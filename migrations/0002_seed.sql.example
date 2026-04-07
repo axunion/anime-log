@@ -1,0 +1,12 @@
+-- Example seed data. Copy to 0002_seed.sql and modify, or generate from your own data:
+--   pnpm migrate:generate
+--
+-- Requires data/data.js and data/history.js (see README for details).
+
+INSERT INTO titles (id, title, year) VALUES (1, 'Example Anime', 2020);
+
+INSERT INTO cast_members (title_id, actor_name, character_name, sort_order)
+VALUES (1, 'Example Actor', 'Example Character', 0);
+
+INSERT INTO history (title_id, display_name, year, sort_order)
+VALUES (1, NULL, 2024, 0);
