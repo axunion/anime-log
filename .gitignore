@@ -1,0 +1,26 @@
+# Dependencies
+node_modules/
+
+# Build output
+dist/
+.tsbuildinfo/
+
+# Cloudflare / Wrangler
+.wrangler/
+src/client/.wrangler/
+.dev.vars
+.dev.vars.*
+
+# Project data (personal, not committed)
+data/
+migrations/0002_seed.sql
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Editor
+.vscode/
+.idea/
+*.swp
+*.swo
