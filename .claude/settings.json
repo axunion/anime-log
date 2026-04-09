@@ -14,5 +14,18 @@
       "Bash(chmod *)",
       "Bash(chown *)"
     ]
+  },
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash(git commit*)",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "cd /Users/macbookair/dev/projects/anime-log && pnpm check && pnpm typecheck || exit 2"
+          }
+        ]
+      }
+    ]
   }
 }
