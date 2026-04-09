@@ -1,0 +1,98 @@
+/* global
+------------------------------------------------------------------------------*/
+
+:root {
+	--accent-color: #7e7efc;
+	--assort-color: #b5b5b5;
+	--base-color: #fcfcfc;
+	--contrast-color: #262626;
+	--gray-color: #808080;
+}
+
+::selection {
+	background-color: var(--assort-color);
+	color: var(--base-color);
+}
+
+html {
+	background: var(--base-color);
+	color: var(--contrast-color);
+	font:
+		500 14px / 1.2 -apple-system,
+		BlinkMacSystemFont,
+		Roboto,
+		Helvetica,
+		"Yu Gothic",
+		sans-serif;
+	-webkit-tap-highlight-color: transparent;
+	-webkit-text-size-adjust: 100%;
+	-webkit-touch-callout: none;
+}
+
+body {
+	margin: 0;
+}
+
+table {
+	border-collapse: collapse;
+	border-spacing: 0;
+}
+
+ul {
+	list-style: none;
+	margin: 0;
+	padding: 0;
+}
+
+a {
+	background-color: transparent;
+	color: inherit;
+	outline-width: 0;
+	text-decoration: none;
+}
+
+button,
+input,
+optgroup,
+select,
+textarea {
+	appearance: none;
+	-moz-appearance: none;
+	-webkit-appearance: none;
+	background: transparent;
+	border: 0;
+	color: inherit;
+	font-family: inherit;
+	font-size: 100%;
+	line-height: 1.5;
+	margin: 0;
+	outline: 0;
+	padding: 0;
+}
+
+button::-moz-focus-inner,
+[type="button"]::-moz-focus-inner,
+[type="reset"]::-moz-focus-inner,
+[type="submit"]::-moz-focus-inner {
+	border-style: none;
+	padding: 0;
+}
+
+button:-moz-focusring,
+[type="button"]:-moz-focusring,
+[type="reset"]:-moz-focusring,
+[type="submit"]:-moz-focusring {
+	outline: 1px dotted ButtonText;
+}
+
+/* icon
+------------------------------------------------------------------------------*/
+
+.icon-wikipedia::before {
+	background-image: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAACXBIWXMAAAOKAAADigGnjPUfAAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAAYxJREFUeNrsV9GxhCAMlFcBJVCCJViCJVACJVACl0AJlGAJlkAJ14FP5sWbnRii3t0bf3QGB1gIm5UENPM8N1c+P83Fz03gJtBQFAylWikjjZGwQZlf+lrF7t/c8iIj3VImGFDqDnC7lAR4XDHCA2ClbgHr0aHSfmHMSAcDM2KEO64MYJ76H8I8S9gTiW0I0GBUoRXwCHgH/VlagJELG0wYHGoyCypFJvHGe+aUO0LAkifrIpJHI+AO2k75bFEkV2GMMocdFUZ1gUUVwvszBFptMwp7RfSexj1rNqoEBJk7ZWNp3vcY82cJ4AJJ8U5TKWnqqAQgtESJIbbX4iubL2lr7J0FEeqBYbztWbsXbMhngaIAevlKMhCqmaVnnpiyZn/3Ewgh6dn+8CzPRxamwzcIbM4Hnnb5XgHS7mMCQsxH7h1P30QuHbJ9kIAXznOrpO9q5nuLAIv52iEV97LnpwQeWtpld4XwHwScduRC+hbvBLVizvwZGWPKBWVScEuL58M271+zm8DVBH4FGADt6PGN5UNpsgAAAABJRU5ErkJggg==);
+	background-size: contain;
+	content: "";
+	display: inline-block;
+	height: 14px;
+	width: 14px;
+}
