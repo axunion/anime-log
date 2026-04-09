@@ -7,7 +7,7 @@
     "dev": "vite",
     "build": "vite build",
     "deploy": "vite build && wrangler deploy",
-    "typecheck": "tsc --noEmit",
+    "typecheck": "vue-tsc --noEmit",
     "check": "biome check src scripts vite.config.ts",
     "fix": "biome check --write src scripts vite.config.ts",
     "migrate:generate": "pnpm exec tsx scripts/migrate.ts",
@@ -15,7 +15,8 @@
     "db:migrate:remote": "wrangler d1 migrations apply anime-db --remote"
   },
   "dependencies": {
-    "hono": "^4.7.0"
+    "hono": "^4.7.0",
+    "vue": "^3.5.32"
   },
   "pnpm": {
     "onlyBuiltDependencies": [
@@ -29,9 +30,11 @@
     "@cloudflare/vite-plugin": "^1.31.0",
     "@cloudflare/workers-types": "^4.20250405.0",
     "@types/node": "^22.15.3",
+    "@vitejs/plugin-vue": "^6.0.5",
     "tsx": "^4.19.3",
     "typescript": "^5.8.3",
     "vite": "^8.0.5",
+    "vue-tsc": "^3.2.6",
     "wrangler": "^4.80.0"
   }
 }

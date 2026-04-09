@@ -10,7 +10,9 @@
     "isolatedModules": true,
     "moduleDetection": "force",
     "allowImportingTsExtensions": true,
-    "skipLibCheck": true
+    "skipLibCheck": true,
+    "jsx": "preserve",
+    "jsxImportSource": "vue"
   },
-  "include": ["src/client/**/*"]
+  "include": ["src/client/**/*", "src/client/**/*.vue"]
 }

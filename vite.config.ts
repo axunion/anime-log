@@ -1,6 +1,7 @@
 import { resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { cloudflare } from "@cloudflare/vite-plugin";
+import vue from "@vitejs/plugin-vue";
 import { defineConfig } from "vite";
 
 const __dirname = fileURLToPath(new URL(".", import.meta.url));
@@ -8,6 +9,7 @@ const __dirname = fileURLToPath(new URL(".", import.meta.url));
 export default defineConfig({
 	root: "src/client",
 	plugins: [
+		vue(),
 		cloudflare({
 			configPath: resolve(__dirname, "wrangler.toml"),
 			persistState: { path: resolve(__dirname, ".wrangler/state") },

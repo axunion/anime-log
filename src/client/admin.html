@@ -2,62 +2,8 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>anime admin</title>
-<link rel="stylesheet" href="./styles/anime.css">
-<link rel="stylesheet" href="./styles/admin.css">
 
-<div id="admin">
-
-  <header class="admin-header">
-    <h1>anime admin</h1>
-    <button id="btn-token" type="button">token</button>
-  </header>
-
-  <main class="admin-main">
-
-    <section class="admin-section" id="section-title">
-      <h2>タイトル管理</h2>
-
-      <form id="form-title-search" class="admin-form">
-        <input type="search" id="input-title-search" placeholder="タイトルを検索...">
-      </form>
-
-      <ul id="list-title-search" class="admin-list"></ul>
-
-      <form id="form-title-add" class="admin-form">
-        <h3>新規タイトル追加</h3>
-        <input type="text" id="input-title-name" placeholder="タイトル名" required>
-        <input type="number" id="input-title-year" placeholder="年" min="1900" max="2099" required>
-        <button type="submit">追加</button>
-      </form>
-    </section>
-
-    <section class="admin-section" id="section-cast">
-      <h2>キャスト編集</h2>
-      <div id="cast-editor-title" class="admin-selected-title">— タイトルを選択してください —</div>
-      <div id="cast-rows"></div>
-      <button id="btn-cast-add-row" type="button">+ 行追加</button>
-      <div class="admin-actions">
-        <button id="btn-cast-save" type="button">保存</button>
-      </div>
-    </section>
-
-    <section class="admin-section" id="section-history">
-      <h2>視聴履歴管理</h2>
-
-      <form id="form-history-add" class="admin-form">
-        <select id="select-history-title">
-          <option value="">タイトルを選択...</option>
-        </select>
-        <input type="text" id="input-history-name" placeholder="表示名（省略可）">
-        <input type="number" id="input-history-year" placeholder="年" min="1900" max="2099" required>
-        <button type="submit">追加</button>
-      </form>
-
-      <ul id="list-history" class="admin-list admin-list-history"></ul>
-    </section>
-
-  </main>
-
-</div>
+<body style="padding: 0 1em 4em;">
+<div id="app"></div>
 
 <script type="module" src="./admin/main.ts"></script>
