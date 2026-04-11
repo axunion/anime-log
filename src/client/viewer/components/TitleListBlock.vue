@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { nextTick, ref, toRef, watch } from "vue";
+import { ref, toRef, watch } from "vue";
 import { useFilter } from "../../composables/useFilter";
 import type { HistoryEntry, Title } from "../../lib/types";
 import TitleListItem from "./TitleListItem.vue";
@@ -7,6 +7,7 @@ import TitleListItem from "./TitleListItem.vue";
 const props = defineProps<{
 	items: (Title | HistoryEntry)[];
 	active: boolean;
+	query: string;
 	clearTrigger: number;
 }>();
 
@@ -24,10 +25,10 @@ watch(
 	},
 );
 
-const blockRef = ref<HTMLElement | null>(null);
-
 function getDisplayName(item: Title | HistoryEntry): string {
-	return "display_name" in item ? (item.display_name ?? item.title) : item.title;
+	return "display_name" in item
+		? (item.display_name ?? item.title)
+		: item.title;
 }
 
 // Unique identifier for each row (used for selection highlight)
@@ -40,7 +41,11 @@ function getTitleId(item: Title | HistoryEntry): number {
 	return "title_id" in item ? item.title_id : item.id;
 }
 
-const { query, filtered } = useFilter(toRef(props, "items"), getDisplayName);
+const { filtered } = useFilter(
+	toRef(props, "items"),
+	getDisplayName,
+	toRef(props, "query"),
+);
 
 function onClickItem(itemId: number, titleId: number) {
 	if (selectedId.value === itemId) {
@@ -51,24 +56,10 @@ function onClickItem(itemId: number, titleId: number) {
 		emit("select", titleId);
 	}
 }
-
-watch(
-	() => props.active,
-	async (active) => {
-		if (active && blockRef.value) {
-			await nextTick();
-			const filterEl = blockRef.value.querySelector(".filter") as HTMLElement | null;
-			if (filterEl) blockRef.value.scrollTop = filterEl.clientHeight;
-		}
-	},
-);
 </script>
 
 <template>
-	<div ref="blockRef" class="block" :class="{ active }">
-		<div class="filter">
-			<input v-model="query" type="text" />
-		</div>
+	<div class="block" :class="{ active }">
 		<ul class="title-list">
 			<TitleListItem
 				v-for="item in filtered"
@@ -85,7 +76,7 @@ watch(
 <style scoped>
 .block {
 	display: none;
-	height: calc(100% - 40px);
+	height: calc(100% - 48px);
 	overflow: auto;
 	scrollbar-color: var(--gray-color) #00000020;
 	scrollbar-width: thin;
@@ -102,24 +93,6 @@ watch(
 
 .block.active {
 	display: block;
-}
-
-.filter {
-	display: block;
-	padding: 0.5em;
-}
-
-.filter > input {
-	background: var(--base-color);
-	border: var(--assort-color) solid 1px;
-	border-radius: 4px;
-	box-sizing: border-box;
-	padding: 0.25em 0.75em;
-	width: 100%;
-}
-
-.filter > input:focus {
-	border-color: var(--gray-color);
 }
 
 .title-list {

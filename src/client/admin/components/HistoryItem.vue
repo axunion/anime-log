@@ -1,18 +1,17 @@
 <script setup lang="ts">
 import type { HistoryEntry } from "../../lib/types";
 
-const props = defineProps<{
+defineProps<{
 	entry: HistoryEntry;
 	isFirst: boolean;
 	isLast: boolean;
 }>();
 
-const emit = defineEmits<{
+defineEmits<{
 	moveUp: [];
 	moveDown: [];
 	delete: [];
 }>();
-
 </script>
 
 <template>

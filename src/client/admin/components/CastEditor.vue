@@ -46,7 +46,10 @@ async function save() {
 	const existingIds = castRows.value.filter((r) => r.id).map((r) => r.id!);
 	await Promise.all(existingIds.map((castId) => del(`/cast/${castId}`)));
 	for (const row of rows) {
-		await post(`/titles/${id}/cast`, { actor_name: row.actor_name, character_name: row.character_name });
+		await post(`/titles/${id}/cast`, {
+			actor_name: row.actor_name,
+			character_name: row.character_name,
+		});
 	}
 	alert("保存しました");
 }

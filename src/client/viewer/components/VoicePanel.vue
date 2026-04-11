@@ -14,7 +14,7 @@ const emit = defineEmits<{
 </script>
 
 <template>
-	<div class="block">
+	<div class="block glass-surface">
 		<ExternalLinks
 			:text="actorName ?? ''"
 			@close="emit('close')"
@@ -37,6 +37,12 @@ const emit = defineEmits<{
 	overflow: auto;
 	scrollbar-color: var(--gray-color) #00000020;
 	scrollbar-width: thin;
+}
+
+@media screen and (max-width: 960px) {
+	.block {
+		background: color-mix(in srgb, var(--base-color) 88%, transparent);
+	}
 }
 
 .block::-webkit-scrollbar {

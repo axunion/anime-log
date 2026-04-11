@@ -5,7 +5,7 @@ import { useHistory } from "../composables/useHistory";
 import { useTitles } from "../composables/useTitles";
 import ViewerLayout from "./components/ViewerLayout.vue";
 
-const { titles, sortedByName, sortedByYear, fetchTitles } = useTitles();
+const { sortedByYear, fetchTitles } = useTitles();
 const { history, fetchHistory } = useHistory();
 const {
 	selectedDetail,
@@ -50,7 +50,6 @@ onMounted(async () => {
 	<ViewerLayout
 		:history="history"
 		:titles-by-year="sortedByYear"
-		:titles-by-name="sortedByName"
 		:cast-detail="selectedDetail"
 		:voice-results="voiceResults"
 		:voice-actor-name="selectedActorName"

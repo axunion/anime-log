@@ -5,7 +5,8 @@ import { useTitles } from "../../composables/useTitles";
 import HistoryItem from "./HistoryItem.vue";
 
 const { titles } = useTitles();
-const { history, fetchHistory, addHistory, deleteHistory, reorder } = useHistory();
+const { history, fetchHistory, addHistory, deleteHistory, reorder } =
+	useHistory();
 
 const selectTitleId = ref("");
 const displayName = ref("");
