@@ -14,3 +14,4 @@ export type HistoryEntry = {
 	sort_order: number;
 };
 export type VoiceResult = { title: string; character_name: string };
+export type Tab = "history" | "year";

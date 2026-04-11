@@ -7,6 +7,28 @@
 	--base-color: #fcfcfc;
 	--contrast-color: #262626;
 	--gray-color: #808080;
+
+	/* glass tokens */
+	--glass-bg: color-mix(in srgb, var(--base-color) 62%, transparent);
+	--glass-bg-strong: color-mix(in srgb, var(--base-color) 80%, transparent);
+	--glass-border: color-mix(in srgb, var(--contrast-color) 10%, transparent);
+	--glass-blur: saturate(180%) blur(18px);
+}
+
+/* glass-surface utility
+------------------------------------------------------------------------------*/
+
+.glass-surface {
+	background: var(--glass-bg);
+	backdrop-filter: var(--glass-blur);
+	-webkit-backdrop-filter: var(--glass-blur);
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.glass-surface {
+		backdrop-filter: none;
+		-webkit-backdrop-filter: none;
+	}
 }
 
 ::selection {
@@ -15,7 +37,18 @@
 }
 
 html {
-	background: var(--base-color);
+	background:
+		radial-gradient(
+			ellipse 900px 700px at 5% 0%,
+			color-mix(in srgb, var(--accent-color) 25%, transparent),
+			transparent 70%
+		),
+		radial-gradient(
+			ellipse 700px 600px at 95% 100%,
+			color-mix(in srgb, #ff9ec7 15%, transparent),
+			transparent 70%
+		),
+		var(--base-color);
 	color: var(--contrast-color);
 	font:
 		500 14px / 1.2 -apple-system,
@@ -83,16 +116,4 @@ button:-moz-focusring,
 [type="reset"]:-moz-focusring,
 [type="submit"]:-moz-focusring {
 	outline: 1px dotted ButtonText;
-}
-
-/* icon
-------------------------------------------------------------------------------*/
-
-.icon-wikipedia::before {
-	background-image: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAACXBIWXMAAAOKAAADigGnjPUfAAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAAYxJREFUeNrsV9GxhCAMlFcBJVCCJViCJVACJVACl0AJlGAJlkAJ14FP5sWbnRii3t0bf3QGB1gIm5UENPM8N1c+P83Fz03gJtBQFAylWikjjZGwQZlf+lrF7t/c8iIj3VImGFDqDnC7lAR4XDHCA2ClbgHr0aHSfmHMSAcDM2KEO64MYJ76H8I8S9gTiW0I0GBUoRXwCHgH/VlagJELG0wYHGoyCypFJvHGe+aUO0LAkifrIpJHI+AO2k75bFEkV2GMMocdFUZ1gUUVwvszBFptMwp7RfSexj1rNqoEBJk7ZWNp3vcY82cJ4AJJ8U5TKWnqqAQgtESJIbbX4iubL2lr7J0FEeqBYbztWbsXbMhngaIAevlKMhCqmaVnnpiyZn/3Ewgh6dn+8CzPRxamwzcIbM4Hnnb5XgHS7mMCQsxH7h1P30QuHbJ9kIAXznOrpO9q5nuLAIv52iEV97LnpwQeWtpld4XwHwScduRC+hbvBLVizvwZGWPKBWVScEuL58M271+zm8DVBH4FGADt6PGN5UNpsgAAAABJRU5ErkJggg==);
-	background-size: contain;
-	content: "";
-	display: inline-block;
-	height: 14px;
-	width: 14px;
 }

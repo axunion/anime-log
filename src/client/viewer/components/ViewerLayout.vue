@@ -1,17 +1,20 @@
 <script setup lang="ts">
 import { ref } from "vue";
-import type { HistoryEntry, Title, TitleDetail, VoiceResult } from "../../lib/types";
+import type {
+	HistoryEntry,
+	Tab,
+	Title,
+	TitleDetail,
+	VoiceResult,
+} from "../../lib/types";
 import CastPanel from "./CastPanel.vue";
 import TitleListBlock from "./TitleListBlock.vue";
 import TitleNav from "./TitleNav.vue";
 import VoicePanel from "./VoicePanel.vue";
 
-type Tab = "history" | "year" | "name";
-
 const props = defineProps<{
 	history: HistoryEntry[];
 	titlesByYear: Title[];
-	titlesByName: Title[];
 	castDetail: TitleDetail | null;
 	voiceResults: VoiceResult[];
 	voiceActorName: string | null;
@@ -27,16 +30,17 @@ const emit = defineEmits<{
 }>();
 
 const activeTab = ref<Tab>("history");
+const query = ref("");
 </script>
 
 <template>
 	<div id="viewport">
-		<!-- frame-title -->
 		<div class="frame">
-			<TitleNav v-model:active-tab="activeTab" />
+			<TitleNav v-model:active-tab="activeTab" v-model:query="query" />
 			<TitleListBlock
 				:items="history"
 				:active="activeTab === 'history'"
+				:query="query"
 				:clear-trigger="clearTrigger"
 				@select="emit('selectTitle', $event)"
 				@deselect="emit('deselectTitle')"
@@ -44,20 +48,13 @@ const activeTab = ref<Tab>("history");
 			<TitleListBlock
 				:items="titlesByYear"
 				:active="activeTab === 'year'"
-				:clear-trigger="clearTrigger"
-				@select="emit('selectTitle', $event)"
-				@deselect="emit('deselectTitle')"
-			/>
-			<TitleListBlock
-				:items="titlesByName"
-				:active="activeTab === 'name'"
+				:query="query"
 				:clear-trigger="clearTrigger"
 				@select="emit('selectTitle', $event)"
 				@deselect="emit('deselectTitle')"
 			/>
 		</div>
 
-		<!-- frame-cast -->
 		<div class="frame frame-cast" :class="{ 'selected-title': castDetail !== null }">
 			<CastPanel
 				:detail="castDetail"
@@ -66,7 +63,6 @@ const activeTab = ref<Tab>("history");
 			/>
 		</div>
 
-		<!-- frame-voice -->
 		<div class="frame frame-voice" :class="{ 'selected-name': voiceActorName !== null }">
 			<VoicePanel
 				:results="voiceResults"
@@ -95,7 +91,7 @@ const activeTab = ref<Tab>("history");
 }
 
 .frame + .frame {
-	border-left: var(--assort-color) solid 1px;
+	border-left: var(--glass-border) solid 1px;
 }
 
 .frame:nth-child(2) {
