@@ -125,9 +125,12 @@ const query = ref("");
 	}
 
 	.frame-voice {
-		left: 50%;
+		border-left: none;
+		left: 0;
+		width: 100%;
 		transform: translate3d(0, 100%, 0);
 		transition: transform 0.4s 0.1s;
+		will-change: transform;
 	}
 
 	.frame-voice.selected-name {
@@ -136,13 +139,13 @@ const query = ref("");
 	}
 
 	.frame-voice > :deep(.block) {
-		box-shadow: #666 0 2px 8px;
 		display: block;
 		transform: scale(0.96);
 		transition: transform 0.1s;
 	}
 
 	.frame-voice.selected-name > :deep(.block) {
+		box-shadow: #66666640 0 4px 24px;
 		transform: scale(0.97, 0.98);
 		transition: transform 0.1s 0.4s;
 	}
@@ -160,8 +163,11 @@ const query = ref("");
 
 	.frame-cast,
 	.frame-voice {
+		border-left: none;
+		left: 0;
 		transform: translate3d(100%, 0, 0);
 		transition: transform 0.4s;
+		will-change: transform;
 	}
 
 	.frame-cast.selected-title,

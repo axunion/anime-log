@@ -2,17 +2,47 @@
 ------------------------------------------------------------------------------*/
 
 :root {
-	--accent-color: #7e7efc;
-	--assort-color: #b5b5b5;
-	--base-color: #fcfcfc;
-	--contrast-color: #262626;
-	--gray-color: #808080;
+	/* raw palette */
+	--color-iris: #7e7efc;
+	--color-blossom: #ff9ec7;
+	--color-mint: #6ddbd0;
+	--color-ink: #1f2233;
+	--color-canvas: #fbfbfe;
+	--color-steel: #6b6f80;
+	--color-mist: #c7cad8;
+	--color-fog: #a6a9bd;
+
+	/* brand / accent */
+	--accent-color: var(--color-iris);
+	--accent-secondary: var(--color-blossom);
+	--accent-tertiary: var(--color-mint);
+
+	/* canvas / ink */
+	--base-color: var(--color-canvas);
+	--contrast-color: var(--color-ink);
+
+	/* text roles */
+	--text-muted: var(--color-steel);
+	--text-subtle: var(--color-fog);
+
+	/* border / fill roles */
+	--border-strong: var(--color-mist);
+	--fill-muted: var(--color-fog);
 
 	/* glass tokens */
 	--glass-bg: color-mix(in srgb, var(--base-color) 62%, transparent);
-	--glass-bg-strong: color-mix(in srgb, var(--base-color) 80%, transparent);
+	--glass-bg-strong: color-mix(in srgb, var(--base-color) 82%, transparent);
 	--glass-border: color-mix(in srgb, var(--contrast-color) 10%, transparent);
-	--glass-blur: saturate(180%) blur(18px);
+	--glass-blur: saturate(200%) blur(28px);
+
+	/* interaction */
+	--hover-overlay: color-mix(in srgb, var(--contrast-color) 5%, transparent);
+	--focus-ring: color-mix(in srgb, var(--accent-color) 55%, transparent);
+	--focus-glow: color-mix(in srgb, var(--accent-color) 18%, transparent);
+
+	/* scrollbar */
+	--scrollbar-track: color-mix(in srgb, var(--contrast-color) 8%, transparent);
+	--scrollbar-thumb: var(--text-muted);
 }
 
 /* glass-surface utility
@@ -32,23 +62,35 @@
 }
 
 ::selection {
-	background-color: var(--assort-color);
+	background-color: var(--fill-muted);
 	color: var(--base-color);
 }
 
 html {
 	background:
 		radial-gradient(
-			ellipse 900px 700px at 5% 0%,
-			color-mix(in srgb, var(--accent-color) 25%, transparent),
-			transparent 70%
+			ellipse 1000px 820px at 105% -5%,
+			color-mix(in srgb, var(--accent-color) 30%, transparent),
+			transparent 65%
 		),
 		radial-gradient(
-			ellipse 700px 600px at 95% 100%,
-			color-mix(in srgb, #ff9ec7 15%, transparent),
+			ellipse 800px 700px at 100% 60%,
+			color-mix(in srgb, var(--accent-secondary) 22%, transparent),
+			transparent 68%
+		),
+		radial-gradient(
+			ellipse 900px 780px at -5% 108%,
+			color-mix(in srgb, var(--accent-tertiary) 26%, transparent),
 			transparent 70%
 		),
+		linear-gradient(
+			-40deg,
+			color-mix(in srgb, var(--accent-tertiary) 4%, transparent) 0%,
+			transparent 50%,
+			color-mix(in srgb, var(--accent-color) 4%, transparent) 100%
+		),
 		var(--base-color);
+	background-attachment: fixed;
 	color: var(--contrast-color);
 	font:
 		500 14px / 1.2 -apple-system,

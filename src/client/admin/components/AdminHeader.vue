@@ -16,7 +16,7 @@ function setToken() {
 <style scoped>
 .admin-header {
 	align-items: center;
-	border-bottom: var(--assort-color) solid 1px;
+	border-bottom: var(--border-strong) solid 1px;
 	display: flex;
 	justify-content: space-between;
 	padding: 0.5em 0;
@@ -31,9 +31,9 @@ function setToken() {
 
 .btn-token {
 	background: none;
-	border: var(--assort-color) solid 1px;
+	border: var(--border-strong) solid 1px;
 	border-radius: 4px;
-	color: var(--gray-color);
+	color: var(--text-muted);
 	cursor: pointer;
 	font-size: 12px;
 	padding: 0.2em 0.75em;

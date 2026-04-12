@@ -39,7 +39,7 @@ dd.show {
 }
 
 .part-line {
-	color: var(--gray-color);
+	color: var(--text-muted);
 	display: block;
 	font-size: 85%;
 	line-height: 1.5;

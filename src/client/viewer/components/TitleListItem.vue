@@ -25,7 +25,7 @@ li {
 }
 
 li.selected {
-	background: var(--assort-color);
+	background: var(--fill-muted);
 	color: var(--base-color);
 }
 
@@ -38,7 +38,7 @@ li.selected {
 }
 
 .year {
-	color: var(--assort-color);
+	color: var(--text-subtle);
 	flex: 0 1 40px;
 	text-align: right;
 }

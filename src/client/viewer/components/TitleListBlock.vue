@@ -78,17 +78,17 @@ function onClickItem(itemId: number, titleId: number) {
 	display: none;
 	height: calc(100% - 48px);
 	overflow: auto;
-	scrollbar-color: var(--gray-color) #00000020;
+	scrollbar-color: var(--scrollbar-thumb) var(--scrollbar-track);
 	scrollbar-width: thin;
 }
 
 .block::-webkit-scrollbar {
-	background-color: #00000020;
+	background-color: var(--scrollbar-track);
 	width: 5px;
 }
 
 .block::-webkit-scrollbar-thumb {
-	background-color: var(--gray-color);
+	background-color: var(--scrollbar-thumb);
 }
 
 .block.active {

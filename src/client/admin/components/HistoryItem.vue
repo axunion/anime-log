@@ -31,7 +31,7 @@ defineEmits<{
 <style scoped>
 li {
 	align-items: center;
-	border-bottom: var(--assort-color) solid 1px;
+	border-bottom: var(--border-strong) solid 1px;
 	display: flex;
 	gap: 0.5em;
 	padding: 0.4em 0.5em;
@@ -49,7 +49,7 @@ li:last-child {
 }
 
 .item-year {
-	color: var(--gray-color);
+	color: var(--text-subtle);
 	flex: 0 0 40px;
 	text-align: right;
 }
@@ -57,7 +57,7 @@ li:last-child {
 .btn-up,
 .btn-down {
 	background: none;
-	border: var(--assort-color) solid 1px;
+	border: var(--border-strong) solid 1px;
 	border-radius: 2px;
 	cursor: pointer;
 	flex: 0 0 20px;
@@ -75,7 +75,7 @@ li:last-child {
 .btn-delete {
 	background: none;
 	border: none;
-	color: var(--gray-color);
+	color: var(--text-muted);
 	cursor: pointer;
 	flex: 0 0 24px;
 	font-size: 14px;
