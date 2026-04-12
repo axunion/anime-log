@@ -43,6 +43,9 @@
 	/* scrollbar */
 	--scrollbar-track: color-mix(in srgb, var(--contrast-color) 8%, transparent);
 	--scrollbar-thumb: var(--text-muted);
+
+	/* shadow */
+	--shadow-overlay: color-mix(in srgb, var(--color-ink) 25%, transparent);
 }
 
 /* glass-surface utility

@@ -22,19 +22,19 @@ const wikiUrl = computed(
 </script>
 
 <template>
-	<div class="h">
-		<button class="close" type="button" aria-label="Close" @click="$emit('close')">
+	<div class="links-header">
+		<button class="panel-close-btn" type="button" aria-label="Close" @click="$emit('close')">
 			<X :size="16" :stroke-width="1.75" />
 		</button>
-		<a class="goog" :href="googleUrl" target="_blank" rel="noopener">{{ text }}</a>
-		<a class="wkpd" :href="wikiUrl" target="_blank" rel="noopener" aria-label="Wikipedia">
+		<a class="link-google" :href="googleUrl" target="_blank" rel="noopener">{{ text }}</a>
+		<a class="link-wikipedia" :href="wikiUrl" target="_blank" rel="noopener" aria-label="Wikipedia">
 			<WikipediaIcon />
 		</a>
 	</div>
 </template>
 
 <style scoped>
-.h {
+.links-header {
 	align-items: center;
 	display: flex;
 	gap: 0.5em;
@@ -43,8 +43,8 @@ const wikiUrl = computed(
 	margin: 1.5em 1em 1em;
 }
 
-.close,
-.wkpd {
+.panel-close-btn,
+.link-wikipedia {
 	align-items: center;
 	border-radius: 8px;
 	color: var(--text-muted);
@@ -57,16 +57,16 @@ const wikiUrl = computed(
 	width: 28px;
 }
 
-.close:hover,
-.wkpd:hover {
+.panel-close-btn:hover,
+.link-wikipedia:hover {
 	background: var(--hover-overlay);
 }
 
-.wkpd:hover :deep(.wiki-icon) {
+.link-wikipedia:hover :deep(.wiki-icon) {
 	opacity: 1;
 }
 
-.goog {
+.link-google {
 	flex: 1;
 	overflow: hidden;
 	text-align: center;

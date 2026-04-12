@@ -11,10 +11,10 @@ defineEmits<{
 
 <template>
 	<tr>
-		<th class="name" :title="actorName" @click="$emit('actorClick', actorName)">
+		<th class="cast-actor" :title="actorName" @click="$emit('actorClick', actorName)">
 			{{ actorName }}
 		</th>
-		<td class="part">
+		<td class="cast-character">
 			<span
 				v-for="(part, i) in characterName.split(', ')"
 				:key="i"
@@ -25,7 +25,7 @@ defineEmits<{
 </template>
 
 <style scoped>
-th {
+.cast-actor {
 	cursor: pointer;
 	font-weight: normal;
 	letter-spacing: 1px;
@@ -37,14 +37,11 @@ th {
 	white-space: nowrap;
 }
 
-td {
-	padding: 0 1em 0 0.5em;
-	width: 60%;
-}
-
-.part {
+.cast-character {
 	color: var(--text-muted);
 	font-size: 85%;
+	padding: 0 1em 0 0.5em;
+	width: 60%;
 }
 
 .part-line {

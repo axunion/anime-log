@@ -10,10 +10,10 @@ const showPart = ref(false);
 </script>
 
 <template>
-	<dt @click="showPart = !showPart">
+	<dt class="voice-title" @click="showPart = !showPart">
 		<span class="title">{{ titleName }}</span>
 	</dt>
-	<dd :class="{ show: showPart }">
+	<dd class="voice-detail" :class="{ show: showPart }">
 		<span
 			v-for="(part, i) in characterName.split(', ')"
 			:key="i"
@@ -23,18 +23,18 @@ const showPart = ref(false);
 </template>
 
 <style scoped>
-dt {
+.voice-title {
+	cursor: pointer;
 	letter-spacing: 0.1em;
 	padding: 0.25em 0;
-	cursor: pointer;
 }
 
-dd {
+.voice-detail {
 	display: none;
 	margin: 0 0 0.25em 2em;
 }
 
-dd.show {
+.voice-detail.show {
 	display: block;
 }
 

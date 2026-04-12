@@ -15,7 +15,7 @@ defineEmits<{
 </script>
 
 <template>
-	<li>
+	<li class="history-item">
 		<button class="btn-up" type="button" :disabled="isFirst" @click="$emit('moveUp')">▲</button>
 		<button class="btn-down" type="button" :disabled="isLast" @click="$emit('moveDown')">▼</button>
 		<span class="item-title">{{ entry.display_name ?? entry.title }}</span>
@@ -29,7 +29,7 @@ defineEmits<{
 </template>
 
 <style scoped>
-li {
+.history-item {
 	align-items: center;
 	border-bottom: var(--border-strong) solid 1px;
 	display: flex;
@@ -37,7 +37,7 @@ li {
 	padding: 0.4em 0.5em;
 }
 
-li:last-child {
+.history-item:last-child {
 	border-bottom: none;
 }
 

@@ -57,7 +57,7 @@ async function save() {
 
 <template>
 	<section class="admin-section">
-		<h2>キャスト編集</h2>
+		<h2 class="admin-section-title">キャスト編集</h2>
 		<p v-if="!selectedTitleName" class="no-selection">タイトルを選択してください</p>
 		<template v-else>
 			<p class="selected-title">{{ selectedTitleName }}</p>
@@ -72,25 +72,14 @@ async function save() {
 			/>
 			<button class="btn-add-row" type="button" @click="addRow">+ 行追加</button>
 			<div class="admin-actions">
-				<button class="btn-save" type="button" @click="save">保存</button>
+				<button class="admin-form-button admin-form-button--wide" type="button" @click="save">保存</button>
 			</div>
 		</template>
 	</section>
 </template>
 
 <style scoped>
-.admin-section {
-	border: var(--border-strong) solid 1px;
-	border-radius: 4px;
-	padding: 1em;
-}
-
-.admin-section h2 {
-	font-size: 0.9em;
-	font-weight: normal;
-	letter-spacing: 0.1em;
-	margin: 0 0 1em;
-}
+@import "../styles/admin-shared.css";
 
 .no-selection {
 	color: var(--text-muted);
@@ -126,11 +115,4 @@ async function save() {
 	text-align: right;
 }
 
-.btn-save {
-	background: var(--contrast-color);
-	border-radius: 4px;
-	color: var(--base-color);
-	cursor: pointer;
-	padding: 0.25em 1.5em;
-}
 </style>

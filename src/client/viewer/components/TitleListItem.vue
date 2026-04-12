@@ -11,25 +11,25 @@ defineEmits<{
 </script>
 
 <template>
-	<li :class="{ selected }" :title="titleName" @click="$emit('select')">
-		<span class="name">{{ titleName }}</span>
-		<span class="year">{{ year }}</span>
+	<li class="title-item" :class="{ selected }" :title="titleName" @click="$emit('select')">
+		<span class="title-item-name">{{ titleName }}</span>
+		<span class="title-item-year">{{ year }}</span>
 	</li>
 </template>
 
 <style scoped>
-li {
+.title-item {
 	cursor: pointer;
 	display: flex;
 	padding: 0.75em 1em;
 }
 
-li.selected {
+.title-item.selected {
 	background: var(--fill-muted);
 	color: var(--base-color);
 }
 
-.name {
+.title-item-name {
 	flex: 0 1 100%;
 	letter-spacing: 0.1em;
 	overflow: hidden;
@@ -37,13 +37,13 @@ li.selected {
 	white-space: nowrap;
 }
 
-.year {
+.title-item-year {
 	color: var(--text-subtle);
 	flex: 0 1 40px;
 	text-align: right;
 }
 
-li.selected .year {
+.title-item.selected .title-item-year {
 	color: var(--base-color);
 }
 </style>

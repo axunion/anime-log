@@ -20,7 +20,7 @@ onMounted(fetchTitles);
 </script>
 
 <template>
-	<div id="admin">
+	<div class="admin-root">
 		<AdminHeader />
 		<main class="admin-main">
 			<TitleManager @select-title="onSelectTitle" />
@@ -34,9 +34,10 @@ onMounted(fetchTitles);
 </template>
 
 <style scoped>
-#admin {
+.admin-root {
 	max-width: 960px;
 	margin: 0 auto;
+	padding: 0 1em 4em;
 }
 
 .admin-main {
