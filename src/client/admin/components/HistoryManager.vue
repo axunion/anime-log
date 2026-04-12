@@ -67,7 +67,7 @@ async function onDelete(id: number) {
 
 <style scoped>
 .admin-section {
-	border: var(--assort-color) solid 1px;
+	border: var(--border-strong) solid 1px;
 	border-radius: 4px;
 	padding: 1em;
 }
@@ -89,7 +89,7 @@ async function onDelete(id: number) {
 .admin-form input,
 .admin-form select {
 	background: var(--base-color);
-	border: var(--assort-color) solid 1px;
+	border: var(--border-strong) solid 1px;
 	border-radius: 4px;
 	flex: 1 1 auto;
 	min-width: 0;
@@ -98,7 +98,7 @@ async function onDelete(id: number) {
 
 .admin-form input:focus,
 .admin-form select:focus {
-	border-color: var(--gray-color);
+	border-color: var(--text-muted);
 	outline: none;
 }
 

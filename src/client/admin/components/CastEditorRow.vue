@@ -39,7 +39,7 @@ const emit = defineEmits<{
 
 .cast-row input {
 	background: var(--base-color);
-	border: var(--assort-color) solid 1px;
+	border: var(--border-strong) solid 1px;
 	border-radius: 4px;
 	flex: 1 1 auto;
 	min-width: 0;
@@ -47,14 +47,14 @@ const emit = defineEmits<{
 }
 
 .cast-row input:focus {
-	border-color: var(--gray-color);
+	border-color: var(--text-muted);
 	outline: none;
 }
 
 .btn-remove-row {
 	background: none;
 	border: none;
-	color: var(--gray-color);
+	color: var(--text-muted);
 	cursor: pointer;
 	flex: 0 0 20px;
 	font-size: 16px;

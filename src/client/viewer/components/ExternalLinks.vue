@@ -47,7 +47,7 @@ const wikiUrl = computed(
 .wkpd {
 	align-items: center;
 	border-radius: 8px;
-	color: var(--gray-color);
+	color: var(--text-muted);
 	cursor: pointer;
 	display: inline-flex;
 	flex: 0 0 28px;
@@ -59,7 +59,7 @@ const wikiUrl = computed(
 
 .close:hover,
 .wkpd:hover {
-	background: color-mix(in srgb, var(--contrast-color) 6%, transparent);
+	background: var(--hover-overlay);
 }
 
 .wkpd:hover :deep(.wiki-icon) {

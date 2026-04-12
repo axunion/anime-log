@@ -20,7 +20,7 @@ defineEmits<{
 <style scoped>
 li {
 	align-items: center;
-	border-bottom: var(--assort-color) solid 1px;
+	border-bottom: var(--border-strong) solid 1px;
 	cursor: pointer;
 	display: flex;
 	gap: 0.5em;
@@ -32,7 +32,7 @@ li:last-child {
 }
 
 li:hover {
-	background: var(--assort-color);
+	background: var(--fill-muted);
 	color: var(--base-color);
 }
 
@@ -49,12 +49,9 @@ li.selected {
 }
 
 .item-year {
-	color: var(--gray-color);
+	color: var(--text-subtle);
 	flex: 0 0 40px;
 	text-align: right;
 }
 
-li.selected .item-year {
-	color: var(--assort-color);
-}
 </style>

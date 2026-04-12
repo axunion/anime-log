@@ -14,7 +14,7 @@ const emit = defineEmits<{
 </script>
 
 <template>
-	<div class="block glass-surface">
+	<div class="block" :class="{ active: detail !== null }">
 		<ExternalLinks
 			:text="detail?.title ?? ''"
 			@close="emit('close')"
@@ -38,23 +38,33 @@ const emit = defineEmits<{
 	display: none;
 	height: 100%;
 	overflow: auto;
-	scrollbar-color: var(--gray-color) #00000020;
+	scrollbar-color: var(--scrollbar-thumb) var(--scrollbar-track);
 	scrollbar-width: thin;
 }
 
-@media screen and (max-width: 960px) {
-	.block {
-		background: color-mix(in srgb, var(--base-color) 88%, transparent);
+/* glass only in mobile overlay mode */
+@media screen and (max-width: 640px) {
+	.block.active {
+		backdrop-filter: var(--glass-blur);
+		-webkit-backdrop-filter: var(--glass-blur);
+		background: var(--glass-bg);
+	}
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.block.active {
+		backdrop-filter: none;
+		-webkit-backdrop-filter: none;
 	}
 }
 
 .block::-webkit-scrollbar {
-	background-color: #00000020;
+	background-color: var(--scrollbar-track);
 	width: 5px;
 }
 
 .block::-webkit-scrollbar-thumb {
-	background-color: var(--gray-color);
+	background-color: var(--scrollbar-thumb);
 }
 
 .cast-table {

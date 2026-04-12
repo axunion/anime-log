@@ -43,7 +43,7 @@ td {
 }
 
 .part {
-	color: var(--gray-color);
+	color: var(--text-muted);
 	font-size: 85%;
 }
 

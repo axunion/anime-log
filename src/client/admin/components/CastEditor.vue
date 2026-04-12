@@ -80,7 +80,7 @@ async function save() {
 
 <style scoped>
 .admin-section {
-	border: var(--assort-color) solid 1px;
+	border: var(--border-strong) solid 1px;
 	border-radius: 4px;
 	padding: 1em;
 }
@@ -93,22 +93,22 @@ async function save() {
 }
 
 .no-selection {
-	color: var(--gray-color);
+	color: var(--text-muted);
 	font-size: 0.85em;
 	margin: 0;
 }
 
 .selected-title {
-	color: var(--gray-color);
+	color: var(--text-muted);
 	font-size: 0.85em;
 	margin-bottom: 0.75em;
 }
 
 .btn-add-row {
 	background: none;
-	border: var(--assort-color) dashed 1px;
+	border: var(--border-strong) dashed 1px;
 	border-radius: 4px;
-	color: var(--gray-color);
+	color: var(--text-muted);
 	cursor: pointer;
 	font-size: 12px;
 	margin-top: 0.25em;
@@ -117,7 +117,7 @@ async function save() {
 }
 
 .btn-add-row:hover {
-	border-color: var(--gray-color);
+	border-color: var(--text-muted);
 	color: var(--contrast-color);
 }
 

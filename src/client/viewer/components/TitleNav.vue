@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { CalendarDays, Clock, Search } from "lucide-vue-next";
+import { CalendarArrowDown, Clock, Search } from "lucide-vue-next";
 import type { Tab } from "../../lib/types";
 
 defineProps<{ activeTab: Tab; query: string }>();
@@ -7,7 +7,7 @@ defineEmits<{ "update:activeTab": [tab: Tab]; "update:query": [q: string] }>();
 
 const tabs: { id: Tab; icon: typeof Clock; label: string }[] = [
 	{ id: "history", icon: Clock, label: "History" },
-	{ id: "year", icon: CalendarDays, label: "Year" },
+	{ id: "year", icon: CalendarArrowDown, label: "Year" },
 ];
 </script>
 
@@ -61,7 +61,7 @@ const tabs: { id: Tab; icon: typeof Clock; label: string }[] = [
 .tab {
 	align-items: center;
 	border-radius: 8px;
-	color: var(--gray-color);
+	color: var(--text-muted);
 	cursor: pointer;
 	display: flex;
 	height: 32px;
@@ -71,7 +71,7 @@ const tabs: { id: Tab; icon: typeof Clock; label: string }[] = [
 }
 
 .tab:hover {
-	background: color-mix(in srgb, var(--contrast-color) 5%, transparent);
+	background: var(--hover-overlay);
 	color: var(--contrast-color);
 }
 
@@ -95,12 +95,12 @@ const tabs: { id: Tab; icon: typeof Clock; label: string }[] = [
 }
 
 .search:focus-within {
-	border-color: color-mix(in srgb, var(--accent-color) 55%, transparent);
-	box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent-color) 18%, transparent);
+	border-color: var(--focus-ring);
+	box-shadow: 0 0 0 3px var(--focus-glow);
 }
 
 .search-icon {
-	color: var(--assort-color);
+	color: var(--text-subtle);
 	flex: 0 0 auto;
 }
 
@@ -112,6 +112,6 @@ const tabs: { id: Tab; icon: typeof Clock; label: string }[] = [
 }
 
 .search > input::placeholder {
-	color: var(--assort-color);
+	color: var(--text-subtle);
 }
 </style>
