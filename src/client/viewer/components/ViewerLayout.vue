@@ -34,59 +34,53 @@ const query = ref("");
 </script>
 
 <template>
-	<div class="viewport">
-		<div class="frame">
-			<TitleNav v-model:active-tab="activeTab" v-model:query="query" />
-			<TitleListBlock
-				:items="history"
-				:active="activeTab === 'history'"
-				:query="query"
-				:clear-trigger="clearTrigger"
-				@select="emit('selectTitle', $event)"
-				@deselect="emit('deselectTitle')"
-			/>
-			<TitleListBlock
-				:items="titlesByYear"
-				:active="activeTab === 'year'"
-				:query="query"
-				:clear-trigger="clearTrigger"
-				@select="emit('selectTitle', $event)"
-				@deselect="emit('deselectTitle')"
-			/>
-		</div>
+	<div class="frame">
+		<TitleNav v-model:active-tab="activeTab" v-model:query="query" />
+		<TitleListBlock
+			:items="history"
+			:active="activeTab === 'history'"
+			:query="query"
+			:clear-trigger="clearTrigger"
+			@select="emit('selectTitle', $event)"
+			@deselect="emit('deselectTitle')"
+		/>
+		<TitleListBlock
+			:items="titlesByYear"
+			:active="activeTab === 'year'"
+			:query="query"
+			:clear-trigger="clearTrigger"
+			@select="emit('selectTitle', $event)"
+			@deselect="emit('deselectTitle')"
+		/>
+	</div>
 
-		<div class="frame frame-cast" :class="{ 'selected-title': castDetail !== null }">
-			<CastPanel
-				:detail="castDetail"
-				@close="emit('closeCast')"
-				@actor-click="emit('actorClick', $event)"
-			/>
-		</div>
+	<div class="frame frame-cast" :class="{ 'selected-title': castDetail !== null }">
+		<CastPanel
+			:detail="castDetail"
+			@close="emit('closeCast')"
+			@actor-click="emit('actorClick', $event)"
+		/>
+	</div>
 
-		<div class="frame frame-voice" :class="{ 'selected-name': voiceActorName !== null }">
-			<VoicePanel
-				:results="voiceResults"
-				:actor-name="voiceActorName"
-				@close="emit('closeVoice')"
-			/>
-		</div>
+	<div class="frame frame-voice" :class="{ 'selected-name': voiceActorName !== null }">
+		<VoicePanel
+			:results="voiceResults"
+			:actor-name="voiceActorName"
+			@close="emit('closeVoice')"
+		/>
 	</div>
 </template>
 
 <style scoped>
-.viewport {
-	bottom: 0;
-	left: 0;
-	overflow: hidden;
-	position: fixed;
-	right: 0;
-	top: 0;
-}
-
+/* Each frame is position:fixed directly in the root stacking context.
+   This allows backdrop-filter on overlay panels to reference the html
+   background gradients and sibling frame content — which is impossible
+   when frames are children of a position:fixed wrapper (separate compositing
+   layer that backdrop-filter cannot cross). */
 .frame {
 	bottom: 0;
-	isolation: isolate;
-	position: absolute;
+	left: 0;
+	position: fixed;
 	top: 0;
 	width: 33.33%;
 }
@@ -113,25 +107,25 @@ const query = ref("");
 		left: 50%;
 	}
 
-	/* voice panel slides up from bottom as a full-width overlay */
+	/* voice slides up from bottom, overlaying only the cast column (right half).
+	   backdrop-filter and background kept on the base selector so the GPU
+	   compositing layer is never destroyed mid-transition. */
 	.frame-voice {
-		border-left: none;
-		left: 0;
-		width: 100%;
-		transform: translate3d(0, 100%, 0);
-		transition: transform 0.4s 0.1s;
-		will-change: transform;
-	}
-
-	.frame-voice.selected-name {
 		backdrop-filter: var(--glass-blur);
 		-webkit-backdrop-filter: var(--glass-blur);
 		background: var(--glass-bg);
-		box-shadow: var(--shadow-overlay) 0 4px 24px;
-		transform: translate3d(0, 0, 0);
-		transition: transform 0.4s;
+		border-left: none;
+		left: 50%;
+		transform: translateY(100%);
+		transition: transform 0.4s 0.1s;
+		width: 50%;
 	}
 
+	.frame-voice.selected-name {
+		box-shadow: var(--shadow-overlay) 0 4px 24px;
+		transform: translateY(0);
+		transition: transform 0.4s;
+	}
 }
 
 /* max-width: 640px */
@@ -140,31 +134,40 @@ const query = ref("");
 		width: 100%;
 	}
 
-	/* cast and voice panels slide in from the right as full-screen overlays */
+	/* cast and voice slide up from bottom as full-screen overlays.
+	   z-index is always set (frames are off-screen when inactive) so
+	   stacking is correct throughout open/close animations. */
 	.frame-cast,
 	.frame-voice {
-		border-left: none;
-		left: 0;
-		transform: translate3d(100%, 0, 0);
-		transition: transform 0.4s;
-		will-change: transform;
-	}
-
-	.frame-cast.selected-title,
-	.frame-voice.selected-name {
 		backdrop-filter: var(--glass-blur);
 		-webkit-backdrop-filter: var(--glass-blur);
 		background: var(--glass-bg);
-		transform: translate3d(0, 0, 0);
+		border-left: none;
+		left: 0;
+		transform: translateY(100%);
+		transition: transform 0.4s;
 	}
 
+	.frame-cast {
+		z-index: 10;
+	}
+
+	.frame-voice {
+		z-index: 11;
+	}
+
+	.frame-cast.selected-title,
+	.frame-voice.selected-name {
+		transform: translateY(0);
+	}
 }
 
 @media (prefers-reduced-motion: reduce) {
-	.frame-cast.selected-title,
-	.frame-voice.selected-name {
+	.frame-cast,
+	.frame-voice {
 		backdrop-filter: none;
 		-webkit-backdrop-filter: none;
+		transition: none;
 	}
 }
 </style>
