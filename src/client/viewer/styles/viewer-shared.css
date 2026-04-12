@@ -1,0 +1,26 @@
+/* Shared viewer panel styles
+ * Imported via @import in viewer component <style scoped> blocks.
+ * Vite inlines the import before Vue applies scoping, so all rules
+ * are correctly scoped to the importing component.
+ * ---------------------------------------------------------------- */
+
+.panel-content {
+	display: none;
+	height: 100%;
+	overflow: auto;
+	scrollbar-color: var(--scrollbar-thumb) var(--scrollbar-track);
+	scrollbar-width: thin;
+}
+
+.panel-content.visible {
+	display: block;
+}
+
+.panel-content::-webkit-scrollbar {
+	background-color: var(--scrollbar-track);
+	width: 5px;
+}
+
+.panel-content::-webkit-scrollbar-thumb {
+	background-color: var(--scrollbar-thumb);
+}

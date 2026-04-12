@@ -32,17 +32,17 @@ async function onAddTitle() {
 
 <template>
 	<section class="admin-section">
-		<h2>タイトル管理</h2>
+		<h2 class="admin-section-title">タイトル管理</h2>
 
 		<form class="admin-form" @submit.prevent="onAddTitle">
-			<input v-model="newTitle" type="text" placeholder="タイトル名" />
-			<input v-model="newYear" type="number" placeholder="年" style="width: 70px; flex: 0 0 70px;" />
-			<button type="submit">追加</button>
+			<input class="admin-form-input" v-model="newTitle" type="text" placeholder="タイトル名" />
+			<input class="admin-form-input admin-form-input--narrow" v-model="newYear" type="number" placeholder="年" />
+			<button class="admin-form-button" type="submit">追加</button>
 		</form>
 
-		<h3>タイトル検索</h3>
+		<h3 class="admin-section-subtitle">タイトル検索</h3>
 		<div class="admin-form">
-			<input v-model="query" type="text" placeholder="検索" />
+			<input class="admin-form-input" v-model="query" type="text" placeholder="検索" />
 		</div>
 		<ul class="admin-list">
 			<TitleSearchItem
@@ -58,61 +58,5 @@ async function onAddTitle() {
 </template>
 
 <style scoped>
-.admin-section {
-	border: var(--border-strong) solid 1px;
-	border-radius: 4px;
-	padding: 1em;
-}
-
-.admin-section h2 {
-	font-size: 0.9em;
-	font-weight: normal;
-	letter-spacing: 0.1em;
-	margin: 0 0 1em;
-}
-
-.admin-section h3 {
-	font-size: 0.85em;
-	font-weight: normal;
-	margin: 1em 0 0.5em;
-}
-
-.admin-form {
-	display: flex;
-	flex-wrap: wrap;
-	gap: 0.5em;
-	margin-bottom: 0.75em;
-}
-
-.admin-form input {
-	background: var(--base-color);
-	border: var(--border-strong) solid 1px;
-	border-radius: 4px;
-	flex: 1 1 auto;
-	min-width: 0;
-	padding: 0.25em 0.75em;
-}
-
-.admin-form input:focus {
-	border-color: var(--text-muted);
-	outline: none;
-}
-
-.admin-form button {
-	background: var(--contrast-color);
-	border-radius: 4px;
-	color: var(--base-color);
-	cursor: pointer;
-	padding: 0.25em 1em;
-	white-space: nowrap;
-}
-
-.admin-form button:hover {
-	opacity: 0.8;
-}
-
-.admin-list {
-	max-height: 240px;
-	overflow-y: auto;
-}
+@import "../styles/admin-shared.css";
 </style>

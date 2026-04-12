@@ -14,7 +14,7 @@ const emit = defineEmits<{
 </script>
 
 <template>
-	<div class="block" :class="{ active: detail !== null }">
+	<div class="panel-content" :class="{ visible: detail !== null }">
 		<ExternalLinks
 			:text="detail?.title ?? ''"
 			@close="emit('close')"
@@ -34,38 +34,7 @@ const emit = defineEmits<{
 </template>
 
 <style scoped>
-.block {
-	display: none;
-	height: 100%;
-	overflow: auto;
-	scrollbar-color: var(--scrollbar-thumb) var(--scrollbar-track);
-	scrollbar-width: thin;
-}
-
-/* glass only in mobile overlay mode */
-@media screen and (max-width: 640px) {
-	.block.active {
-		backdrop-filter: var(--glass-blur);
-		-webkit-backdrop-filter: var(--glass-blur);
-		background: var(--glass-bg);
-	}
-}
-
-@media (prefers-reduced-motion: reduce) {
-	.block.active {
-		backdrop-filter: none;
-		-webkit-backdrop-filter: none;
-	}
-}
-
-.block::-webkit-scrollbar {
-	background-color: var(--scrollbar-track);
-	width: 5px;
-}
-
-.block::-webkit-scrollbar-thumb {
-	background-color: var(--scrollbar-thumb);
-}
+@import "../styles/viewer-shared.css";
 
 .cast-table {
 	line-height: 20px;

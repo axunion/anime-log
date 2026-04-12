@@ -34,7 +34,7 @@ const query = ref("");
 </script>
 
 <template>
-	<div id="viewport">
+	<div class="viewport">
 		<div class="frame">
 			<TitleNav v-model:active-tab="activeTab" v-model:query="query" />
 			<TitleListBlock
@@ -74,7 +74,7 @@ const query = ref("");
 </template>
 
 <style scoped>
-#viewport {
+.viewport {
 	bottom: 0;
 	left: 0;
 	overflow: hidden;
@@ -85,6 +85,7 @@ const query = ref("");
 
 .frame {
 	bottom: 0;
+	isolation: isolate;
 	position: absolute;
 	top: 0;
 	width: 33.33%;
@@ -94,24 +95,12 @@ const query = ref("");
 	border-left: var(--glass-border) solid 1px;
 }
 
-.frame:nth-child(2) {
+.frame-cast {
 	left: 33.33%;
 }
 
-.frame:nth-child(3) {
+.frame-voice {
 	left: 66.66%;
-}
-
-/* block visibility via parent frame class */
-.selected-title > :deep(.block),
-.selected-name > :deep(.block) {
-	display: block;
-}
-
-/* show close button in responsive modes */
-.frame-cast :deep(.close),
-.frame-voice :deep(.close) {
-	display: none;
 }
 
 /* min-width: 641px and max-width: 960px */
@@ -120,10 +109,11 @@ const query = ref("");
 		width: 50%;
 	}
 
-	.frame:nth-child(2) {
+	.frame-cast {
 		left: 50%;
 	}
 
+	/* voice panel slides up from bottom as a full-width overlay */
 	.frame-voice {
 		border-left: none;
 		left: 0;
@@ -134,25 +124,14 @@ const query = ref("");
 	}
 
 	.frame-voice.selected-name {
+		backdrop-filter: var(--glass-blur);
+		-webkit-backdrop-filter: var(--glass-blur);
+		background: var(--glass-bg);
+		box-shadow: var(--shadow-overlay) 0 4px 24px;
 		transform: translate3d(0, 0, 0);
 		transition: transform 0.4s;
 	}
 
-	.frame-voice > :deep(.block) {
-		display: block;
-		transform: scale(0.96);
-		transition: transform 0.1s;
-	}
-
-	.frame-voice.selected-name > :deep(.block) {
-		box-shadow: #66666640 0 4px 24px;
-		transform: scale(0.97, 0.98);
-		transition: transform 0.1s 0.4s;
-	}
-
-	.frame-voice :deep(.close) {
-		display: block;
-	}
 }
 
 /* max-width: 640px */
@@ -161,6 +140,7 @@ const query = ref("");
 		width: 100%;
 	}
 
+	/* cast and voice panels slide in from the right as full-screen overlays */
 	.frame-cast,
 	.frame-voice {
 		border-left: none;
@@ -172,17 +152,19 @@ const query = ref("");
 
 	.frame-cast.selected-title,
 	.frame-voice.selected-name {
+		backdrop-filter: var(--glass-blur);
+		-webkit-backdrop-filter: var(--glass-blur);
+		background: var(--glass-bg);
 		transform: translate3d(0, 0, 0);
 	}
 
-	.frame-cast > :deep(.block),
-	.frame-voice > :deep(.block) {
-		display: block;
-	}
+}
 
-	.frame-cast :deep(.close),
-	.frame-voice :deep(.close) {
-		display: block;
+@media (prefers-reduced-motion: reduce) {
+	.frame-cast.selected-title,
+	.frame-voice.selected-name {
+		backdrop-filter: none;
+		-webkit-backdrop-filter: none;
 	}
 }
 </style>

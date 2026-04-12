@@ -11,14 +11,14 @@ defineEmits<{
 </script>
 
 <template>
-	<li :class="{ selected }" @click="$emit('select')">
+	<li class="search-item" :class="{ selected }" @click="$emit('select')">
 		<span class="item-title">{{ titleName }}</span>
 		<span class="item-year">{{ year }}</span>
 	</li>
 </template>
 
 <style scoped>
-li {
+.search-item {
 	align-items: center;
 	border-bottom: var(--border-strong) solid 1px;
 	cursor: pointer;
@@ -27,16 +27,16 @@ li {
 	padding: 0.4em 0.5em;
 }
 
-li:last-child {
+.search-item:last-child {
 	border-bottom: none;
 }
 
-li:hover {
+.search-item:hover {
 	background: var(--fill-muted);
 	color: var(--base-color);
 }
 
-li.selected {
+.search-item.selected {
 	background: var(--contrast-color);
 	color: var(--base-color);
 }

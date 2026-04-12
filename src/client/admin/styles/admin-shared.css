@@ -1,0 +1,75 @@
+/* Shared admin section and form styles
+ * Imported via @import in admin component <style scoped> blocks.
+ * Vite inlines the import before Vue applies scoping, so all rules
+ * are correctly scoped to the importing component.
+ * ---------------------------------------------------------------- */
+
+.admin-section {
+	border: var(--border-strong) solid 1px;
+	border-radius: 4px;
+	padding: 1em;
+}
+
+.admin-section-title {
+	font-size: 0.9em;
+	font-weight: normal;
+	letter-spacing: 0.1em;
+	margin: 0 0 1em;
+}
+
+.admin-section-subtitle {
+	font-size: 0.85em;
+	font-weight: normal;
+	margin: 1em 0 0.5em;
+}
+
+.admin-form {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.5em;
+	margin-bottom: 0.75em;
+}
+
+.admin-form-input,
+.admin-form-select {
+	background: var(--base-color);
+	border: var(--border-strong) solid 1px;
+	border-radius: 4px;
+	flex: 1 1 auto;
+	min-width: 0;
+	padding: 0.25em 0.75em;
+}
+
+.admin-form-input:focus,
+.admin-form-select:focus {
+	border-color: var(--text-muted);
+	outline: none;
+}
+
+.admin-form-input--narrow {
+	flex: 0 0 70px;
+	width: 70px;
+}
+
+.admin-form-button {
+	background: var(--contrast-color);
+	border-radius: 4px;
+	color: var(--base-color);
+	cursor: pointer;
+	padding: 0.25em 1em;
+	white-space: nowrap;
+}
+
+.admin-form-button:hover {
+	opacity: 0.8;
+}
+
+.admin-form-button--wide {
+	padding-left: 1.5em;
+	padding-right: 1.5em;
+}
+
+.admin-list {
+	max-height: 240px;
+	overflow-y: auto;
+}

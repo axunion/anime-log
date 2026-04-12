@@ -8,7 +8,7 @@ function setToken() {
 
 <template>
 	<header class="admin-header">
-		<h1>anime admin</h1>
+		<h1 class="admin-header-title">anime admin</h1>
 		<button class="btn-token" type="button" @click="setToken">token</button>
 	</header>
 </template>
@@ -22,7 +22,7 @@ function setToken() {
 	padding: 0.5em 0;
 }
 
-.admin-header h1 {
+.admin-header-title {
 	font-size: 1em;
 	font-weight: normal;
 	letter-spacing: 0.1em;

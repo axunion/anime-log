@@ -30,6 +30,7 @@ const tabs: { id: Tab; icon: typeof Clock; label: string }[] = [
 		<label class="search">
 			<Search :size="15" :stroke-width="1.75" class="search-icon" />
 			<input
+				class="search-input"
 				type="text"
 				:value="query"
 				placeholder="Search"
@@ -104,14 +105,14 @@ const tabs: { id: Tab; icon: typeof Clock; label: string }[] = [
 	flex: 0 0 auto;
 }
 
-.search > input {
+.search-input {
 	background: transparent;
 	flex: 1;
 	font-size: 13px;
 	min-width: 0;
 }
 
-.search > input::placeholder {
+.search-input::placeholder {
 	color: var(--text-subtle);
 }
 </style>

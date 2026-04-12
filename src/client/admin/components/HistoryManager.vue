@@ -36,18 +36,18 @@ async function onDelete(id: number) {
 
 <template>
 	<section class="admin-section">
-		<h2>視聴履歴管理</h2>
+		<h2 class="admin-section-title">視聴履歴管理</h2>
 
 		<form class="admin-form" @submit.prevent="onAdd">
-			<select v-model="selectTitleId">
+			<select class="admin-form-select" v-model="selectTitleId">
 				<option value="">タイトルを選択</option>
 				<option v-for="t in titles" :key="t.id" :value="String(t.id)">
 					{{ t.title }} ({{ t.year }})
 				</option>
 			</select>
-			<input v-model="displayName" type="text" placeholder="表示名（省略可）" />
-			<input v-model="year" type="number" placeholder="年" style="width: 70px; flex: 0 0 70px;" />
-			<button type="submit">追加</button>
+			<input class="admin-form-input" v-model="displayName" type="text" placeholder="表示名（省略可）" />
+			<input class="admin-form-input admin-form-input--narrow" v-model="year" type="number" placeholder="年" />
+			<button class="admin-form-button" type="submit">追加</button>
 		</form>
 
 		<ul class="admin-list">
@@ -66,57 +66,5 @@ async function onDelete(id: number) {
 </template>
 
 <style scoped>
-.admin-section {
-	border: var(--border-strong) solid 1px;
-	border-radius: 4px;
-	padding: 1em;
-}
-
-.admin-section h2 {
-	font-size: 0.9em;
-	font-weight: normal;
-	letter-spacing: 0.1em;
-	margin: 0 0 1em;
-}
-
-.admin-form {
-	display: flex;
-	flex-wrap: wrap;
-	gap: 0.5em;
-	margin-bottom: 0.75em;
-}
-
-.admin-form input,
-.admin-form select {
-	background: var(--base-color);
-	border: var(--border-strong) solid 1px;
-	border-radius: 4px;
-	flex: 1 1 auto;
-	min-width: 0;
-	padding: 0.25em 0.75em;
-}
-
-.admin-form input:focus,
-.admin-form select:focus {
-	border-color: var(--text-muted);
-	outline: none;
-}
-
-.admin-form button {
-	background: var(--contrast-color);
-	border-radius: 4px;
-	color: var(--base-color);
-	cursor: pointer;
-	padding: 0.25em 1em;
-	white-space: nowrap;
-}
-
-.admin-form button:hover {
-	opacity: 0.8;
-}
-
-.admin-list {
-	max-height: 240px;
-	overflow-y: auto;
-}
+@import "../styles/admin-shared.css";
 </style>

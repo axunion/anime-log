@@ -14,12 +14,14 @@ const emit = defineEmits<{
 <template>
 	<div class="cast-row">
 		<input
+			class="admin-form-input cast-row-input"
 			type="text"
 			placeholder="声優名"
 			:value="actorName"
 			@input="emit('update:actorName', ($event.target as HTMLInputElement).value)"
 		/>
 		<input
+			class="admin-form-input cast-row-input"
 			type="text"
 			placeholder="役名"
 			:value="characterName"
@@ -30,6 +32,8 @@ const emit = defineEmits<{
 </template>
 
 <style scoped>
+@import "../styles/admin-shared.css";
+
 .cast-row {
 	align-items: center;
 	display: flex;
@@ -37,18 +41,9 @@ const emit = defineEmits<{
 	margin-bottom: 0.5em;
 }
 
-.cast-row input {
-	background: var(--base-color);
-	border: var(--border-strong) solid 1px;
-	border-radius: 4px;
-	flex: 1 1 auto;
-	min-width: 0;
+/* cast inputs are more compact than the standard admin form input */
+.cast-row-input {
 	padding: 0.25em 0.5em;
-}
-
-.cast-row input:focus {
-	border-color: var(--text-muted);
-	outline: none;
 }
 
 .btn-remove-row {
