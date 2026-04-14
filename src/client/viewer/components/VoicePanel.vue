@@ -62,7 +62,9 @@ watch(
 		border: 1px solid var(--glass-border);
 		border-radius: 16px;
 		box-shadow: 0 8px 32px var(--shadow-overlay);
+		box-sizing: border-box;
 		display: block;
+		height: auto;
 		left: 1rem;
 		max-height: calc(100dvh - 2rem);
 		overflow: auto;
