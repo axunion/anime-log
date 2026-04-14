@@ -141,16 +141,13 @@ onUnmounted(() => {
 		left: 50%;
 	}
 
-	/* voice overlays the cast column as a top-aligned modal.
-	   The frame is a full-area flex container; clicking outside
-	   the modal card dismisses it. Animation lives on the inner
-	   .panel-content — the frame itself never moves. */
+	/* voice overlays the cast column as a transparent hit-test area.
+	   The modal card positions itself absolutely inside this frame.
+	   pointer-events:none lets clicks pass through to cast content below;
+	   selected-name re-enables events once the panel is open. */
 	.frame-voice {
-		align-items: flex-start;
 		border-left: none;
 		bottom: 0;
-		display: flex;
-		justify-content: center;
 		left: 50%;
 		pointer-events: none;
 		width: 50%;
@@ -189,15 +186,11 @@ onUnmounted(() => {
 		transition: transform 0.35s cubic-bezier(0.3, 0.8, 0.7, 1);
 	}
 
-	/* voice appears as a top-aligned modal over full width.
-	   Same flex container approach as the 2-column breakpoint.
-	   Animation lives on the inner .panel-content, not here. */
+	/* voice: transparent hit-test overlay, same as 2-column.
+	   The modal card positions itself absolutely inside this frame. */
 	.frame-voice {
-		align-items: flex-start;
 		border-left: none;
 		bottom: 0;
-		display: flex;
-		justify-content: center;
 		left: 0;
 		pointer-events: none;
 		z-index: 11;
