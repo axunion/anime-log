@@ -131,6 +131,23 @@ onUnmounted(() => {
 	left: 66.66%;
 }
 
+/* voice frame: shared modal layout for 2-column and 1-column.
+   pointer-events:none lets clicks pass through to content below;
+   selected-name re-enables events once the panel is open. */
+@media screen and (max-width: 960px) {
+	.frame-voice {
+		align-items: flex-start;
+		border-left: none;
+		display: flex;
+		justify-content: center;
+		pointer-events: none;
+	}
+
+	.frame-voice.selected-name {
+		pointer-events: auto;
+	}
+}
+
 /* min-width: 641px and max-width: 960px */
 @media screen and (min-width: 641px) and (max-width: 960px) {
 	.frame {
@@ -141,23 +158,9 @@ onUnmounted(() => {
 		left: 50%;
 	}
 
-	/* voice overlays the cast column as a top-aligned modal.
-	   The frame is a full-area flex container; clicking outside
-	   the modal card dismisses it. Animation lives on the inner
-	   .panel-content — the frame itself never moves. */
 	.frame-voice {
-		align-items: flex-start;
-		border-left: none;
-		bottom: 0;
-		display: flex;
-		justify-content: center;
 		left: 50%;
-		pointer-events: none;
 		width: 50%;
-	}
-
-	.frame-voice.selected-name {
-		pointer-events: auto;
 	}
 }
 
@@ -189,20 +192,9 @@ onUnmounted(() => {
 		transition: transform 0.35s cubic-bezier(0.3, 0.8, 0.7, 1);
 	}
 
-	/* voice: full-area flex container, same approach as 2-column. */
 	.frame-voice {
-		align-items: flex-start;
-		border-left: none;
-		bottom: 0;
-		display: flex;
-		justify-content: center;
 		left: 0;
-		pointer-events: none;
 		z-index: 11;
-	}
-
-	.frame-voice.selected-name {
-		pointer-events: auto;
 	}
 }
 
