@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { X } from "lucide-vue-next";
+
 defineProps<{
 	actorName: string;
 	characterName: string;
@@ -27,7 +29,9 @@ const emit = defineEmits<{
 			:value="characterName"
 			@input="emit('update:characterName', ($event.target as HTMLInputElement).value)"
 		/>
-		<button class="btn-remove-row" type="button" @click="$emit('remove')">×</button>
+		<button class="btn-remove-row" type="button" @click="$emit('remove')">
+			<X :size="14" :stroke-width="2" />
+		</button>
 	</div>
 </template>
 
@@ -47,12 +51,19 @@ const emit = defineEmits<{
 }
 
 .btn-remove-row {
+	align-items: center;
 	background: none;
 	border: none;
-	color: var(--text-muted);
+	color: var(--text-subtle);
 	cursor: pointer;
+	display: flex;
 	flex: 0 0 20px;
-	font-size: 16px;
+	justify-content: center;
 	padding: 0;
+	transition: color 0.15s;
+}
+
+.btn-remove-row:hover {
+	color: var(--contrast-color);
 }
 </style>

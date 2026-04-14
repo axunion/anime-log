@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { ChevronDown, ChevronUp, Trash2 } from "lucide-vue-next";
 import type { HistoryEntry } from "../../lib/types";
 
 defineProps<{
@@ -16,33 +17,42 @@ defineEmits<{
 
 <template>
 	<li class="history-item">
-		<button class="btn-up" type="button" :disabled="isFirst" @click="$emit('moveUp')">▲</button>
-		<button class="btn-down" type="button" :disabled="isLast" @click="$emit('moveDown')">▼</button>
+		<button class="btn-order" type="button" :disabled="isFirst" @click="$emit('moveUp')">
+			<ChevronUp :size="14" :stroke-width="2" />
+		</button>
+		<button class="btn-order" type="button" :disabled="isLast" @click="$emit('moveDown')">
+			<ChevronDown :size="14" :stroke-width="2" />
+		</button>
 		<span class="item-title">{{ entry.display_name ?? entry.title }}</span>
 		<span class="item-year">{{ entry.year }}</span>
-		<button
-			class="btn-delete"
-			type="button"
-			@click="$emit('delete')"
-		>×</button>
+		<button class="btn-delete" type="button" @click="$emit('delete')">
+			<Trash2 :size="13" :stroke-width="1.75" />
+		</button>
 	</li>
 </template>
 
 <style scoped>
 .history-item {
 	align-items: center;
-	border-bottom: var(--border-strong) solid 1px;
+	border-bottom: 1px solid var(--glass-border);
 	display: flex;
-	gap: 0.5em;
-	padding: 0.4em 0.5em;
+	gap: 0.4em;
+	padding: 0.4em 0.25em;
+	transition: background 0.1s;
 }
 
 .history-item:last-child {
 	border-bottom: none;
 }
 
+.history-item:hover {
+	background: var(--hover-overlay);
+	border-radius: 6px;
+}
+
 .item-title {
 	flex: 1 1 auto;
+	font-size: 13px;
 	overflow: hidden;
 	text-overflow: ellipsis;
 	white-space: nowrap;
@@ -51,36 +61,47 @@ defineEmits<{
 .item-year {
 	color: var(--text-subtle);
 	flex: 0 0 40px;
+	font-size: 12px;
 	text-align: right;
 }
 
-.btn-up,
-.btn-down {
+.btn-order {
+	align-items: center;
 	background: none;
-	border: var(--border-strong) solid 1px;
-	border-radius: 2px;
+	border: 1px solid var(--glass-border);
+	border-radius: 4px;
+	color: var(--text-muted);
 	cursor: pointer;
-	flex: 0 0 20px;
-	font-size: 10px;
+	display: flex;
+	flex: 0 0 22px;
+	height: 22px;
+	justify-content: center;
 	padding: 0;
-	text-align: center;
+	transition: border-color 0.1s, color 0.1s;
+	width: 22px;
 }
 
-.btn-up:disabled,
-.btn-down:disabled {
-	opacity: 0.3;
+.btn-order:hover:not(:disabled) {
+	border-color: var(--accent-color);
+	color: var(--accent-color);
+}
+
+.btn-order:disabled {
 	cursor: default;
+	opacity: 0.25;
 }
 
 .btn-delete {
+	align-items: center;
 	background: none;
 	border: none;
-	color: var(--text-muted);
+	color: var(--text-subtle);
 	cursor: pointer;
+	display: flex;
 	flex: 0 0 24px;
-	font-size: 14px;
+	justify-content: center;
 	padding: 0;
-	text-align: center;
+	transition: color 0.15s;
 }
 
 .btn-delete:hover {
