@@ -20,11 +20,14 @@ defineEmits<{
 <style scoped>
 .search-item {
 	align-items: center;
-	border-bottom: var(--border-strong) solid 1px;
+	border-bottom: 1px solid var(--glass-border);
+	border-radius: 6px;
 	cursor: pointer;
 	display: flex;
+	font-size: 13px;
 	gap: 0.5em;
 	padding: 0.4em 0.5em;
+	transition: background 0.1s, color 0.1s;
 }
 
 .search-item:last-child {
@@ -32,13 +35,12 @@ defineEmits<{
 }
 
 .search-item:hover {
-	background: var(--fill-muted);
-	color: var(--base-color);
+	background: var(--hover-overlay);
 }
 
 .search-item.selected {
-	background: var(--contrast-color);
-	color: var(--base-color);
+	background: color-mix(in srgb, var(--accent-color) 12%, transparent);
+	color: var(--accent-color);
 }
 
 .item-title {
@@ -51,7 +53,7 @@ defineEmits<{
 .item-year {
 	color: var(--text-subtle);
 	flex: 0 0 40px;
+	font-size: 12px;
 	text-align: right;
 }
-
 </style>

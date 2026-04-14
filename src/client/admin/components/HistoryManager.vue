@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { onMounted, ref } from "vue";
+import { History as HistoryIcon, Plus } from "lucide-vue-next";
+import { ref } from "vue";
 import { useHistory } from "../../composables/useHistory";
 import { useTitles } from "../../composables/useTitles";
 import HistoryItem from "./HistoryItem.vue";
@@ -11,8 +12,6 @@ const { history, fetchHistory, addHistory, deleteHistory, reorder } =
 const selectTitleId = ref("");
 const displayName = ref("");
 const year = ref("");
-
-onMounted(fetchHistory);
 
 async function onAdd() {
 	if (!selectTitleId.value) return;
@@ -36,7 +35,10 @@ async function onDelete(id: number) {
 
 <template>
 	<section class="admin-section">
-		<h2 class="admin-section-title">視聴履歴管理</h2>
+		<h2 class="admin-section-title">
+			<HistoryIcon :size="14" :stroke-width="2" />
+			視聴履歴管理
+		</h2>
 
 		<form class="admin-form" @submit.prevent="onAdd">
 			<select class="admin-form-select" v-model="selectTitleId">
@@ -47,7 +49,10 @@ async function onDelete(id: number) {
 			</select>
 			<input class="admin-form-input" v-model="displayName" type="text" placeholder="表示名（省略可）" />
 			<input class="admin-form-input admin-form-input--narrow" v-model="year" type="number" placeholder="年" />
-			<button class="admin-form-button" type="submit">追加</button>
+			<button class="admin-form-button" type="submit">
+				<Plus :size="13" :stroke-width="2.5" />
+				追加
+			</button>
 		</form>
 
 		<ul class="admin-list">

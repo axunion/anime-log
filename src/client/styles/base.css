@@ -33,7 +33,7 @@
 	--glass-bg: color-mix(in srgb, var(--base-color) 62%, transparent);
 	--glass-bg-strong: color-mix(in srgb, var(--base-color) 82%, transparent);
 	--glass-border: color-mix(in srgb, var(--contrast-color) 10%, transparent);
-	--glass-blur: saturate(160%) blur(16px);
+	--glass-blur: saturate(80%) blur(8px);
 
 	/* interaction */
 	--hover-overlay: color-mix(in srgb, var(--contrast-color) 5%, transparent);

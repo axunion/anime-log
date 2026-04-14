@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { Mic2, Plus, Save } from "lucide-vue-next";
 import { ref, watch } from "vue";
 import { del, get, post } from "../../lib/api";
 import type { TitleDetail } from "../../lib/types";
@@ -57,22 +58,33 @@ async function save() {
 
 <template>
 	<section class="admin-section">
-		<h2 class="admin-section-title">キャスト編集</h2>
+		<h2 class="admin-section-title">
+			<Mic2 :size="14" :stroke-width="2" />
+			キャスト編集
+		</h2>
 		<p v-if="!selectedTitleName" class="no-selection">タイトルを選択してください</p>
 		<template v-else>
 			<p class="selected-title">{{ selectedTitleName }}</p>
-			<CastEditorRow
-				v-for="(row, i) in castRows"
-				:key="i"
-				:actor-name="row.actor_name"
-				:character-name="row.character_name"
-				@update:actor-name="row.actor_name = $event"
-				@update:character-name="row.character_name = $event"
-				@remove="removeRow(i)"
-			/>
-			<button class="btn-add-row" type="button" @click="addRow">+ 行追加</button>
+			<div class="cast-rows">
+				<CastEditorRow
+					v-for="(row, i) in castRows"
+					:key="i"
+					:actor-name="row.actor_name"
+					:character-name="row.character_name"
+					@update:actor-name="row.actor_name = $event"
+					@update:character-name="row.character_name = $event"
+					@remove="removeRow(i)"
+				/>
+			</div>
+			<button class="btn-add-row" type="button" @click="addRow">
+				<Plus :size="13" :stroke-width="2" />
+				行追加
+			</button>
 			<div class="admin-actions">
-				<button class="admin-form-button admin-form-button--wide" type="button" @click="save">保存</button>
+				<button class="admin-form-button admin-form-button--wide" type="button" @click="save">
+					<Save :size="13" :stroke-width="2" />
+					保存
+				</button>
 			</div>
 		</template>
 	</section>
@@ -80,6 +92,12 @@ async function save() {
 
 <style scoped>
 @import "../styles/admin-shared.css";
+
+.cast-rows {
+	flex: 1;
+	min-height: 0;
+	overflow-y: auto;
+}
 
 .no-selection {
 	color: var(--text-muted);
@@ -89,30 +107,37 @@ async function save() {
 
 .selected-title {
 	color: var(--text-muted);
+	flex-shrink: 0;
 	font-size: 0.85em;
 	margin-bottom: 0.75em;
 }
 
 .btn-add-row {
+	align-items: center;
 	background: none;
-	border: var(--border-strong) dashed 1px;
-	border-radius: 4px;
+	border: 1px dashed var(--glass-border);
+	flex-shrink: 0;
+	border-radius: 8px;
 	color: var(--text-muted);
 	cursor: pointer;
+	display: flex;
 	font-size: 12px;
+	gap: 0.35em;
+	justify-content: center;
 	margin-top: 0.25em;
-	padding: 0.25em 0.75em;
+	padding: 0.35em 0.75em;
+	transition: border-color 0.15s, color 0.15s;
 	width: 100%;
 }
 
 .btn-add-row:hover {
-	border-color: var(--text-muted);
-	color: var(--contrast-color);
+	border-color: var(--accent-color);
+	color: var(--accent-color);
 }
 
 .admin-actions {
+	flex-shrink: 0;
 	margin-top: 0.75em;
 	text-align: right;
 }
-
 </style>

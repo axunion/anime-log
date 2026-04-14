@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { Library, Plus, Search } from "lucide-vue-next";
 import { ref } from "vue";
 import { useFilter } from "../../composables/useFilter";
 import { useTitles } from "../../composables/useTitles";
@@ -32,21 +33,30 @@ async function onAddTitle() {
 
 <template>
 	<section class="admin-section">
-		<h2 class="admin-section-title">タイトル管理</h2>
+		<h2 class="admin-section-title">
+			<Library :size="14" :stroke-width="2" />
+			タイトル管理
+		</h2>
 
 		<form class="admin-form" @submit.prevent="onAddTitle">
 			<input class="admin-form-input" v-model="newTitle" type="text" placeholder="タイトル名" />
 			<input class="admin-form-input admin-form-input--narrow" v-model="newYear" type="number" placeholder="年" />
-			<button class="admin-form-button" type="submit">追加</button>
+			<button class="admin-form-button" type="submit">
+				<Plus :size="13" :stroke-width="2.5" />
+				追加
+			</button>
 		</form>
 
-		<h3 class="admin-section-subtitle">タイトル検索</h3>
+		<h3 class="admin-section-subtitle">
+			<Search :size="11" :stroke-width="2" />
+			タイトル検索
+		</h3>
 		<div class="admin-form">
 			<input class="admin-form-input" v-model="query" type="text" placeholder="検索" />
 		</div>
 		<ul class="admin-list">
 			<TitleSearchItem
-				v-for="t in filtered.slice(0, 30)"
+				v-for="t in filtered"
 				:key="t.id"
 				:title-name="t.title"
 				:year="t.year"
@@ -59,4 +69,10 @@ async function onAddTitle() {
 
 <style scoped>
 @import "../styles/admin-shared.css";
+
+.admin-section-subtitle {
+	align-items: center;
+	display: flex;
+	gap: 0.4em;
+}
 </style>

@@ -15,3 +15,4 @@ export type HistoryEntry = {
 };
 export type VoiceResult = { title: string; character_name: string };
 export type Tab = "history" | "year";
+export type AdminTab = "data" | "history";
