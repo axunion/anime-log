@@ -50,11 +50,15 @@ watch(
 }
 
 /* Modal card in 1-column and 2-column layouts.
-   Uses position:absolute so all four edges are directly controlled:
-   top/left/right pin the card with 1rem gaps; max-height caps height so
-   the card never reaches the viewport bottom, leaving an equal 1rem gap.
-   The parent frame is position:fixed, so absolute coordinates are relative
-   to the frame, not the document. */
+   Slides up from below the viewport with a spring bounce on entry,
+   and exits straight down. display:none is overridden so transform
+   can animate; pointer-events guards interactivity instead.
+
+   Spacing: margin:1rem creates equal gaps on all four sides.
+   max-height:calc(100dvh - 2rem) caps total rendered height including
+   padding (box-sizing:border-box), so the card never reaches the
+   viewport bottom. height:auto overrides the height:100% from
+   viewer-shared.css so the card shrinks to fit short content. */
 @media screen and (max-width: 960px) {
 	.panel-content {
 		backdrop-filter: var(--glass-blur);
@@ -65,16 +69,14 @@ watch(
 		box-sizing: border-box;
 		display: block;
 		height: auto;
-		left: 1rem;
+		margin: 1rem;
 		max-height: calc(100dvh - 2rem);
 		overflow: auto;
 		padding-bottom: 1em;
 		pointer-events: none;
-		position: absolute;
-		right: 1rem;
 		scrollbar-color: var(--scrollbar-thumb) var(--scrollbar-track);
 		scrollbar-width: thin;
-		top: 1rem;
+		width: calc(100% - 2rem);
 		/* exit: ease-in straight down */
 		transform: translateY(100vh);
 		transition: transform 0.45s cubic-bezier(0.3, 0.8, 0.7, 1);
