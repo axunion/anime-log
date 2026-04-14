@@ -17,6 +17,13 @@ export default defineConfig({
 	],
 	css: {
 		transformer: "lightningcss",
+		lightningcss: {
+			targets: {
+				safari: (15 << 16) | (4 << 8),
+				chrome: 100 << 16,
+				firefox: 100 << 16,
+			},
+		},
 	},
 	build: {
 		outDir: resolve(__dirname, "dist"),

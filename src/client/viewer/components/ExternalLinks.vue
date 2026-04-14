@@ -40,7 +40,7 @@ const wikiUrl = computed(
 	gap: 0.5em;
 	justify-content: space-between;
 	letter-spacing: 0.05em;
-	margin: 1.5em 1em 1em;
+	margin: 1em;
 }
 
 .panel-close-btn,

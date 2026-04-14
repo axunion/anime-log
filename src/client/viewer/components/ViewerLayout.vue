@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref } from "vue";
+import { nextTick, onUnmounted, ref, watch } from "vue";
 import type {
 	HistoryEntry,
 	Tab,
@@ -31,6 +31,40 @@ const emit = defineEmits<{
 
 const activeTab = ref<Tab>("history");
 const query = ref("");
+
+// Asymmetric cast animation: enters from right, exits to right.
+// Managed in JS because CSS transitions can't express different
+// source and destination positions for enter vs leave.
+const castVisible = ref(false);
+const castLeaving = ref(false);
+let castLeaveTimer: ReturnType<typeof setTimeout> | null = null;
+
+watch(
+	() => props.castDetail,
+	async (val, old) => {
+		if (val !== null) {
+			if (castLeaveTimer) {
+				clearTimeout(castLeaveTimer);
+				castLeaveTimer = null;
+			}
+			castLeaving.value = false;
+			// Wait one tick so the DOM settles at translateX(100%) before animating in.
+			await nextTick();
+			castVisible.value = true;
+		} else if (old !== null) {
+			castVisible.value = false;
+			castLeaving.value = true;
+			castLeaveTimer = setTimeout(() => {
+				castLeaving.value = false;
+				castLeaveTimer = null;
+			}, 420);
+		}
+	},
+);
+
+onUnmounted(() => {
+	if (castLeaveTimer) clearTimeout(castLeaveTimer);
+});
 </script>
 
 <template>
@@ -54,7 +88,7 @@ const query = ref("");
 		/>
 	</div>
 
-	<div class="frame frame-cast" :class="{ 'selected-title': castDetail !== null }">
+	<div class="frame frame-cast" :class="{ 'cast-visible': castVisible, 'cast-leaving': castLeaving }">
 		<CastPanel
 			:detail="castDetail"
 			@close="emit('closeCast')"
@@ -107,24 +141,23 @@ const query = ref("");
 		left: 50%;
 	}
 
-	/* voice slides up from bottom, overlaying only the cast column (right half).
-	   backdrop-filter and background kept on the base selector so the GPU
-	   compositing layer is never destroyed mid-transition. */
+	/* voice overlays the cast column as a top-aligned modal.
+	   The frame is a full-area flex container; clicking outside
+	   the modal card dismisses it. Animation lives on the inner
+	   .panel-content — the frame itself never moves. */
 	.frame-voice {
-		backdrop-filter: var(--glass-blur);
-		-webkit-backdrop-filter: var(--glass-blur);
-		background: var(--glass-bg);
+		align-items: flex-start;
 		border-left: none;
+		bottom: 0;
+		display: flex;
+		justify-content: center;
 		left: 50%;
-		transform: translateY(100%);
-		transition: transform 0.4s 0.1s;
+		pointer-events: none;
 		width: 50%;
 	}
 
 	.frame-voice.selected-name {
-		box-shadow: var(--shadow-overlay) 0 4px 24px;
-		transform: translateY(0);
-		transition: transform 0.4s;
+		pointer-events: auto;
 	}
 }
 
@@ -134,39 +167,54 @@ const query = ref("");
 		width: 100%;
 	}
 
-	/* cast and voice slide up from bottom as full-screen overlays.
-	   z-index is always set (frames are off-screen when inactive) so
-	   stacking is correct throughout open/close animations. */
-	.frame-cast,
-	.frame-voice {
+	/* cast enters from the right, exits to the right.
+	   Default position (translateX(100%)) has no transition so the
+	   snap back after leaving (0 → 100%) is invisible off-screen. */
+	.frame-cast {
 		backdrop-filter: var(--glass-blur);
-		-webkit-backdrop-filter: var(--glass-blur);
 		background: var(--glass-bg);
 		border-left: none;
 		left: 0;
-		transform: translateY(100%);
-		transition: transform 0.4s;
-	}
-
-	.frame-cast {
+		transform: translateX(100%);
 		z-index: 10;
 	}
 
+	.frame-cast.cast-visible {
+		transform: translateX(0);
+		transition: transform 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+	}
+
+	.frame-cast.cast-leaving {
+		transform: translateX(100%);
+		transition: transform 0.35s cubic-bezier(0.3, 0.8, 0.7, 1);
+	}
+
+	/* voice appears as a top-aligned modal over full width.
+	   Same flex container approach as the 2-column breakpoint.
+	   Animation lives on the inner .panel-content, not here. */
 	.frame-voice {
+		align-items: flex-start;
+		border-left: none;
+		bottom: 0;
+		display: flex;
+		justify-content: center;
+		left: 0;
+		pointer-events: none;
 		z-index: 11;
 	}
 
-	.frame-cast.selected-title,
 	.frame-voice.selected-name {
-		transform: translateY(0);
+		pointer-events: auto;
 	}
 }
 
 @media (prefers-reduced-motion: reduce) {
-	.frame-cast,
-	.frame-voice {
+	.frame-cast {
 		backdrop-filter: none;
-		-webkit-backdrop-filter: none;
+	}
+
+	.frame-cast.cast-visible,
+	.frame-cast.cast-leaving {
 		transition: none;
 	}
 }
