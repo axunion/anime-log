@@ -37,3 +37,7 @@ Always in this order: `<script>` → `<template>` → `<style scoped>`
 - Composables: `../../composables/useXxx` (never inline logic in components)
 - API calls: only via `../lib/api.ts` helpers (`get`, `post`, `put`, `del`) — never raw `fetch`
 - Types: from `../lib/types.ts`
+
+## Admin CRUD add forms
+
+All admin sections that support adding items must place the add form at the top of the section, directly after `<h2 class="admin-section-title">`. Use `<form class="admin-form" @submit.prevent="onAdd">` with inline inputs and a submit button. Never place the primary add UI at the bottom of a list.

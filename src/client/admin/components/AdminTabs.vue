@@ -10,9 +10,24 @@ defineEmits<{ "update:modelValue": [tab: AdminTab] }>();
 const { titles } = useTitles();
 const { history } = useHistory();
 
-const tabs: { id: AdminTab; icon: typeof Library; label: string; getCount: () => number }[] = [
-	{ id: "data", icon: Library, label: "データ", getCount: () => titles.value.length },
-	{ id: "history", icon: History, label: "履歴", getCount: () => history.value.length },
+const tabs: {
+	id: AdminTab;
+	icon: typeof Library;
+	label: string;
+	getCount: () => number;
+}[] = [
+	{
+		id: "data",
+		icon: Library,
+		label: "データ",
+		getCount: () => titles.value.length,
+	},
+	{
+		id: "history",
+		icon: History,
+		label: "履歴",
+		getCount: () => history.value.length,
+	},
 ];
 </script>
 

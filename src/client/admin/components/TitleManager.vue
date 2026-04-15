@@ -6,7 +6,7 @@ import { useTitles } from "../../composables/useTitles";
 import TitleSearchItem from "./TitleSearchItem.vue";
 
 const emit = defineEmits<{
-	selectTitle: [id: number, title: string];
+	selectTitle: [id: number | null, title: string];
 }>();
 
 const { titles, addTitle } = useTitles();
@@ -17,8 +17,13 @@ const newTitle = ref("");
 const newYear = ref("");
 
 function onSelect(id: number, title: string) {
-	selectedId.value = id;
-	emit("selectTitle", id, title);
+	if (selectedId.value === id) {
+		selectedId.value = null;
+		emit("selectTitle", null, "");
+	} else {
+		selectedId.value = id;
+		emit("selectTitle", id, title);
+	}
 }
 
 async function onAddTitle() {
