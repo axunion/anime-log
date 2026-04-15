@@ -1,8 +1,7 @@
 <script setup lang="ts">
-import { Mic2, Plus, Save } from "lucide-vue-next";
+import { Mic2, Plus } from "lucide-vue-next";
 import { ref, watch } from "vue";
-import { del, get, post } from "../../lib/api";
-import type { TitleDetail } from "../../lib/types";
+import { useCast } from "../../composables/useCast";
 import CastEditorRow from "./CastEditorRow.vue";
 
 const props = defineProps<{
@@ -10,9 +9,13 @@ const props = defineProps<{
 	selectedTitleName: string;
 }>();
 
-type CastRow = { id?: number; actor_name: string; character_name: string };
+type CastRow = { id: number; actor_name: string; character_name: string };
 
+const { selectedDetail, loadCast, addCast, updateCast, deleteCast } = useCast();
 const castRows = ref<CastRow[]>([]);
+
+const newActorName = ref("");
+const newCharacterName = ref("");
 
 watch(
 	() => props.selectedTitleId,
@@ -21,8 +24,8 @@ watch(
 			castRows.value = [];
 			return;
 		}
-		const detail = await get<TitleDetail>(`/titles/${id}`);
-		castRows.value = detail.cast.map((m) => ({
+		await loadCast(id);
+		castRows.value = (selectedDetail.value?.cast ?? []).map((m) => ({
 			id: m.id,
 			actor_name: m.actor_name,
 			character_name: m.character_name,
@@ -30,29 +33,36 @@ watch(
 	},
 );
 
-function addRow() {
-	castRows.value.push({ actor_name: "", character_name: "" });
-}
-
-function removeRow(index: number) {
-	castRows.value.splice(index, 1);
-}
-
-async function save() {
+async function onAdd() {
 	if (props.selectedTitleId === null) return;
-	const id = props.selectedTitleId;
+	const actor = newActorName.value.trim();
+	if (!actor) return;
+	const character = newCharacterName.value.trim();
+	const result = await addCast(props.selectedTitleId, {
+		actor_name: actor,
+		character_name: character,
+	});
+	castRows.value.push({
+		id: result.id,
+		actor_name: actor,
+		character_name: character,
+	});
+	newActorName.value = "";
+	newCharacterName.value = "";
+}
 
-	const rows = castRows.value.filter((r) => r.actor_name.trim());
+async function onCommit(index: number) {
+	const row = castRows.value[index];
+	await updateCast(row.id, {
+		actor_name: row.actor_name,
+		character_name: row.character_name,
+	});
+}
 
-	const existingIds = castRows.value.filter((r) => r.id).map((r) => r.id!);
-	await Promise.all(existingIds.map((castId) => del(`/cast/${castId}`)));
-	for (const row of rows) {
-		await post(`/titles/${id}/cast`, {
-			actor_name: row.actor_name,
-			character_name: row.character_name,
-		});
-	}
-	alert("保存しました");
+async function onRemove(index: number) {
+	const row = castRows.value[index];
+	await deleteCast(row.id);
+	castRows.value.splice(index, 1);
 }
 </script>
 
@@ -62,29 +72,38 @@ async function save() {
 			<Mic2 :size="14" :stroke-width="2" />
 			キャスト編集
 		</h2>
-		<p v-if="!selectedTitleName" class="no-selection">タイトルを選択してください</p>
-		<template v-else>
+
+		<template v-if="selectedTitleName">
+			<form class="admin-form" @submit.prevent="onAdd">
+				<input
+					class="admin-form-input"
+					v-model="newActorName"
+					type="text"
+					placeholder="声優名"
+				/>
+				<input
+					class="admin-form-input"
+					v-model="newCharacterName"
+					type="text"
+					placeholder="役名"
+				/>
+				<button class="admin-form-button" type="submit">
+					<Plus :size="13" :stroke-width="2.5" />
+					追加
+				</button>
+			</form>
 			<p class="selected-title">{{ selectedTitleName }}</p>
 			<div class="cast-rows">
 				<CastEditorRow
 					v-for="(row, i) in castRows"
-					:key="i"
+					:key="row.id"
 					:actor-name="row.actor_name"
 					:character-name="row.character_name"
 					@update:actor-name="row.actor_name = $event"
 					@update:character-name="row.character_name = $event"
-					@remove="removeRow(i)"
+					@commit="onCommit(i)"
+					@remove="onRemove(i)"
 				/>
-			</div>
-			<button class="btn-add-row" type="button" @click="addRow">
-				<Plus :size="13" :stroke-width="2" />
-				行追加
-			</button>
-			<div class="admin-actions">
-				<button class="admin-form-button admin-form-button--wide" type="button" @click="save">
-					<Save :size="13" :stroke-width="2" />
-					保存
-				</button>
 			</div>
 		</template>
 	</section>
@@ -99,45 +118,10 @@ async function save() {
 	overflow-y: auto;
 }
 
-.no-selection {
-	color: var(--text-muted);
-	font-size: 0.85em;
-	margin: 0;
-}
-
 .selected-title {
 	color: var(--text-muted);
 	flex-shrink: 0;
 	font-size: 0.85em;
 	margin-bottom: 0.75em;
-}
-
-.btn-add-row {
-	align-items: center;
-	background: none;
-	border: 1px dashed var(--glass-border);
-	flex-shrink: 0;
-	border-radius: 8px;
-	color: var(--text-muted);
-	cursor: pointer;
-	display: flex;
-	font-size: 12px;
-	gap: 0.35em;
-	justify-content: center;
-	margin-top: 0.25em;
-	padding: 0.35em 0.75em;
-	transition: border-color 0.15s, color 0.15s;
-	width: 100%;
-}
-
-.btn-add-row:hover {
-	border-color: var(--accent-color);
-	color: var(--accent-color);
-}
-
-.admin-actions {
-	flex-shrink: 0;
-	margin-top: 0.75em;
-	text-align: right;
 }
 </style>

@@ -62,6 +62,7 @@ defineEmits<{
 	color: var(--text-subtle);
 	flex: 0 0 40px;
 	font-size: 12px;
+	font-variant-numeric: tabular-nums;
 	text-align: right;
 }
 

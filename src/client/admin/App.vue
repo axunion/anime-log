@@ -15,7 +15,7 @@ const activeTab = ref<AdminTab>("data");
 const selectedTitleId = ref<number | null>(null);
 const selectedTitleName = ref("");
 
-function onSelectTitle(id: number, name: string) {
+function onSelectTitle(id: number | null, name: string) {
 	selectedTitleId.value = id;
 	selectedTitleName.value = name;
 }
