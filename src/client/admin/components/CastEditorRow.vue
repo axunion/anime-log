@@ -20,14 +20,14 @@ const emit = defineEmits<{
 		@focusout="($event.currentTarget as HTMLElement).contains($event.relatedTarget as Node) || emit('commit')"
 	>
 		<input
-			class="admin-form-input cast-row-input"
+			class="admin-form-input cast-row-input cast-row-input--actor"
 			type="text"
 			placeholder="声優名"
 			:value="actorName"
 			@input="emit('update:actorName', ($event.target as HTMLInputElement).value)"
 		/>
 		<input
-			class="admin-form-input cast-row-input"
+			class="admin-form-input cast-row-input cast-row-input--character"
 			type="text"
 			placeholder="役名"
 			:value="characterName"
@@ -46,12 +46,26 @@ const emit = defineEmits<{
 	align-items: center;
 	display: flex;
 	gap: 0.5em;
-	margin-bottom: 0.5em;
 }
 
 /* cast inputs are more compact than the standard admin form input */
 .cast-row-input {
-	padding: 0.25em 0.5em;
+	background: transparent;
+	border-color: transparent;
+	padding: 0.1em 0.5em;
+}
+
+.cast-row-input:focus {
+	border-color: var(--focus-ring);
+	box-shadow: 0 0 0 3px var(--focus-glow);
+}
+
+.cast-row-input--actor {
+	flex: 0 0 96px;
+}
+
+.cast-row-input--character {
+	flex: 1 1 auto;
 }
 
 .btn-remove-row {

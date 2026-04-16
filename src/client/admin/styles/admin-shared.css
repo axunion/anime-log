@@ -70,8 +70,9 @@
 }
 
 .admin-form-input--narrow {
-	flex: 0 0 70px;
-	width: 70px;
+	flex: 0 0 52px;
+	text-align: right;
+	width: 52px;
 }
 
 .admin-form-button {

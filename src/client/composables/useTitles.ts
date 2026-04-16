@@ -1,5 +1,5 @@
 import { computed, ref } from "vue";
-import { get, post } from "../lib/api";
+import { del, get, post, put } from "../lib/api";
 import type { Title } from "../lib/types";
 
 const titles = ref<Title[]>([]);
@@ -22,5 +22,26 @@ export function useTitles() {
 		await fetchTitles();
 	}
 
-	return { titles, sortedByName, sortedByYear, fetchTitles, addTitle };
+	async function updateTitle(
+		id: number,
+		fields: { title?: string; year?: number },
+	) {
+		await put(`/titles/${id}`, fields);
+		await fetchTitles();
+	}
+
+	async function deleteTitle(id: number) {
+		await del(`/titles/${id}`);
+		await fetchTitles();
+	}
+
+	return {
+		titles,
+		sortedByName,
+		sortedByYear,
+		fetchTitles,
+		addTitle,
+		updateTitle,
+		deleteTitle,
+	};
 }
