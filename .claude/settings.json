@@ -1,31 +1,61 @@
 {
-  "sandbox": {
-    "enabled": true
-  },
-  "autoAllowBashIfSandboxed": true,
   "permissions": {
+    "allow": [
+      "Bash(git status *)",
+      "Bash(git diff *)",
+      "Bash(git log *)",
+      "Bash(git add *)",
+      "Bash(git commit *)",
+      "Bash(git branch)",
+      "Bash(git branch -a)",
+      "Bash(git branch -v *)",
+      "Bash(git show *)",
+      "Bash(git fetch *)",
+      "Bash(git stash list)",
+      "Bash(git rev-parse *)",
+      "Bash(git remote *)",
+      "Bash(gh *)",
+      "Bash(ls)",
+      "Bash(ls *)",
+      "Bash(pwd)",
+      "Bash(which *)",
+      "Bash(wc *)",
+      "Bash(file *)",
+      "Bash(tree *)",
+      "Bash(pnpm dev)",
+      "Bash(pnpm build)",
+      "Bash(pnpm typecheck)",
+      "Bash(pnpm check)",
+      "Bash(pnpm fix)",
+      "Bash(pnpm migrate:generate)",
+      "Bash(pnpm db:migrate)",
+      "Bash(pnpm exec wrangler d1 execute anime-db --local *)",
+      "WebSearch",
+      "WebFetch(domain:github.com)",
+      "WebFetch(domain:api.github.com)",
+      "WebFetch(domain:raw.githubusercontent.com)",
+      "WebFetch(domain:developers.cloudflare.com)",
+      "WebFetch(domain:hono.dev)",
+      "WebFetch(domain:vuejs.org)"
+    ],
     "deny": [
-      "Bash(rm -rf*)",
-      "Bash(rm -r*)",
-      "Bash(git push*)",
-      "Bash(git reset --hard*)",
-      "Bash(git clean -f*)",
+      "Bash(git push --force *)",
+      "Bash(git push -f *)",
+      "Bash(git push --force-with-lease *)",
+      "Bash(git reset --hard *)",
+      "Bash(git clean -f *)",
+      "Bash(git clean -fd *)",
+      "Bash(git branch -D *)",
+      "Bash(git checkout .)",
+      "Bash(git checkout -- .)",
+      "Bash(git restore .)",
+      "Bash(rm -rf *)",
       "Bash(sudo *)",
-      "Bash(chmod *)",
-      "Bash(chown *)"
-    ]
-  },
-  "hooks": {
-    "PreToolUse": [
-      {
-        "matcher": "Bash(git commit*)",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "cd /Users/macbookair/dev/projects/anime-log && pnpm check && pnpm typecheck || exit 2"
-          }
-        ]
-      }
+      "Read(~/.ssh/*)",
+      "Read(~/.gnupg/*)",
+      "Read(**/.env*)",
+      "Read(**/*.pem)",
+      "Read(**/*.key)"
     ]
   }
 }
