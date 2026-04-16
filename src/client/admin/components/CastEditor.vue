@@ -1,8 +1,8 @@
 <script setup lang="ts">
-import { Mic2, Save } from "lucide-vue-next";
+import { ClipboardList, Mic2, Plus, Save } from "lucide-vue-next";
 import { computed, ref, watch } from "vue";
 import { useCast } from "../../composables/useCast";
-import type { CastInput } from "../../lib/types";
+import CastEditorRow from "./CastEditorRow.vue";
 
 const props = defineProps<{
 	selectedTitleId: number | null;
@@ -11,47 +11,117 @@ const props = defineProps<{
 
 const { selectedDetail, loadCast, replaceCast } = useCast();
 
-const tsv = ref("");
-const savedTsv = ref("");
+type CastRow = { key: number; actor_name: string; character_name: string };
+let nextKey = 0;
+
+const rows = ref<CastRow[]>([]);
+const savedRows = ref<CastRow[]>([]);
 const saving = ref(false);
 
-const dirty = computed(() => tsv.value !== savedTsv.value);
+const bulkOpen = ref(false);
+const bulkText = ref("");
+
+const dirty = computed(
+	() =>
+		JSON.stringify(
+			rows.value.map(({ actor_name, character_name }) => ({
+				actor_name,
+				character_name,
+			})),
+		) !==
+		JSON.stringify(
+			savedRows.value.map(({ actor_name, character_name }) => ({
+				actor_name,
+				character_name,
+			})),
+		),
+);
+
+function castToRows(
+	cast: { actor_name: string; character_name: string }[],
+): CastRow[] {
+	return cast.map((m) => ({
+		key: nextKey++,
+		actor_name: m.actor_name,
+		character_name: m.character_name,
+	}));
+}
 
 watch(
 	() => props.selectedTitleId,
 	async (id) => {
+		bulkOpen.value = false;
+		bulkText.value = "";
 		if (id === null) {
-			tsv.value = "";
-			savedTsv.value = "";
+			rows.value = [];
+			savedRows.value = [];
 			return;
 		}
 		await loadCast(id);
-		const lines = (selectedDetail.value?.cast ?? [])
-			.map((m) => `${m.actor_name}\t${m.character_name}`)
-			.join("\n");
-		tsv.value = lines;
-		savedTsv.value = lines;
+		const cast = selectedDetail.value?.cast ?? [];
+		rows.value = castToRows(cast);
+		savedRows.value = castToRows(cast);
 	},
 );
 
-function parseTsv(raw: string): CastInput[] {
-	return raw.split("\n").flatMap((l) => {
-		const trimmed = l.trim();
+function addRow() {
+	rows.value.push({ key: nextKey++, actor_name: "", character_name: "" });
+}
+
+function removeRow(index: number) {
+	rows.value.splice(index, 1);
+}
+
+function updateRow(
+	index: number,
+	field: keyof Omit<CastRow, "key">,
+	value: string,
+) {
+	rows.value[index][field] = value;
+}
+
+function openBulk() {
+	bulkText.value = "";
+	bulkOpen.value = true;
+}
+
+function cancelBulk() {
+	bulkOpen.value = false;
+	bulkText.value = "";
+}
+
+function commitBulk() {
+	const parsed = bulkText.value.split("\n").flatMap((line) => {
+		const trimmed = line.trim();
 		if (!trimmed) return [];
 		const [actor = "", character = ""] = trimmed.split("\t");
-		const actorTrimmed = actor.trim();
-		return actorTrimmed
-			? [{ actor_name: actorTrimmed, character_name: character.trim() }]
+		return actor.trim()
+			? [
+					{
+						key: nextKey++,
+						actor_name: actor.trim(),
+						character_name: character.trim(),
+					},
+				]
 			: [];
 	});
+	rows.value.push(...parsed);
+	bulkOpen.value = false;
+	bulkText.value = "";
 }
 
 async function onSave() {
 	if (props.selectedTitleId === null || !dirty.value) return;
 	saving.value = true;
 	try {
-		await replaceCast(props.selectedTitleId, parseTsv(tsv.value));
-		savedTsv.value = tsv.value;
+		const payload = rows.value
+			.filter((r) => r.actor_name.trim())
+			.map(({ actor_name, character_name }) => ({
+				actor_name,
+				character_name,
+			}));
+		await replaceCast(props.selectedTitleId, payload);
+		savedRows.value = castToRows(payload);
 	} finally {
 		saving.value = false;
 	}
@@ -69,6 +139,15 @@ async function onSave() {
 			<div class="cast-header">
 				<p class="selected-title">{{ selectedTitleName }}</p>
 				<button
+					class="admin-form-button btn-bulk"
+					type="button"
+					:class="{ active: bulkOpen }"
+					@click="bulkOpen ? cancelBulk() : openBulk()"
+				>
+					<ClipboardList :size="13" :stroke-width="2.5" />
+					一括入力
+				</button>
+				<button
 					class="admin-form-button"
 					type="button"
 					:disabled="!dirty || saving"
@@ -78,12 +157,40 @@ async function onSave() {
 					保存
 				</button>
 			</div>
-			<textarea
-				class="cast-textarea"
-				v-model="tsv"
-				placeholder="声優名&#9;役名"
-				spellcheck="false"
-			/>
+
+			<div v-if="bulkOpen" class="bulk-panel">
+				<textarea
+					class="bulk-textarea"
+					v-model="bulkText"
+					placeholder="声優名&#9;役名（1行1件、タブ区切り）"
+					spellcheck="false"
+					autofocus
+				/>
+				<div class="bulk-actions">
+					<button class="admin-form-button" type="button" @click="commitBulk">
+						取り込む
+					</button>
+					<button class="btn-cancel" type="button" @click="cancelBulk">
+						キャンセル
+					</button>
+				</div>
+			</div>
+
+			<div class="cast-rows">
+				<CastEditorRow
+					v-for="(row, i) in rows"
+					:key="row.key"
+					:actor-name="row.actor_name"
+					:character-name="row.character_name"
+					@update:actor-name="(v) => updateRow(i, 'actor_name', v)"
+					@update:character-name="(v) => updateRow(i, 'character_name', v)"
+					@remove="removeRow(i)"
+				/>
+				<button class="admin-form-button btn-add-row" type="button" @click="addRow">
+					<Plus :size="13" :stroke-width="2.5" />
+					行を追加
+				</button>
+			</div>
 		</template>
 
 		<p v-else class="cast-placeholder">← タイトルを選択</p>
@@ -97,7 +204,7 @@ async function onSave() {
 	align-items: center;
 	display: flex;
 	flex-shrink: 0;
-	gap: 0.75em;
+	gap: 0.5em;
 	margin-bottom: 0.75em;
 }
 
@@ -116,16 +223,39 @@ async function onSave() {
 	opacity: 0.35;
 }
 
-.cast-textarea {
+.btn-bulk {
 	background: var(--glass-bg-strong);
 	border: 1px solid var(--glass-border);
+	color: var(--text-muted);
+}
+
+.btn-bulk:hover,
+.btn-bulk.active {
+	background: color-mix(in srgb, var(--accent-color) 12%, transparent);
+	border-color: color-mix(in srgb, var(--accent-color) 30%, transparent);
+	color: var(--accent-color);
+}
+
+.bulk-panel {
+	background: var(--glass-bg);
+	border: 1px solid var(--glass-border);
 	border-radius: 8px;
-	flex: 1;
-	font-family: monospace;
+	display: flex;
+	flex-direction: column;
+	flex-shrink: 0;
+	gap: 0.5em;
+	margin-bottom: 0.75em;
+	padding: 0.75em;
+}
+
+.bulk-textarea {
+	background: var(--glass-bg-strong);
+	border: 1px solid var(--glass-border);
+	border-radius: 6px;
 	font-size: 13px;
-	line-height: 1.7;
-	min-height: 0;
-	padding: 0.5em 0.75em;
+	height: 120px;
+	line-height: 1.6;
+	padding: 0.5em 0.6em;
 	resize: none;
 	transition:
 		border-color 0.15s,
@@ -133,10 +263,45 @@ async function onSave() {
 	width: 100%;
 }
 
-.cast-textarea:focus {
+.bulk-textarea:focus {
 	border-color: var(--focus-ring);
 	box-shadow: 0 0 0 3px var(--focus-glow);
 	outline: none;
+}
+
+.bulk-actions {
+	align-items: center;
+	display: flex;
+	gap: 0.5em;
+}
+
+.btn-cancel {
+	background: none;
+	border: none;
+	color: var(--text-subtle);
+	cursor: pointer;
+	font-size: 13px;
+	padding: 0.25em 0.5em;
+	transition: color 0.1s;
+}
+
+.btn-cancel:hover {
+	color: var(--contrast-color);
+}
+
+.cast-rows {
+	display: flex;
+	flex: 1;
+	flex-direction: column;
+	gap: 0.2em;
+	min-height: 0;
+	overflow-y: auto;
+	padding-right: 0.25em;
+}
+
+.btn-add-row {
+	align-self: flex-start;
+	margin-top: 0.25em;
 }
 
 .cast-placeholder {
