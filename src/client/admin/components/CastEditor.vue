@@ -1,68 +1,60 @@
 <script setup lang="ts">
-import { Mic2, Plus } from "lucide-vue-next";
-import { ref, watch } from "vue";
+import { Mic2, Save } from "lucide-vue-next";
+import { computed, ref, watch } from "vue";
 import { useCast } from "../../composables/useCast";
-import CastEditorRow from "./CastEditorRow.vue";
+import type { CastInput } from "../../lib/types";
 
 const props = defineProps<{
 	selectedTitleId: number | null;
 	selectedTitleName: string;
 }>();
 
-type CastRow = { id: number; actor_name: string; character_name: string };
+const { selectedDetail, loadCast, replaceCast } = useCast();
 
-const { selectedDetail, loadCast, addCast, updateCast, deleteCast } = useCast();
-const castRows = ref<CastRow[]>([]);
+const tsv = ref("");
+const savedTsv = ref("");
+const saving = ref(false);
 
-const newActorName = ref("");
-const newCharacterName = ref("");
+const dirty = computed(() => tsv.value !== savedTsv.value);
 
 watch(
 	() => props.selectedTitleId,
 	async (id) => {
 		if (id === null) {
-			castRows.value = [];
+			tsv.value = "";
+			savedTsv.value = "";
 			return;
 		}
 		await loadCast(id);
-		castRows.value = (selectedDetail.value?.cast ?? []).map((m) => ({
-			id: m.id,
-			actor_name: m.actor_name,
-			character_name: m.character_name,
-		}));
+		const lines = (selectedDetail.value?.cast ?? [])
+			.map((m) => `${m.actor_name}\t${m.character_name}`)
+			.join("\n");
+		tsv.value = lines;
+		savedTsv.value = lines;
 	},
 );
 
-async function onAdd() {
-	if (props.selectedTitleId === null) return;
-	const actor = newActorName.value.trim();
-	if (!actor) return;
-	const character = newCharacterName.value.trim();
-	const result = await addCast(props.selectedTitleId, {
-		actor_name: actor,
-		character_name: character,
-	});
-	castRows.value.push({
-		id: result.id,
-		actor_name: actor,
-		character_name: character,
-	});
-	newActorName.value = "";
-	newCharacterName.value = "";
-}
-
-async function onCommit(index: number) {
-	const row = castRows.value[index];
-	await updateCast(row.id, {
-		actor_name: row.actor_name,
-		character_name: row.character_name,
+function parseTsv(raw: string): CastInput[] {
+	return raw.split("\n").flatMap((l) => {
+		const trimmed = l.trim();
+		if (!trimmed) return [];
+		const [actor = "", character = ""] = trimmed.split("\t");
+		const actorTrimmed = actor.trim();
+		return actorTrimmed
+			? [{ actor_name: actorTrimmed, character_name: character.trim() }]
+			: [];
 	});
 }
 
-async function onRemove(index: number) {
-	const row = castRows.value[index];
-	await deleteCast(row.id);
-	castRows.value.splice(index, 1);
+async function onSave() {
+	if (props.selectedTitleId === null || !dirty.value) return;
+	saving.value = true;
+	try {
+		await replaceCast(props.selectedTitleId, parseTsv(tsv.value));
+		savedTsv.value = tsv.value;
+	} finally {
+		saving.value = false;
+	}
 }
 </script>
 
@@ -74,54 +66,82 @@ async function onRemove(index: number) {
 		</h2>
 
 		<template v-if="selectedTitleName">
-			<form class="admin-form" @submit.prevent="onAdd">
-				<input
-					class="admin-form-input"
-					v-model="newActorName"
-					type="text"
-					placeholder="声優名"
-				/>
-				<input
-					class="admin-form-input"
-					v-model="newCharacterName"
-					type="text"
-					placeholder="役名"
-				/>
-				<button class="admin-form-button" type="submit">
-					<Plus :size="13" :stroke-width="2.5" />
-					追加
+			<div class="cast-header">
+				<p class="selected-title">{{ selectedTitleName }}</p>
+				<button
+					class="admin-form-button"
+					type="button"
+					:disabled="!dirty || saving"
+					@click="onSave"
+				>
+					<Save :size="13" :stroke-width="2.5" />
+					保存
 				</button>
-			</form>
-			<p class="selected-title">{{ selectedTitleName }}</p>
-			<div class="cast-rows">
-				<CastEditorRow
-					v-for="(row, i) in castRows"
-					:key="row.id"
-					:actor-name="row.actor_name"
-					:character-name="row.character_name"
-					@update:actor-name="row.actor_name = $event"
-					@update:character-name="row.character_name = $event"
-					@commit="onCommit(i)"
-					@remove="onRemove(i)"
-				/>
 			</div>
+			<textarea
+				class="cast-textarea"
+				v-model="tsv"
+				placeholder="声優名&#9;役名"
+				spellcheck="false"
+			/>
 		</template>
+
+		<p v-else class="cast-placeholder">← タイトルを選択</p>
 	</section>
 </template>
 
 <style scoped>
 @import "../styles/admin-shared.css";
 
-.cast-rows {
-	flex: 1;
-	min-height: 0;
-	overflow-y: auto;
+.cast-header {
+	align-items: center;
+	display: flex;
+	flex-shrink: 0;
+	gap: 0.75em;
+	margin-bottom: 0.75em;
 }
 
 .selected-title {
 	color: var(--text-muted);
-	flex-shrink: 0;
+	flex: 1;
 	font-size: 0.85em;
-	margin-bottom: 0.75em;
+	margin: 0;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.admin-form-button:disabled {
+	cursor: default;
+	opacity: 0.35;
+}
+
+.cast-textarea {
+	background: var(--glass-bg-strong);
+	border: 1px solid var(--glass-border);
+	border-radius: 8px;
+	flex: 1;
+	font-family: monospace;
+	font-size: 13px;
+	line-height: 1.7;
+	min-height: 0;
+	padding: 0.5em 0.75em;
+	resize: none;
+	transition:
+		border-color 0.15s,
+		box-shadow 0.15s;
+	width: 100%;
+}
+
+.cast-textarea:focus {
+	border-color: var(--focus-ring);
+	box-shadow: 0 0 0 3px var(--focus-glow);
+	outline: none;
+}
+
+.cast-placeholder {
+	color: var(--text-subtle);
+	font-size: 0.85em;
+	margin: 0;
 }
 </style>
