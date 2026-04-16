@@ -1,6 +1,6 @@
 import { ref } from "vue";
 import { del, get, post, put } from "../lib/api";
-import type { TitleDetail, VoiceResult } from "../lib/types";
+import type { CastInput, TitleDetail, VoiceResult } from "../lib/types";
 
 const selectedDetail = ref<TitleDetail | null>(null);
 const voiceResults = ref<VoiceResult[]>([]);
@@ -45,6 +45,13 @@ export function useCast() {
 		await del(`/cast/${castId}`);
 	}
 
+	async function replaceCast(
+		titleId: number,
+		cast: CastInput[],
+	): Promise<void> {
+		await put(`/titles/${titleId}/cast`, { cast });
+	}
+
 	return {
 		selectedDetail,
 		voiceResults,
@@ -56,5 +63,6 @@ export function useCast() {
 		addCast,
 		updateCast,
 		deleteCast,
+		replaceCast,
 	};
 }

@@ -43,6 +43,25 @@ castRoutes.post("/titles/:id/cast", authMiddleware, async (c) => {
 	return c.json(result, 201);
 });
 
+castRoutes.put("/titles/:id/cast", authMiddleware, async (c) => {
+	const titleId = Number(c.req.param("id"));
+	const body = await c.req.json<{
+		cast: { actor_name: string; character_name: string }[];
+	}>();
+	const stmts = [
+		c.env.DB.prepare("DELETE FROM cast_members WHERE title_id = ?").bind(
+			titleId,
+		),
+		...body.cast.map((m, i) =>
+			c.env.DB.prepare(
+				"INSERT INTO cast_members (title_id, actor_name, character_name, sort_order) VALUES (?, ?, ?, ?)",
+			).bind(titleId, m.actor_name, m.character_name, i),
+		),
+	];
+	await c.env.DB.batch(stmts);
+	return c.json({ ok: true });
+});
+
 castRoutes.put("/cast/:id", authMiddleware, async (c) => {
 	const id = Number(c.req.param("id"));
 	const body = await c.req.json<{
