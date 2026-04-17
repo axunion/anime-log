@@ -9,16 +9,12 @@ defineProps<{
 const emit = defineEmits<{
 	"update:actorName": [value: string];
 	"update:characterName": [value: string];
-	commit: [];
 	remove: [];
 }>();
 </script>
 
 <template>
-	<div
-		class="cast-row"
-		@focusout="($event.currentTarget as HTMLElement).contains($event.relatedTarget as Node) || emit('commit')"
-	>
+	<div class="cast-row">
 		<input
 			class="admin-form-input cast-row-input cast-row-input--actor"
 			type="text"

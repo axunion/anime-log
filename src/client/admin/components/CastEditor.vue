@@ -1,5 +1,12 @@
 <script setup lang="ts">
-import { ClipboardList, Mic2, Plus, Save } from "lucide-vue-next";
+import {
+	ClipboardList,
+	Mic2,
+	RotateCcw,
+	Save,
+	Trash2,
+	X,
+} from "lucide-vue-next";
 import { computed, ref, watch } from "vue";
 import { useCast } from "../../composables/useCast";
 import CastEditorRow from "./CastEditorRow.vue";
@@ -64,8 +71,12 @@ watch(
 	},
 );
 
-function addRow() {
-	rows.value.push({ key: nextKey++, actor_name: "", character_name: "" });
+function clearAll() {
+	rows.value = [];
+}
+
+function onCancel() {
+	rows.value = savedRows.value.map((r) => ({ ...r }));
 }
 
 function removeRow(index: number) {
@@ -139,22 +150,21 @@ async function onSave() {
 			<div class="cast-header">
 				<p class="selected-title">{{ selectedTitleName }}</p>
 				<button
-					class="admin-form-button btn-bulk"
+					class="admin-form-button"
 					type="button"
-					:class="{ active: bulkOpen }"
 					@click="bulkOpen ? cancelBulk() : openBulk()"
 				>
 					<ClipboardList :size="13" :stroke-width="2.5" />
-					一括入力
+					追加
 				</button>
 				<button
-					class="admin-form-button"
+					class="admin-form-button btn-outline"
 					type="button"
-					:disabled="!dirty || saving"
-					@click="onSave"
+					:disabled="rows.length === 0"
+					@click="clearAll"
 				>
-					<Save :size="13" :stroke-width="2.5" />
-					保存
+					<Trash2 :size="13" :stroke-width="2.5" />
+					クリア
 				</button>
 			</div>
 
@@ -167,16 +177,17 @@ async function onSave() {
 					autofocus
 				/>
 				<div class="bulk-actions">
-					<button class="admin-form-button" type="button" @click="commitBulk">
+					<button class="admin-form-button" type="button" :disabled="!bulkText.trim()" @click="commitBulk">
 						取り込む
 					</button>
 					<button class="btn-cancel" type="button" @click="cancelBulk">
+						<X :size="13" :stroke-width="2.5" />
 						キャンセル
 					</button>
 				</div>
 			</div>
 
-			<div class="cast-rows">
+			<div v-show="!bulkOpen" class="cast-rows">
 				<CastEditorRow
 					v-for="(row, i) in rows"
 					:key="row.key"
@@ -186,9 +197,25 @@ async function onSave() {
 					@update:character-name="(v) => updateRow(i, 'character_name', v)"
 					@remove="removeRow(i)"
 				/>
-				<button class="admin-form-button btn-add-row" type="button" @click="addRow">
-					<Plus :size="13" :stroke-width="2.5" />
-					行を追加
+			</div>
+			<div v-show="!bulkOpen" class="cast-footer">
+				<button
+					class="btn-cancel"
+					type="button"
+					:disabled="!dirty || saving"
+					@click="onCancel"
+				>
+					<RotateCcw :size="13" :stroke-width="2.5" />
+					キャンセル
+				</button>
+				<button
+					class="admin-form-button"
+					type="button"
+					:disabled="!dirty || saving"
+					@click="onSave"
+				>
+					<Save :size="13" :stroke-width="2.5" />
+					保存
 				</button>
 			</div>
 		</template>
@@ -223,37 +250,21 @@ async function onSave() {
 	opacity: 0.35;
 }
 
-.btn-bulk {
-	background: var(--glass-bg-strong);
-	border: 1px solid var(--glass-border);
-	color: var(--text-muted);
-}
-
-.btn-bulk:hover,
-.btn-bulk.active {
-	background: color-mix(in srgb, var(--accent-color) 12%, transparent);
-	border-color: color-mix(in srgb, var(--accent-color) 30%, transparent);
-	color: var(--accent-color);
-}
-
 .bulk-panel {
-	background: var(--glass-bg);
-	border: 1px solid var(--glass-border);
-	border-radius: 8px;
 	display: flex;
+	flex: 1;
 	flex-direction: column;
-	flex-shrink: 0;
 	gap: 0.5em;
-	margin-bottom: 0.75em;
-	padding: 0.75em;
+	min-height: 0;
 }
 
 .bulk-textarea {
 	background: var(--glass-bg-strong);
 	border: 1px solid var(--glass-border);
 	border-radius: 6px;
+	box-sizing: border-box;
+	flex: 1;
 	font-size: 13px;
-	height: 120px;
 	line-height: 1.6;
 	padding: 0.5em 0.6em;
 	resize: none;
@@ -276,16 +287,24 @@ async function onSave() {
 }
 
 .btn-cancel {
+	align-items: center;
 	background: none;
 	border: none;
 	color: var(--text-subtle);
 	cursor: pointer;
+	display: inline-flex;
 	font-size: 13px;
+	gap: 0.35em;
 	padding: 0.25em 0.5em;
 	transition: color 0.1s;
 }
 
-.btn-cancel:hover {
+.btn-cancel:disabled {
+	cursor: default;
+	opacity: 0.35;
+}
+
+.btn-cancel:hover:not(:disabled) {
 	color: var(--contrast-color);
 }
 
@@ -299,9 +318,23 @@ async function onSave() {
 	padding-right: 0.25em;
 }
 
-.btn-add-row {
-	align-self: flex-start;
-	margin-top: 0.25em;
+.btn-outline {
+	background: none;
+	border-color: var(--glass-border);
+	color: var(--text-muted);
+}
+
+.btn-outline:hover:not(:disabled) {
+	background: var(--glass-bg-strong);
+	opacity: 1;
+}
+
+.cast-footer {
+	display: flex;
+	flex-shrink: 0;
+	gap: 0.5em;
+	justify-content: flex-end;
+	margin-top: 0.75em;
 }
 
 .cast-placeholder {

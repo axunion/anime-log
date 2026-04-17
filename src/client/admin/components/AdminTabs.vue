@@ -17,16 +17,16 @@ const tabs: {
 	getCount: () => number;
 }[] = [
 	{
-		id: "data",
-		icon: Library,
-		label: "データ",
-		getCount: () => titles.value.length,
-	},
-	{
 		id: "history",
 		icon: History,
 		label: "履歴",
 		getCount: () => history.value.length,
+	},
+	{
+		id: "data",
+		icon: Library,
+		label: "データ",
+		getCount: () => titles.value.length,
 	},
 ];
 </script>

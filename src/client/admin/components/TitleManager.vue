@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Library, Plus, Search } from "lucide-vue-next";
+import { Library, Plus } from "lucide-vue-next";
 import { ref } from "vue";
 import { useFilter } from "../../composables/useFilter";
 import { useTitles } from "../../composables/useTitles";
@@ -60,12 +60,8 @@ async function onDeleteTitle(id: number) {
 			</button>
 		</form>
 
-		<h3 class="admin-section-subtitle">
-			<Search :size="11" :stroke-width="2" />
-			タイトル検索
-		</h3>
-		<div class="admin-form">
-			<input class="admin-form-input" v-model="query" type="text" placeholder="検索" />
+		<div class="admin-form title-filter">
+			<input class="admin-form-input" v-model="query" type="text" placeholder="フィルター" />
 		</div>
 		<ul class="admin-list">
 			<TitleSearchItem
@@ -86,9 +82,10 @@ async function onDeleteTitle(id: number) {
 <style scoped>
 @import "../styles/admin-shared.css";
 
-.admin-section-subtitle {
-	align-items: center;
-	display: flex;
-	gap: 0.4em;
+.title-filter {
+	border-top: 1px solid var(--glass-border);
+	margin-bottom: 0.5em;
+	margin-top: 0.75em;
+	padding-top: 1em;
 }
 </style>
