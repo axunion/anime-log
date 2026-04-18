@@ -11,7 +11,7 @@ import TitleManager from "./components/TitleManager.vue";
 const { fetchTitles } = useTitles();
 const { fetchHistory } = useHistory();
 
-const activeTab = ref<AdminTab>("data");
+const activeTab = ref<AdminTab>("history");
 const selectedTitleId = ref<number | null>(null);
 const selectedTitleName = ref("");
 
