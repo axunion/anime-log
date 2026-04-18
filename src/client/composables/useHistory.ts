@@ -18,6 +18,14 @@ export function useHistory() {
 		await fetchHistory();
 	}
 
+	async function updateHistory(
+		id: number,
+		payload: { display_name: string | null; year: number },
+	) {
+		await put(`/history/${id}`, payload);
+		await fetchHistory();
+	}
+
 	async function deleteHistory(id: number) {
 		await del(`/history/${id}`);
 		await fetchHistory();
@@ -31,5 +39,12 @@ export function useHistory() {
 		await put("/history/reorder", { ids: list.map((h) => h.id) });
 	}
 
-	return { history, fetchHistory, addHistory, deleteHistory, reorder };
+	return {
+		history,
+		fetchHistory,
+		addHistory,
+		updateHistory,
+		deleteHistory,
+		reorder,
+	};
 }

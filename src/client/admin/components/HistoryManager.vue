@@ -1,17 +1,43 @@
 <script setup lang="ts">
 import { History as HistoryIcon, Plus } from "lucide-vue-next";
-import { ref } from "vue";
+import { ref, watch } from "vue";
+import { useFilter } from "../../composables/useFilter";
 import { useHistory } from "../../composables/useHistory";
 import { useTitles } from "../../composables/useTitles";
+import type { Title } from "../../lib/types";
 import HistoryItem from "./HistoryItem.vue";
 
 const { titles } = useTitles();
-const { history, fetchHistory, addHistory, deleteHistory, reorder } =
-	useHistory();
+const {
+	history,
+	fetchHistory,
+	addHistory,
+	updateHistory,
+	deleteHistory,
+	reorder,
+} = useHistory();
 
 const selectTitleId = ref("");
+const titleQuery = ref("");
+const showSuggest = ref(false);
 const displayName = ref("");
 const year = ref("");
+
+const { filtered } = useFilter(
+	titles,
+	(t) => `${t.title} ${t.year}`,
+	titleQuery,
+);
+
+watch(titleQuery, () => {
+	selectTitleId.value = "";
+});
+
+function selectTitle(t: Title) {
+	selectTitleId.value = String(t.id);
+	titleQuery.value = `${t.title} (${t.year})`;
+	showSuggest.value = false;
+}
 
 async function onAdd() {
 	if (!selectTitleId.value) return;
@@ -21,6 +47,7 @@ async function onAdd() {
 		year: Number(year.value),
 	});
 	selectTitleId.value = "";
+	titleQuery.value = "";
 	displayName.value = "";
 	year.value = "";
 }
@@ -41,14 +68,31 @@ async function onDelete(id: number) {
 		</h2>
 
 		<form class="admin-form" @submit.prevent="onAdd">
-			<select class="admin-form-select" v-model="selectTitleId">
-				<option value="">タイトルを選択</option>
-				<option v-for="t in titles" :key="t.id" :value="String(t.id)">
-					{{ t.title }} ({{ t.year }})
-				</option>
-			</select>
+			<div class="title-search">
+				<input
+					class="admin-form-input"
+					type="text"
+					v-model="titleQuery"
+					@focus="showSuggest = true"
+					@blur="showSuggest = false"
+					@keydown.escape="showSuggest = false"
+					placeholder="タイトルを検索"
+				/>
+				<ul
+					class="title-suggest"
+					v-if="showSuggest && titleQuery && filtered.length"
+				>
+					<li
+						v-for="t in filtered"
+						:key="t.id"
+						@mousedown.prevent="selectTitle(t)"
+					>
+						{{ t.title }} ({{ t.year }})
+					</li>
+				</ul>
+			</div>
 			<input class="admin-form-input" v-model="displayName" type="text" placeholder="表示名（省略可）" />
-			<input class="admin-form-input admin-form-input--narrow" v-model="year" type="number" placeholder="年" />
+			<input class="admin-form-input admin-form-input--narrow" v-model="year" type="text" inputmode="numeric" maxlength="4" placeholder="年" />
 			<button class="admin-form-button" type="submit">
 				<Plus :size="13" :stroke-width="2.5" />
 				追加
@@ -64,6 +108,7 @@ async function onDelete(id: number) {
 				:is-last="i === history.length - 1"
 				@move-up="reorder(i, 'up')"
 				@move-down="reorder(i, 'down')"
+				@update="updateHistory(entry.id, $event)"
 				@delete="onDelete(entry.id)"
 			/>
 		</ul>
@@ -72,4 +117,48 @@ async function onDelete(id: number) {
 
 <style scoped>
 @import "../styles/admin-shared.css";
+
+.title-search {
+	flex: 1 1 auto;
+	min-width: 0;
+	position: relative;
+}
+
+.title-search input {
+	box-sizing: border-box;
+	width: 100%;
+}
+
+.title-suggest {
+	background: var(--glass-bg-strong);
+	border: 1px solid var(--glass-border);
+	border-radius: 8px;
+	left: 0;
+	list-style: none;
+	margin: 2px 0 0;
+	max-height: 240px;
+	overflow-y: auto;
+	padding: 4px 0;
+	position: absolute;
+	right: 0;
+	top: 100%;
+	z-index: 10;
+}
+
+.title-suggest li {
+	cursor: pointer;
+	font-size: 13px;
+	padding: 0.35em 0.75em;
+}
+
+.title-suggest li:hover {
+	background: var(--glass-bg);
+}
+
+@media screen and (max-width: 640px) {
+	.title-search,
+	.admin-form-input:not(.admin-form-input--narrow) {
+		flex-basis: 100%;
+	}
+}
 </style>

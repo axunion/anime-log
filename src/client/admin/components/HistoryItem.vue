@@ -1,18 +1,44 @@
 <script setup lang="ts">
 import { ChevronDown, ChevronUp, Trash2 } from "lucide-vue-next";
+import { ref, watch } from "vue";
 import type { HistoryEntry } from "../../lib/types";
 
-defineProps<{
+const props = defineProps<{
 	entry: HistoryEntry;
 	isFirst: boolean;
 	isLast: boolean;
 }>();
 
-defineEmits<{
+const emit = defineEmits<{
 	moveUp: [];
 	moveDown: [];
 	delete: [];
+	update: [payload: { display_name: string | null; year: number }];
 }>();
+
+const displayName = ref(props.entry.display_name ?? "");
+const year = ref(props.entry.year ? String(props.entry.year) : "");
+
+watch(
+	() => props.entry,
+	(e) => {
+		displayName.value = e.display_name ?? "";
+		year.value = e.year ? String(e.year) : "";
+	},
+	{ deep: true },
+);
+
+function onBlur() {
+	const dn = displayName.value.trim() || null;
+	const yr = Number(year.value.trim());
+	if (!yr) {
+		year.value = String(props.entry.year);
+		return;
+	}
+	if (dn === (props.entry.display_name ?? null) && yr === props.entry.year)
+		return;
+	emit("update", { display_name: dn, year: yr });
+}
 </script>
 
 <template>
@@ -23,8 +49,25 @@ defineEmits<{
 		<button class="btn-order" type="button" :disabled="isLast" @click="$emit('moveDown')">
 			<ChevronDown :size="14" :stroke-width="2" />
 		</button>
-		<span class="item-title">{{ entry.display_name ?? entry.title }}</span>
-		<span class="item-year">{{ entry.year }}</span>
+		<span class="item-title">{{ entry.title }}</span>
+		<input
+			class="item-input item-input--name"
+			type="text"
+			v-model="displayName"
+			:placeholder="entry.title"
+			@blur="onBlur"
+			@keydown.enter="($event.target as HTMLInputElement).blur()"
+		/>
+		<input
+			class="item-input item-input--year"
+			type="text"
+			inputmode="numeric"
+			maxlength="4"
+			v-model="year"
+			placeholder="年"
+			@blur="onBlur"
+			@keydown.enter="($event.target as HTMLInputElement).blur()"
+		/>
 		<button class="btn-delete" type="button" @click="$emit('delete')">
 			<Trash2 :size="13" :stroke-width="1.75" />
 		</button>
@@ -38,31 +81,44 @@ defineEmits<{
 	display: flex;
 	gap: 0.4em;
 	padding: 0.4em 0.25em;
-	transition: background 0.1s;
 }
 
 .history-item:last-child {
 	border-bottom: none;
 }
 
-.history-item:hover {
-	background: var(--hover-overlay);
-	border-radius: 6px;
-}
-
 .item-title {
-	flex: 1 1 auto;
-	font-size: 13px;
+	color: var(--text-muted);
+	flex: 0 1 120px;
+	font-size: 12px;
+	min-width: 0;
 	overflow: hidden;
 	text-overflow: ellipsis;
 	white-space: nowrap;
 }
 
-.item-year {
-	color: var(--text-subtle);
-	flex: 0 0 40px;
-	font-size: 12px;
-	font-variant-numeric: tabular-nums;
+.item-input {
+	background: transparent;
+	border: 1px solid transparent;
+	border-radius: 4px;
+	font-size: 13px;
+	min-width: 0;
+	padding: 0.1em 0.5em;
+	transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+.item-input:focus {
+	border-color: var(--focus-ring);
+	box-shadow: 0 0 0 3px var(--focus-glow);
+	outline: none;
+}
+
+.item-input--name {
+	flex: 1 1 auto;
+}
+
+.item-input--year {
+	flex: 0 0 44px;
 	text-align: right;
 }
 

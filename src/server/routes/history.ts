@@ -52,3 +52,17 @@ historyRoutes.put("/reorder", authMiddleware, async (c) => {
 	await c.env.DB.batch(stmts);
 	return c.json({ ok: true });
 });
+
+historyRoutes.put("/:id", authMiddleware, async (c) => {
+	const id = Number(c.req.param("id"));
+	const body = await c.req.json<{
+		display_name?: string | null;
+		year: number;
+	}>();
+	await c.env.DB.prepare(
+		"UPDATE history SET display_name = ?, year = ? WHERE id = ?",
+	)
+		.bind(body.display_name ?? null, body.year, id)
+		.run();
+	return c.json({ ok: true });
+});
