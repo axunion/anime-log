@@ -30,6 +30,15 @@
 	text-transform: uppercase;
 }
 
+.section-count {
+	color: var(--text-subtle);
+	font-size: 0.9em;
+	font-weight: 500;
+	letter-spacing: 0;
+	margin-left: auto;
+	text-transform: none;
+}
+
 .admin-section-subtitle {
 	color: var(--text-subtle);
 	flex-shrink: 0;

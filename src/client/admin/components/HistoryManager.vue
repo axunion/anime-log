@@ -65,6 +65,7 @@ async function onDelete(id: number) {
 		<h2 class="admin-section-title">
 			<HistoryIcon :size="14" :stroke-width="2" />
 			視聴履歴管理
+			<span class="section-count">{{ history.length }}件</span>
 		</h2>
 
 		<form class="admin-form" @submit.prevent="onAdd">

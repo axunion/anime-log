@@ -1,15 +1,10 @@
 <script setup lang="ts">
-import { Download, History, Library } from "lucide-vue-next";
-import { useHistory } from "../../composables/useHistory";
-import { useTitles } from "../../composables/useTitles";
+import { Download } from "lucide-vue-next";
 import { get } from "../../lib/api";
 import type { AdminTab } from "../../lib/types";
 
 defineProps<{ modelValue: AdminTab }>();
 defineEmits<{ "update:modelValue": [tab: AdminTab] }>();
-
-const { titles } = useTitles();
-const { history } = useHistory();
 
 function downloadBlob(data: unknown, filename: string) {
 	const blob = new Blob([JSON.stringify(data, null, 2)], {
@@ -32,50 +27,26 @@ async function exportData() {
 	downloadBlob(historyData, "history.json");
 }
 
-const tabs: {
-	id: AdminTab;
-	icon: typeof Library;
-	label: string;
-	getCount: () => number;
-}[] = [
-	{
-		id: "history",
-		icon: History,
-		label: "履歴",
-		getCount: () => history.value.length,
-	},
-	{
-		id: "data",
-		icon: Library,
-		label: "データ",
-		getCount: () => titles.value.length,
-	},
+const tabs: { id: AdminTab; label: string }[] = [
+	{ id: "history", label: "履歴" },
+	{ id: "data", label: "データ" },
 ];
 </script>
 
 <template>
 	<nav class="admin-tabs glass-surface">
 		<div class="admin-tabs-inner">
-			<div class="left">
-				<div class="tabs">
-					<button
-						v-for="tab in tabs"
-						:key="tab.id"
-						type="button"
-						class="tab"
-						:class="{ active: modelValue === tab.id }"
-						@click="$emit('update:modelValue', tab.id)"
-					>
-						<component :is="tab.icon" :size="15" :stroke-width="1.75" />
-						{{ tab.label }}
-					</button>
-				</div>
-				<div class="stats">
-					<span v-for="tab in tabs" :key="tab.id" class="stat">
-						<component :is="tab.icon" :size="15" :stroke-width="1.75" />
-						{{ tab.getCount() }}
-					</span>
-				</div>
+			<div class="tabs">
+				<button
+					v-for="tab in tabs"
+					:key="tab.id"
+					type="button"
+					class="tab"
+					:class="{ active: modelValue === tab.id }"
+					@click="$emit('update:modelValue', tab.id)"
+				>
+					{{ tab.label }}
+				</button>
 			</div>
 			<button
 				type="button"
@@ -105,11 +76,6 @@ const tabs: {
 	margin: 0 auto;
 	max-width: 1200px;
 	padding: 0 1.5em;
-}
-
-.left {
-	align-items: center;
-	display: flex;
 }
 
 .tabs {
@@ -142,24 +108,6 @@ const tabs: {
 	color: var(--accent-color);
 }
 
-.stats {
-	align-items: center;
-	display: flex;
-	gap: 4px;
-	margin-left: 1.25em;
-}
-
-.stat {
-	align-items: center;
-	border-radius: 8px;
-	color: var(--text-subtle);
-	display: flex;
-	font-size: 13px;
-	gap: 0.4em;
-	height: 32px;
-	padding: 0 0.75em;
-}
-
 .export-btn {
 	align-items: center;
 	border-radius: 8px;
@@ -179,9 +127,4 @@ const tabs: {
 	color: var(--contrast-color);
 }
 
-@media screen and (max-width: 480px) {
-	.stats {
-		display: none;
-	}
-}
 </style>
