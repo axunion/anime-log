@@ -49,6 +49,7 @@ async function onDeleteTitle(id: number) {
 		<h2 class="admin-section-title">
 			<Library :size="14" :stroke-width="2" />
 			タイトル管理
+			<span class="section-count">{{ titles.length }}件</span>
 		</h2>
 
 		<form class="admin-form" @submit.prevent="onAddTitle">

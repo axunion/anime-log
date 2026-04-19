@@ -30,14 +30,14 @@ onMounted(() => {
 	<div class="admin-root">
 		<AdminTabs v-model="activeTab" />
 		<main class="admin-main" :class="{ 'admin-main--single': activeTab === 'history' }">
-			<template v-if="activeTab === 'data'">
+			<div v-show="activeTab === 'data'" style="display: contents">
 				<TitleManager @select-title="onSelectTitle" />
 				<CastEditor
 					:selected-title-id="selectedTitleId"
 					:selected-title-name="selectedTitleName"
 				/>
-			</template>
-			<HistoryManager v-else-if="activeTab === 'history'" />
+			</div>
+			<HistoryManager v-show="activeTab === 'history'" />
 		</main>
 	</div>
 </template>

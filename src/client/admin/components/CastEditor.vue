@@ -146,81 +146,78 @@ async function onSave() {
 			キャスト編集
 		</h2>
 
-		<template v-if="selectedTitleName">
-			<div class="cast-header">
-				<p class="selected-title">{{ selectedTitleName }}</p>
-				<button
-					class="admin-form-button"
-					type="button"
-					@click="bulkOpen ? cancelBulk() : openBulk()"
-				>
-					<ClipboardList :size="13" :stroke-width="2.5" />
-					追加
-				</button>
-				<button
-					class="admin-form-button btn-outline"
-					type="button"
-					:disabled="rows.length === 0"
-					@click="clearAll"
-				>
-					<Trash2 :size="13" :stroke-width="2.5" />
-					クリア
-				</button>
-			</div>
+		<div class="cast-header">
+			<p class="selected-title">{{ selectedTitleName }}</p>
+			<button
+				class="admin-form-button"
+				type="button"
+				:disabled="!selectedTitleId"
+				@click="bulkOpen ? cancelBulk() : openBulk()"
+			>
+				<ClipboardList :size="13" :stroke-width="2.5" />
+				追加
+			</button>
+			<button
+				class="admin-form-button btn-outline"
+				type="button"
+				:disabled="rows.length === 0"
+				@click="clearAll"
+			>
+				<Trash2 :size="13" :stroke-width="2.5" />
+				クリア
+			</button>
+		</div>
 
-			<div v-if="bulkOpen" class="bulk-panel">
-				<textarea
-					class="bulk-textarea"
-					v-model="bulkText"
-					placeholder="声優名&#9;役名（1行1件、タブ区切り）"
-					spellcheck="false"
-					autofocus
-				/>
-				<div class="bulk-actions">
-					<button class="admin-form-button" type="button" :disabled="!bulkText.trim()" @click="commitBulk">
-						取り込む
-					</button>
-					<button class="btn-cancel" type="button" @click="cancelBulk">
-						<X :size="13" :stroke-width="2.5" />
-						キャンセル
-					</button>
-				</div>
-			</div>
-
-			<div v-show="!bulkOpen" class="cast-rows">
-				<CastEditorRow
-					v-for="(row, i) in rows"
-					:key="row.key"
-					:actor-name="row.actor_name"
-					:character-name="row.character_name"
-					@update:actor-name="(v) => updateRow(i, 'actor_name', v)"
-					@update:character-name="(v) => updateRow(i, 'character_name', v)"
-					@remove="removeRow(i)"
-				/>
-			</div>
-			<div v-show="!bulkOpen" class="cast-footer">
-				<button
-					class="btn-cancel"
-					type="button"
-					:disabled="!dirty || saving"
-					@click="onCancel"
-				>
-					<RotateCcw :size="13" :stroke-width="2.5" />
+		<div v-if="bulkOpen" class="bulk-panel">
+			<textarea
+				class="bulk-textarea"
+				v-model="bulkText"
+				placeholder="声優名&#9;役名（1行1件、タブ区切り）"
+				spellcheck="false"
+				autofocus
+			/>
+			<div class="bulk-actions">
+				<button class="admin-form-button" type="button" :disabled="!bulkText.trim()" @click="commitBulk">
+					取り込む
+				</button>
+				<button class="btn-cancel" type="button" @click="cancelBulk">
+					<X :size="13" :stroke-width="2.5" />
 					キャンセル
 				</button>
-				<button
-					class="admin-form-button"
-					type="button"
-					:disabled="!dirty || saving"
-					@click="onSave"
-				>
-					<Save :size="13" :stroke-width="2.5" />
-					保存
-				</button>
 			</div>
-		</template>
+		</div>
 
-		<p v-else class="cast-placeholder">← タイトルを選択</p>
+		<div v-show="!bulkOpen" class="cast-rows">
+			<CastEditorRow
+				v-for="(row, i) in rows"
+				:key="row.key"
+				:actor-name="row.actor_name"
+				:character-name="row.character_name"
+				@update:actor-name="(v) => updateRow(i, 'actor_name', v)"
+				@update:character-name="(v) => updateRow(i, 'character_name', v)"
+				@remove="removeRow(i)"
+			/>
+		</div>
+		<div v-show="!bulkOpen" class="cast-footer">
+			<button
+				class="btn-cancel"
+				type="button"
+				:disabled="!dirty || saving"
+				@click="onCancel"
+			>
+				<RotateCcw :size="13" :stroke-width="2.5" />
+				キャンセル
+			</button>
+			<button
+				class="admin-form-button"
+				type="button"
+				:disabled="!dirty || saving"
+				@click="onSave"
+			>
+				<Save :size="13" :stroke-width="2.5" />
+				保存
+			</button>
+		</div>
 	</section>
 </template>
 
@@ -337,9 +334,4 @@ async function onSave() {
 	margin-top: 0.75em;
 }
 
-.cast-placeholder {
-	color: var(--text-subtle);
-	font-size: 0.85em;
-	margin: 0;
-}
 </style>
