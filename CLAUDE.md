@@ -20,6 +20,10 @@ pnpm fix              # Biome lint + auto-fix
 pnpm migrate:generate # Regenerate migrations/0002_seed.sql from data/data.js + data/history.js
 pnpm db:migrate       # Apply migrations to local D1
 pnpm db:migrate:remote # Apply migrations to remote D1
+
+pnpm test             # Run all tests (client + server)
+pnpm test:client      # Client composable/API tests (Vitest + happy-dom)
+pnpm test:server      # Server route tests (Vitest + @cloudflare/vitest-pool-workers)
 ```
 
 To query the local D1 database directly:
@@ -57,6 +61,7 @@ Coding conventions are in `.claude/rules/` (path-scoped, auto-loaded when editin
 - `migrations.md` — D1/SQLite schema patterns (`migrations/**`)
 - `server.md` — Hono route and D1 query conventions (`src/server/**`)
 - `vue.md` — Vue 3 component conventions (`src/client/**/*.vue`)
+- `testing.md` — Test structure, patterns, and what to test/skip (auto-loaded for `*.test.ts`)
 
 ## Architecture
 
