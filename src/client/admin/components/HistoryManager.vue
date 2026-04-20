@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { History as HistoryIcon, Plus } from "lucide-vue-next";
 import { ref, watch } from "vue";
+import draggable from "vuedraggable";
 import { useFilter } from "../../composables/useFilter";
 import { useHistory } from "../../composables/useHistory";
 import { useTitles } from "../../composables/useTitles";
@@ -14,7 +15,7 @@ const {
 	addHistory,
 	updateHistory,
 	deleteHistory,
-	reorder,
+	persistOrder,
 } = useHistory();
 
 const selectTitleId = ref("");
@@ -50,6 +51,10 @@ async function onAdd() {
 	titleQuery.value = "";
 	displayName.value = "";
 	year.value = "";
+}
+
+async function onDragEnd(event: { oldIndex?: number; newIndex?: number }) {
+	if (event.oldIndex !== event.newIndex) await persistOrder();
 }
 
 async function onDelete(id: number) {
@@ -100,19 +105,23 @@ async function onDelete(id: number) {
 			</button>
 		</form>
 
-		<ul class="admin-list">
-			<HistoryItem
-				v-for="(entry, i) in history"
-				:key="entry.id"
-				:entry="entry"
-				:is-first="i === 0"
-				:is-last="i === history.length - 1"
-				@move-up="reorder(i, 'up')"
-				@move-down="reorder(i, 'down')"
-				@update="updateHistory(entry.id, $event)"
-				@delete="onDelete(entry.id)"
-			/>
-		</ul>
+		<draggable
+			v-model="history"
+			tag="ul"
+			class="admin-list"
+			item-key="id"
+			handle=".drag-handle"
+			:animation="150"
+			@end="onDragEnd"
+		>
+			<template #item="{ element: entry }">
+				<HistoryItem
+					:entry="entry"
+					@update="updateHistory(entry.id, $event)"
+					@delete="onDelete(entry.id)"
+				/>
+			</template>
+		</draggable>
 	</section>
 </template>
 

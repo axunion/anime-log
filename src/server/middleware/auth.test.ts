@@ -1,14 +1,16 @@
 /// <reference types="@cloudflare/vitest-pool-workers/types" />
 import { env } from "cloudflare:test";
 import { beforeEach, describe, expect, it } from "vitest";
-import app from "../../server/index.ts";
 import { applySchema } from "../../../test/helpers/d1.ts";
+import app from "../../server/index.ts";
 import type { Bindings } from "../types.ts";
 
 const typedEnv = env as unknown as Bindings;
 
 function postTitles(authHeader?: string) {
-	const headers: Record<string, string> = { "Content-Type": "application/json" };
+	const headers: Record<string, string> = {
+		"Content-Type": "application/json",
+	};
 	if (authHeader) headers.Authorization = authHeader;
 	return app.fetch(
 		new Request("http://localhost/api/titles", {

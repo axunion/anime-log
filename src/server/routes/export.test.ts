@@ -1,13 +1,13 @@
 /// <reference types="@cloudflare/vitest-pool-workers/types" />
 import { env } from "cloudflare:test";
 import { beforeEach, describe, expect, it } from "vitest";
+import { callApp } from "../../../test/helpers/app.ts";
 import {
 	applySchema,
-	seedTitle,
 	seedCast,
 	seedHistory,
+	seedTitle,
 } from "../../../test/helpers/d1.ts";
-import { callApp } from "../../../test/helpers/app.ts";
 import type { Bindings } from "../types.ts";
 
 const typedEnv = env as unknown as Bindings;
