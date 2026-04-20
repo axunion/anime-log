@@ -1,17 +1,13 @@
 <script setup lang="ts">
-import { ChevronDown, ChevronUp, Trash2 } from "lucide-vue-next";
+import { GripVertical, Trash2 } from "lucide-vue-next";
 import { ref, watch } from "vue";
 import type { HistoryEntry } from "../../lib/types";
 
 const props = defineProps<{
 	entry: HistoryEntry;
-	isFirst: boolean;
-	isLast: boolean;
 }>();
 
 const emit = defineEmits<{
-	moveUp: [];
-	moveDown: [];
 	delete: [];
 	update: [payload: { display_name: string | null; year: number }];
 }>();
@@ -43,12 +39,9 @@ function onBlur() {
 
 <template>
 	<li class="history-item">
-		<button class="btn-order" type="button" :disabled="isFirst" @click="$emit('moveUp')">
-			<ChevronUp :size="14" :stroke-width="2" />
-		</button>
-		<button class="btn-order" type="button" :disabled="isLast" @click="$emit('moveDown')">
-			<ChevronDown :size="14" :stroke-width="2" />
-		</button>
+		<span class="drag-handle">
+			<GripVertical :size="16" :stroke-width="1.75" />
+		</span>
 		<span class="item-title">{{ entry.title }}</span>
 		<input
 			class="item-input item-input--name"
@@ -122,30 +115,17 @@ function onBlur() {
 	text-align: right;
 }
 
-.btn-order {
+.drag-handle {
 	align-items: center;
-	background: none;
-	border: 1px solid var(--glass-border);
-	border-radius: 4px;
-	color: var(--text-muted);
-	cursor: pointer;
+	color: var(--text-subtle);
+	cursor: grab;
 	display: flex;
 	flex: 0 0 22px;
-	height: 22px;
 	justify-content: center;
-	padding: 0;
-	transition: border-color 0.1s, color 0.1s;
-	width: 22px;
 }
 
-.btn-order:hover:not(:disabled) {
-	border-color: var(--accent-color);
-	color: var(--accent-color);
-}
-
-.btn-order:disabled {
-	cursor: default;
-	opacity: 0.25;
+.drag-handle:active {
+	cursor: grabbing;
 }
 
 .btn-delete {

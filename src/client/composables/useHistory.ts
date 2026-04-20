@@ -31,12 +31,10 @@ export function useHistory() {
 		await fetchHistory();
 	}
 
-	async function reorder(fromIndex: number, direction: "up" | "down") {
-		const list = history.value;
-		const toIndex = direction === "up" ? fromIndex - 1 : fromIndex + 1;
-		if (toIndex < 0 || toIndex >= list.length) return;
-		[list[fromIndex], list[toIndex]] = [list[toIndex], list[fromIndex]];
-		await put("/history/reorder", { ids: list.map((h) => h.id) });
+	async function persistOrder() {
+		const ids = history.value.map((h) => h.id);
+		if (ids.length === 0) return;
+		await put("/history/reorder", { ids });
 	}
 
 	return {
@@ -45,6 +43,6 @@ export function useHistory() {
 		addHistory,
 		updateHistory,
 		deleteHistory,
-		reorder,
+		persistOrder,
 	};
 }
