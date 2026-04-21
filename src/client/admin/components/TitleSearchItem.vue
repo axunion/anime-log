@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { Check, Pencil, Trash2, X } from "lucide-vue-next";
 import { ref } from "vue";
+import { useConfirm } from "../../composables/useConfirm";
 
 const props = defineProps<{
 	id: number;
@@ -15,6 +16,7 @@ const emit = defineEmits<{
 	delete: [id: number];
 }>();
 
+const { confirm } = useConfirm();
 const editing = ref(false);
 const editTitle = ref("");
 const editYear = ref("");
@@ -41,11 +43,11 @@ function commitEdit(e: Event) {
 	editing.value = false;
 }
 
-function onDelete(e: Event) {
+async function onDelete(e: Event) {
 	e.stopPropagation();
-	if (window.confirm(`「${props.titleName}」を削除しますか？`)) {
-		emit("delete", props.id);
-	}
+	if (!(await confirm({ message: `「${props.titleName}」を削除しますか？` })))
+		return;
+	emit("delete", props.id);
 }
 </script>
 

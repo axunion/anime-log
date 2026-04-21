@@ -2,12 +2,14 @@
 import { History as HistoryIcon, Plus } from "lucide-vue-next";
 import { ref, watch } from "vue";
 import draggable from "vuedraggable";
+import { useConfirm } from "../../composables/useConfirm";
 import { useFilter } from "../../composables/useFilter";
 import { useHistory } from "../../composables/useHistory";
 import { useTitles } from "../../composables/useTitles";
 import type { Title } from "../../lib/types";
 import HistoryItem from "./HistoryItem.vue";
 
+const { confirm } = useConfirm();
 const { titles } = useTitles();
 const {
 	history,
@@ -60,7 +62,7 @@ async function onDragEnd(event: { oldIndex?: number; newIndex?: number }) {
 async function onDelete(id: number) {
 	const entry = history.value.find((h) => h.id === id);
 	const name = entry?.display_name ?? entry?.title ?? "";
-	if (!confirm(`「${name}」を削除しますか？`)) return;
+	if (!(await confirm({ message: `「${name}」を削除しますか？` }))) return;
 	await deleteHistory(id);
 }
 </script>
