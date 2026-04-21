@@ -1,13 +1,7 @@
 <script setup lang="ts">
-import {
-	ClipboardList,
-	Mic2,
-	RotateCcw,
-	Save,
-	Trash2,
-	X,
-} from "lucide-vue-next";
+import { ClipboardList, Mic2, RotateCcw, Save, Trash2 } from "lucide-vue-next";
 import { computed, ref, watch } from "vue";
+import Modal from "../../components/Modal.vue";
 import { useCast } from "../../composables/useCast";
 import CastEditorRow from "./CastEditorRow.vue";
 
@@ -152,7 +146,7 @@ async function onSave() {
 				class="admin-form-button"
 				type="button"
 				:disabled="!selectedTitleId"
-				@click="bulkOpen ? cancelBulk() : openBulk()"
+				@click="openBulk"
 			>
 				<ClipboardList :size="13" :stroke-width="2.5" />
 				追加
@@ -168,7 +162,7 @@ async function onSave() {
 			</button>
 		</div>
 
-		<div v-if="bulkOpen" class="bulk-panel">
+		<Modal v-model:open="bulkOpen" title="キャストを一括追加" size="md" :close-on-overlay="false" @close="cancelBulk">
 			<textarea
 				class="bulk-textarea"
 				v-model="bulkText"
@@ -176,18 +170,15 @@ async function onSave() {
 				spellcheck="false"
 				autofocus
 			/>
-			<div class="bulk-actions">
+			<template #footer>
+				<button class="btn-cancel" type="button" @click="cancelBulk">キャンセル</button>
 				<button class="admin-form-button" type="button" :disabled="!bulkText.trim()" @click="commitBulk">
 					取り込む
 				</button>
-				<button class="btn-cancel" type="button" @click="cancelBulk">
-					<X :size="13" :stroke-width="2.5" />
-					キャンセル
-				</button>
-			</div>
-		</div>
+			</template>
+		</Modal>
 
-		<div v-show="!bulkOpen" class="cast-rows">
+		<div class="cast-rows">
 			<CastEditorRow
 				v-for="(row, i) in rows"
 				:key="row.key"
@@ -198,7 +189,7 @@ async function onSave() {
 				@remove="removeRow(i)"
 			/>
 		</div>
-		<div v-show="!bulkOpen" class="cast-footer">
+		<div class="cast-footer">
 			<button
 				class="btn-cancel"
 				type="button"
@@ -247,24 +238,16 @@ async function onSave() {
 	opacity: 0.35;
 }
 
-.bulk-panel {
-	display: flex;
-	flex: 1;
-	flex-direction: column;
-	gap: 0.5em;
-	min-height: 0;
-}
-
 .bulk-textarea {
 	background: var(--glass-bg-strong);
 	border: 1px solid var(--glass-border);
 	border-radius: 6px;
 	box-sizing: border-box;
-	flex: 1;
 	font-size: 13px;
+	height: 200px;
 	line-height: 1.6;
 	padding: 0.5em 0.6em;
-	resize: none;
+	resize: vertical;
 	transition:
 		border-color 0.15s,
 		box-shadow 0.15s;
@@ -275,12 +258,6 @@ async function onSave() {
 	border-color: var(--focus-ring);
 	box-shadow: 0 0 0 3px var(--focus-glow);
 	outline: none;
-}
-
-.bulk-actions {
-	align-items: center;
-	display: flex;
-	gap: 0.5em;
 }
 
 .btn-cancel {

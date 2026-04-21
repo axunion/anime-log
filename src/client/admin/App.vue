@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { onMounted, ref } from "vue";
+import ConfirmDialog from "../components/ConfirmDialog.vue";
 import { useHistory } from "../composables/useHistory";
 import { useTitles } from "../composables/useTitles";
 import type { AdminTab } from "../lib/types";
@@ -39,6 +40,7 @@ onMounted(() => {
 			</div>
 			<HistoryManager v-show="activeTab === 'history'" />
 		</main>
+		<ConfirmDialog />
 	</div>
 </template>
 
