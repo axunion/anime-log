@@ -1,10 +1,13 @@
 import { computed, ref } from "vue";
 import { del, get, post, put } from "../lib/api";
 import type { Title } from "../lib/types";
+import { useHistory } from "./useHistory";
 
 const titles = ref<Title[]>([]);
 
 export function useTitles() {
+	const { fetchHistory } = useHistory();
+
 	const sortedByName = computed(() =>
 		[...titles.value].sort((a, b) => a.title.localeCompare(b.title)),
 	);
@@ -32,7 +35,7 @@ export function useTitles() {
 
 	async function deleteTitle(id: number) {
 		await del(`/titles/${id}`);
-		await fetchTitles();
+		await Promise.all([fetchTitles(), fetchHistory()]);
 	}
 
 	return {
