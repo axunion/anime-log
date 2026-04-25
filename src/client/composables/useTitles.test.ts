@@ -1,17 +1,35 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { useTitles } from "./useTitles.ts";
+
+const mockGet = vi.hoisted(() => vi.fn());
+const mockPost = vi.hoisted(() => vi.fn());
+const mockPut = vi.hoisted(() => vi.fn());
+const mockDel = vi.hoisted(() => vi.fn());
+const fetchHistoryMock = vi.hoisted(() => vi.fn());
 
 vi.mock("../lib/api.ts", () => ({
-	get: vi.fn(),
-	post: vi.fn(),
-	put: vi.fn(),
-	del: vi.fn(),
+	get: mockGet,
+	post: mockPost,
+	put: mockPut,
+	del: mockDel,
 }));
+
+vi.mock("./useHistory.ts", () => ({
+	useHistory: () => ({
+		fetchHistory: fetchHistoryMock,
+	}),
+}));
+
+import { useTitles } from "./useTitles.ts";
 
 describe("useTitles", () => {
 	beforeEach(() => {
 		const { titles } = useTitles();
 		titles.value = [];
+		mockGet.mockReset();
+		mockPost.mockReset();
+		mockPut.mockReset();
+		mockDel.mockReset();
+		fetchHistoryMock.mockReset();
 	});
 
 	it("sortedByName returns titles in localeCompare order", () => {
@@ -44,5 +62,18 @@ describe("useTitles", () => {
 		];
 		void sortedByName.value;
 		expect(titles.value[0].title).toBe("Z");
+	});
+
+	it("deleteTitle refreshes both titles and history", async () => {
+		mockDel.mockResolvedValue({});
+		mockGet.mockResolvedValue([]);
+		fetchHistoryMock.mockResolvedValue(undefined);
+
+		const { deleteTitle } = useTitles();
+		await deleteTitle(42);
+
+		expect(mockDel).toHaveBeenCalledWith("/titles/42");
+		expect(mockGet).toHaveBeenCalledWith("/titles");
+		expect(fetchHistoryMock).toHaveBeenCalledTimes(1);
 	});
 });

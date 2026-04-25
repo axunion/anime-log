@@ -37,20 +37,17 @@ describe("useFilter", () => {
 		expect(filtered.value).toEqual(["Alpha", "Beta"]);
 	});
 
-	it("dot metacharacter matches any character (documented behavior)", () => {
-		const items = ref(["abc", "axc", "a1c"]);
+	it("treats regex metacharacters as literal characters", () => {
+		const items = ref(["a.c", "abc", "a[c", "(test)"]);
 		const { query, filtered } = useFilter(items, (s) => s);
 		query.value = ".";
-		expect(filtered.value).toHaveLength(3);
-	});
+		expect(filtered.value).toEqual(["a.c"]);
 
-	it("unmatched paren throws SyntaxError (documented behavior)", () => {
-		// NOTE: user input is passed directly to new RegExp() without escaping.
-		// Special chars like "(" cause a SyntaxError. This is a known limitation.
-		const items = ref(["abc"]);
-		const { query, filtered } = useFilter(items, (s) => s);
+		query.value = "[";
+		expect(filtered.value).toEqual(["a[c"]);
+
 		query.value = "(";
-		expect(() => filtered.value).toThrow(SyntaxError);
+		expect(filtered.value).toEqual(["(test)"]);
 	});
 
 	it("uses custom keyFn to extract the searchable field", () => {

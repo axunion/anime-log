@@ -5,24 +5,36 @@ import type { CastInput, TitleDetail, VoiceResult } from "../lib/types";
 const selectedDetail = ref<TitleDetail | null>(null);
 const voiceResults = ref<VoiceResult[]>([]);
 const selectedActorName = ref<string | null>(null);
+let castRequestToken = 0;
+let voiceRequestToken = 0;
 
 export function useCast() {
 	async function loadCast(titleId: number) {
-		selectedDetail.value = await get<TitleDetail>(`/titles/${titleId}`);
+		const token = ++castRequestToken;
+		const detail = await get<TitleDetail>(`/titles/${titleId}`);
+		if (token === castRequestToken) {
+			selectedDetail.value = detail;
+		}
 	}
 
 	async function loadVoice(actorName: string) {
+		const token = ++voiceRequestToken;
 		selectedActorName.value = actorName;
-		voiceResults.value = await get<VoiceResult[]>(
+		const results = await get<VoiceResult[]>(
 			`/cast?actor=${encodeURIComponent(actorName)}`,
 		);
+		if (token === voiceRequestToken) {
+			voiceResults.value = results;
+		}
 	}
 
 	function clearCast() {
+		castRequestToken++;
 		selectedDetail.value = null;
 	}
 
 	function clearVoice() {
+		voiceRequestToken++;
 		selectedActorName.value = null;
 		voiceResults.value = [];
 	}

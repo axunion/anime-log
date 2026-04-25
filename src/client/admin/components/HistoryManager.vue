@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { History as HistoryIcon, Plus } from "lucide-vue-next";
-import { ref, watch } from "vue";
+import { ref } from "vue";
 import draggable from "vuedraggable";
 import { useConfirm } from "../../composables/useConfirm";
 import { useFilter } from "../../composables/useFilter";
@@ -11,14 +11,8 @@ import HistoryItem from "./HistoryItem.vue";
 
 const { confirm } = useConfirm();
 const { titles } = useTitles();
-const {
-	history,
-	fetchHistory,
-	addHistory,
-	updateHistory,
-	deleteHistory,
-	persistOrder,
-} = useHistory();
+const { history, addHistory, updateHistory, deleteHistory, persistOrder } =
+	useHistory();
 
 const selectTitleId = ref("");
 const titleQuery = ref("");
@@ -32,9 +26,10 @@ const { filtered } = useFilter(
 	titleQuery,
 );
 
-watch(titleQuery, () => {
+function onTitleQueryInput() {
 	selectTitleId.value = "";
-});
+	showSuggest.value = true;
+}
 
 function selectTitle(t: Title) {
 	selectTitleId.value = String(t.id);
@@ -81,6 +76,7 @@ async function onDelete(id: number) {
 					class="admin-form-input"
 					type="text"
 					v-model="titleQuery"
+					@input="onTitleQueryInput"
 					@focus="showSuggest = true"
 					@blur="showSuggest = false"
 					@keydown.escape="showSuggest = false"
