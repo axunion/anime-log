@@ -153,6 +153,21 @@ describe("PUT /api/cast/:id", () => {
 	});
 });
 
+describe("POST /api/titles/:id/cast validation", () => {
+	beforeEach(() => applySchema(typedEnv.DB));
+
+	it("returns 400 when actor_name is missing", async () => {
+		const titleId = await seedTitle(typedEnv.DB, { title: "Test", year: 2000 });
+		const res = await callApp(typedEnv, {
+			method: "POST",
+			path: `/titles/${titleId}/cast`,
+			auth: true,
+			body: { character_name: "Hero" },
+		});
+		expect(res.status).toBe(400);
+	});
+});
+
 describe("DELETE /api/cast/:id", () => {
 	beforeEach(() => applySchema(typedEnv.DB));
 

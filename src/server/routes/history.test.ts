@@ -108,6 +108,35 @@ describe("PUT /api/history/:id", () => {
 	});
 });
 
+describe("POST /api/history validation", () => {
+	beforeEach(() => applySchema(typedEnv.DB));
+
+	it("returns 400 when year is missing", async () => {
+		const id = await seedTitle(typedEnv.DB, { title: "OP", year: 1999 });
+		const res = await callApp(typedEnv, {
+			method: "POST",
+			path: "/history",
+			auth: true,
+			body: { title_id: id },
+		});
+		expect(res.status).toBe(400);
+	});
+});
+
+describe("PUT /api/history/reorder validation", () => {
+	beforeEach(() => applySchema(typedEnv.DB));
+
+	it("returns 400 when ids contains non-integers", async () => {
+		const res = await callApp(typedEnv, {
+			method: "PUT",
+			path: "/history/reorder",
+			auth: true,
+			body: { ids: ["a", "b"] },
+		});
+		expect(res.status).toBe(400);
+	});
+});
+
 describe("DELETE /api/history/:id", () => {
 	beforeEach(() => applySchema(typedEnv.DB));
 

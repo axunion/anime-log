@@ -1,11 +1,23 @@
 import { Hono } from "hono";
+import { z } from "zod";
 import { authMiddleware } from "../middleware/auth";
 import type { Bindings } from "../types";
 
-type CastInput = {
-	actor_name: string;
-	character_name: string;
-};
+const castInput = z.object({
+	actor_name: z.string().min(1),
+	character_name: z.string().min(1),
+});
+
+const createTitle = z.object({
+	title: z.string().min(1),
+	year: z.number().int(),
+	cast: z.array(castInput).optional(),
+});
+
+const updateTitle = z.object({
+	title: z.string().min(1).optional(),
+	year: z.number().int().optional(),
+});
 
 export const titlesRoutes = new Hono<{ Bindings: Bindings }>();
 
@@ -35,24 +47,30 @@ titlesRoutes.get("/:id", async (c) => {
 });
 
 titlesRoutes.post("/", authMiddleware, async (c) => {
-	const body = await c.req.json<{
-		title: string;
-		year: number;
-		cast?: CastInput[];
-	}>();
+	const body = createTitle.parse(await c.req.json());
 	const result = await c.env.DB.prepare(
 		"INSERT INTO titles (title, year) VALUES (?, ?) RETURNING id",
 	)
 		.bind(body.title, body.year)
 		.first<{ id: number }>();
 
-	if (body.cast && body.cast.length > 0 && result) {
-		const stmts = body.cast.map((m, i) =>
-			c.env.DB.prepare(
-				"INSERT INTO cast_members (title_id, actor_name, character_name, sort_order) VALUES (?, ?, ?, ?)",
-			).bind(result.id, m.actor_name, m.character_name, i),
-		);
-		await c.env.DB.batch(stmts);
+	if (!result) return c.json({ error: "Internal Server Error" }, 500);
+
+	if (body.cast && body.cast.length > 0) {
+		try {
+			const stmts = body.cast.map((m, i) =>
+				c.env.DB.prepare(
+					"INSERT INTO cast_members (title_id, actor_name, character_name, sort_order) VALUES (?, ?, ?, ?)",
+				).bind(result.id, m.actor_name, m.character_name, i),
+			);
+			await c.env.DB.batch(stmts);
+		} catch (err) {
+			// Compensate: delete the orphan title row if cast batch fails
+			await c.env.DB.prepare("DELETE FROM titles WHERE id = ?")
+				.bind(result.id)
+				.run();
+			throw err;
+		}
 	}
 
 	return c.json(result, 201);
@@ -60,7 +78,7 @@ titlesRoutes.post("/", authMiddleware, async (c) => {
 
 titlesRoutes.put("/:id", authMiddleware, async (c) => {
 	const id = Number(c.req.param("id"));
-	const body = await c.req.json<{ title?: string; year?: number }>();
+	const body = updateTitle.parse(await c.req.json());
 	await c.env.DB.prepare(
 		"UPDATE titles SET title = COALESCE(?, title), year = COALESCE(?, year), updated_at = datetime('now') WHERE id = ?",
 	)

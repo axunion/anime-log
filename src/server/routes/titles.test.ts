@@ -105,6 +105,30 @@ describe("PUT /api/titles/:id", () => {
 	});
 });
 
+describe("POST /api/titles validation", () => {
+	beforeEach(() => applySchema(typedEnv.DB));
+
+	it("returns 400 when title is missing", async () => {
+		const res = await callApp(typedEnv, {
+			method: "POST",
+			path: "/titles",
+			auth: true,
+			body: { year: 2000 },
+		});
+		expect(res.status).toBe(400);
+	});
+
+	it("returns 400 when year is a string", async () => {
+		const res = await callApp(typedEnv, {
+			method: "POST",
+			path: "/titles",
+			auth: true,
+			body: { title: "Test", year: "not-a-number" },
+		});
+		expect(res.status).toBe(400);
+	});
+});
+
 describe("DELETE /api/titles/:id", () => {
 	beforeEach(() => applySchema(typedEnv.DB));
 

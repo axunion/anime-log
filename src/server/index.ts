@@ -1,4 +1,5 @@
 import { Hono } from "hono";
+import { ZodError } from "zod";
 import { castRoutes } from "./routes/cast";
 import { exportRoutes } from "./routes/export";
 import { historyRoutes } from "./routes/history";
@@ -11,5 +12,15 @@ app.route("/api/titles", titlesRoutes);
 app.route("/api", castRoutes);
 app.route("/api/history", historyRoutes);
 app.route("/api/export", exportRoutes);
+
+app.onError((err, c) => {
+	if (err instanceof ZodError) {
+		return c.json({ error: "Bad Request", issues: err.issues }, 400);
+	}
+	console.error(err);
+	return c.json({ error: "Internal Server Error" }, 500);
+});
+
+app.notFound((c) => c.json({ error: "Not Found" }, 404));
 
 export default app;

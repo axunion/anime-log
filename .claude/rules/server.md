@@ -22,10 +22,38 @@ Always parse with `Number()` — D1 bindings require numbers, not strings:
 const id = Number(c.req.param("id"))
 ```
 
+## Input validation
+
+All `POST` and `PUT` handlers must validate request bodies with zod. Define schemas at the top of the file and call `.parse()` — `ZodError` is caught globally in `index.ts` and returned as `400 Bad Request`.
+
+```ts
+import { z } from "zod"
+
+const createFoo = z.object({
+  name: z.string().min(1),
+  year: z.number().int(),
+})
+
+foosRoutes.post("/", authMiddleware, async (c) => {
+  const body = createFoo.parse(await c.req.json())
+  // ...
+})
+```
+
+Do NOT use `c.req.json<T>()` with a TypeScript type alone — this provides no runtime validation.
+
+## Error handling
+
+- `ZodError` → 400 via global `app.onError` in `index.ts`
+- All other errors → 500 with `{ error: "Internal Server Error" }` (no internal details exposed)
+- Do not add per-route try/catch for validation — let it bubble to `onError`
+
 ## D1 queries
 
 - Use `RETURNING id` on INSERT when the client needs the new ID
 - Use `c.env.DB.batch([...stmts])` for multiple related inserts — never loop individual awaits
+- Batch size limit is 100 statements per call; split with `stmts.slice(i, i + 100)` when needed
+- Use subquery for auto-incrementing `sort_order` to avoid two-query race conditions:
 
 ```ts
 // Single insert
@@ -38,6 +66,11 @@ const stmts = items.map((item, i) =>
   c.env.DB.prepare("INSERT INTO cast_members (...) VALUES (?, ?, ?)").bind(...)
 )
 await c.env.DB.batch(stmts)
+
+// sort_order via subquery (avoids MAX+1 race condition)
+await c.env.DB.prepare(
+  "INSERT INTO foo (name, sort_order) VALUES (?, COALESCE((SELECT MAX(sort_order)+1 FROM foo), 0)) RETURNING id"
+).bind(name).first()
 ```
 
 ## Adding a new route module

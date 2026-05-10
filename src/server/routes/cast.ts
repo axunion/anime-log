@@ -1,6 +1,21 @@
 import { Hono } from "hono";
+import { z } from "zod";
 import { authMiddleware } from "../middleware/auth";
 import type { Bindings } from "../types";
+
+const castMemberInput = z.object({
+	actor_name: z.string().min(1),
+	character_name: z.string().min(1),
+});
+
+const castListInput = z.object({
+	cast: z.array(castMemberInput),
+});
+
+const updateCastInput = z.object({
+	actor_name: z.string().min(1).optional(),
+	character_name: z.string().min(1).optional(),
+});
 
 export const castRoutes = new Hono<{ Bindings: Bindings }>();
 
@@ -22,22 +37,14 @@ castRoutes.get("/cast", async (c) => {
 
 castRoutes.post("/titles/:id/cast", authMiddleware, async (c) => {
 	const titleId = Number(c.req.param("id"));
-	const body = await c.req.json<{
-		actor_name: string;
-		character_name: string;
-	}>();
-
-	const row = await c.env.DB.prepare(
-		"SELECT MAX(sort_order) AS max_order FROM cast_members WHERE title_id = ?",
-	)
-		.bind(titleId)
-		.first<{ max_order: number | null }>();
-	const maxOrder = row?.max_order ?? -1;
+	const body = castMemberInput.parse(await c.req.json());
 
 	const result = await c.env.DB.prepare(
-		"INSERT INTO cast_members (title_id, actor_name, character_name, sort_order) VALUES (?, ?, ?, ?) RETURNING id",
+		`INSERT INTO cast_members (title_id, actor_name, character_name, sort_order)
+     VALUES (?, ?, ?, COALESCE((SELECT MAX(sort_order)+1 FROM cast_members WHERE title_id = ?), 0))
+     RETURNING id`,
 	)
-		.bind(titleId, body.actor_name, body.character_name, maxOrder + 1)
+		.bind(titleId, body.actor_name, body.character_name, titleId)
 		.first();
 
 	return c.json(result, 201);
@@ -45,9 +52,7 @@ castRoutes.post("/titles/:id/cast", authMiddleware, async (c) => {
 
 castRoutes.put("/titles/:id/cast", authMiddleware, async (c) => {
 	const titleId = Number(c.req.param("id"));
-	const body = await c.req.json<{
-		cast: { actor_name: string; character_name: string }[];
-	}>();
+	const body = castListInput.parse(await c.req.json());
 	const stmts = [
 		c.env.DB.prepare("DELETE FROM cast_members WHERE title_id = ?").bind(
 			titleId,
@@ -58,16 +63,16 @@ castRoutes.put("/titles/:id/cast", authMiddleware, async (c) => {
 			).bind(titleId, m.actor_name, m.character_name, i),
 		),
 	];
-	await c.env.DB.batch(stmts);
+	// D1 batch limit is 100 statements per call
+	for (let i = 0; i < stmts.length; i += 100) {
+		await c.env.DB.batch(stmts.slice(i, i + 100));
+	}
 	return c.json({ ok: true });
 });
 
 castRoutes.put("/cast/:id", authMiddleware, async (c) => {
 	const id = Number(c.req.param("id"));
-	const body = await c.req.json<{
-		actor_name?: string;
-		character_name?: string;
-	}>();
+	const body = updateCastInput.parse(await c.req.json());
 	await c.env.DB.prepare(
 		"UPDATE cast_members SET actor_name = COALESCE(?, actor_name), character_name = COALESCE(?, character_name) WHERE id = ?",
 	)

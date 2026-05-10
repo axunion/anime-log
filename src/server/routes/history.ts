@@ -1,6 +1,22 @@
 import { Hono } from "hono";
+import { z } from "zod";
 import { authMiddleware } from "../middleware/auth";
 import type { Bindings } from "../types";
+
+const createHistory = z.object({
+	title_id: z.number().int(),
+	display_name: z.string().optional(),
+	year: z.number().int(),
+});
+
+const reorderHistory = z.object({
+	ids: z.array(z.number().int()),
+});
+
+const updateHistory = z.object({
+	display_name: z.string().nullable().optional(),
+	year: z.number().int(),
+});
 
 export const historyRoutes = new Hono<{ Bindings: Bindings }>();
 
@@ -15,21 +31,14 @@ historyRoutes.get("/", async (c) => {
 });
 
 historyRoutes.post("/", authMiddleware, async (c) => {
-	const body = await c.req.json<{
-		title_id: number;
-		display_name?: string;
-		year: number;
-	}>();
-
-	const row = await c.env.DB.prepare(
-		"SELECT MAX(sort_order) AS max_order FROM history",
-	).first<{ max_order: number | null }>();
-	const maxOrder = row?.max_order ?? -1;
+	const body = createHistory.parse(await c.req.json());
 
 	const result = await c.env.DB.prepare(
-		"INSERT INTO history (title_id, display_name, year, sort_order) VALUES (?, ?, ?, ?) RETURNING id",
+		`INSERT INTO history (title_id, display_name, year, sort_order)
+     VALUES (?, ?, ?, COALESCE((SELECT MAX(sort_order)+1 FROM history), 0))
+     RETURNING id`,
 	)
-		.bind(body.title_id, body.display_name ?? null, body.year, maxOrder + 1)
+		.bind(body.title_id, body.display_name ?? null, body.year)
 		.first();
 
 	return c.json(result, 201);
@@ -42,7 +51,7 @@ historyRoutes.delete("/:id", authMiddleware, async (c) => {
 });
 
 historyRoutes.put("/reorder", authMiddleware, async (c) => {
-	const body = await c.req.json<{ ids: number[] }>();
+	const body = reorderHistory.parse(await c.req.json());
 	const stmts = body.ids.map((id, i) =>
 		c.env.DB.prepare("UPDATE history SET sort_order = ? WHERE id = ?").bind(
 			i,
@@ -58,10 +67,7 @@ historyRoutes.put("/reorder", authMiddleware, async (c) => {
 
 historyRoutes.put("/:id", authMiddleware, async (c) => {
 	const id = Number(c.req.param("id"));
-	const body = await c.req.json<{
-		display_name?: string | null;
-		year: number;
-	}>();
+	const body = updateHistory.parse(await c.req.json());
 	await c.env.DB.prepare(
 		"UPDATE history SET display_name = ?, year = ? WHERE id = ?",
 	)
