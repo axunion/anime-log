@@ -49,7 +49,10 @@ historyRoutes.put("/reorder", authMiddleware, async (c) => {
 			id,
 		),
 	);
-	await c.env.DB.batch(stmts);
+	// D1 batch limit is 100 statements per call
+	for (let i = 0; i < stmts.length; i += 100) {
+		await c.env.DB.batch(stmts.slice(i, i + 100));
+	}
 	return c.json({ ok: true });
 });
 
