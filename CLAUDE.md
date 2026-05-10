@@ -41,6 +41,7 @@ Project-specific skills for common workflows. Invoke them by name or with `/skil
 | `server-feature` | Add a Hono route and TypeScript types |
 | `client-feature` | Add a Vue composable and component |
 | `api-test` | Test API endpoints against the local dev server |
+| `db-query` | Run a SQL query against the local D1 database |
 
 ## Keeping skills and rules up to date
 
