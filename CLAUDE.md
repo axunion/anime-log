@@ -14,8 +14,7 @@ pnpm dev              # Start dev server with Cloudflare Worker + Vite HMR (http
 pnpm build            # Build client (dist/client/) and worker (dist/anime_log/)
 pnpm deploy           # Build then deploy to Cloudflare (requires valid database_id in wrangler.toml)
 pnpm typecheck        # TypeScript type check (vue-tsc --noEmit)
-pnpm check            # Biome lint
-pnpm fix              # Biome lint + auto-fix
+pnpm fix              # Biome lint + auto-fix (all files, respects .gitignore)
 
 pnpm migrate:generate # Regenerate migrations/0002_seed.sql from data/data.js + data/history.js
 pnpm db:migrate       # Apply migrations to local D1
