@@ -94,8 +94,23 @@ describe("del", () => {
 });
 
 describe("error handling", () => {
-	it("throws Error with status when response is not ok", async () => {
+	it("throws Error with status when response is not ok and body has no error", async () => {
 		mockFetch.mockResolvedValue(makeResponse({}, false, 404));
 		await expect(get("/missing")).rejects.toThrow("404");
+	});
+
+	it("uses server error message when body contains error field", async () => {
+		mockFetch.mockResolvedValue(makeResponse({ error: "Not found" }, false, 404));
+		await expect(get("/missing")).rejects.toThrow("Not found");
+	});
+
+	it("falls back to status text when body is not JSON", async () => {
+		mockFetch.mockResolvedValue({
+			ok: false,
+			status: 500,
+			statusText: "Internal Server Error",
+			json: () => Promise.reject(new Error("not json")),
+		});
+		await expect(get("/broken")).rejects.toThrow("500 Internal Server Error");
 	});
 });

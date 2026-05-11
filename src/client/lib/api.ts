@@ -2,7 +2,12 @@ const BASE = "/api";
 
 async function request<T>(path: string, options?: RequestInit): Promise<T> {
 	const res = await fetch(`${BASE}${path}`, options);
-	if (!res.ok) throw new Error(`${res.status} ${res.statusText}`);
+	if (!res.ok) {
+		const body = await res
+			.json()
+			.catch(() => null) as { error?: string } | null;
+		throw new Error(body?.error ?? `${res.status} ${res.statusText}`);
+	}
 	return res.json() as Promise<T>;
 }
 

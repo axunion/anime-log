@@ -61,9 +61,9 @@ const result = await c.env.DB.prepare(
   "INSERT INTO titles (title, year) VALUES (?, ?) RETURNING id"
 ).bind(body.title, body.year).first<{ id: number }>()
 
-// Batch insert
+// Batch insert — use buildCastInsertStmts() from lib/cast.ts for cast_members
 const stmts = items.map((item, i) =>
-  c.env.DB.prepare("INSERT INTO cast_members (...) VALUES (?, ?, ?)").bind(...)
+  c.env.DB.prepare("INSERT INTO foo (...) VALUES (?, ?, ?)").bind(...)
 )
 await c.env.DB.batch(stmts)
 
@@ -71,6 +71,30 @@ await c.env.DB.batch(stmts)
 await c.env.DB.prepare(
   "INSERT INTO foo (name, sort_order) VALUES (?, COALESCE((SELECT MAX(sort_order)+1 FROM foo), 0)) RETURNING id"
 ).bind(name).first()
+```
+
+## Resource existence checks
+
+Before inserting a child row, verify the parent exists and return 404 if not (prevents FK violations leaking as 500):
+
+```ts
+const parent = await c.env.DB.prepare("SELECT 1 FROM titles WHERE id = ?")
+  .bind(id)
+  .first()
+if (!parent) return c.json({ error: "Not found" }, 404)
+```
+
+## Partial updates (PUT)
+
+Use `COALESCE(?, column)` for NOT NULL fields that may be omitted from the request body.
+For nullable fields that must support explicit null clearing, use direct assignment:
+
+```ts
+// Partial update: omit field → keep old value
+"UPDATE foo SET name = COALESCE(?, name), year = COALESCE(?, year) WHERE id = ?"
+
+// Nullable field: omit or null → clear; string → set
+"UPDATE history SET display_name = ?, year = COALESCE(?, year) WHERE id = ?"
 ```
 
 ## Adding a new route module

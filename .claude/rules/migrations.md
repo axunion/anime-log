@@ -18,12 +18,22 @@ CREATE TABLE my_table (
   title_id INTEGER NOT NULL REFERENCES titles(id) ON DELETE CASCADE,
   some_text TEXT NOT NULL,
   sort_order INTEGER NOT NULL DEFAULT 0,
-  created_at TEXT NOT NULL DEFAULT (datetime('now'))
-  -- mutable tables also get: updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+  created_at TEXT NOT NULL DEFAULT (datetime('now')),
+  updated_at TEXT NOT NULL DEFAULT (datetime('now'))  -- mutable tables only
 );
 
 -- Index every FK column
 CREATE INDEX idx_my_table_title_id ON my_table(title_id);
+```
+
+When adding `updated_at` to an **existing** table, SQLite prohibits non-constant defaults
+in `ALTER TABLE ADD COLUMN`. Use a nullable column instead; UPDATE handlers set it explicitly:
+
+```sql
+-- Cannot use DEFAULT (datetime('now')) in ALTER TABLE
+ALTER TABLE my_table ADD COLUMN updated_at TEXT;
+-- Then in handlers: SET updated_at = datetime('now')
+-- Existing rows will be NULL (meaning "never explicitly updated")
 ```
 
 ## SQLite-only syntax

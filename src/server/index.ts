@@ -8,6 +8,12 @@ import type { Bindings } from "./types";
 
 const app = new Hono<{ Bindings: Bindings }>();
 
+app.use("*", async (c, next) => {
+	await next();
+	c.res.headers.set("X-Content-Type-Options", "nosniff");
+	c.res.headers.set("X-Frame-Options", "DENY");
+});
+
 app.route("/api/titles", titlesRoutes);
 app.route("/api", castRoutes);
 app.route("/api/history", historyRoutes);

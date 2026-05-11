@@ -106,6 +106,29 @@ describe("PUT /api/history/:id", () => {
 		expect(updated?.display_name).toBe("劇場版");
 		expect(updated?.year).toBe(2021);
 	});
+
+	it("keeps year unchanged when omitted", async () => {
+		const titleId = await seedTitle(typedEnv.DB, { title: "OP", year: 1999 });
+		await seedHistory(typedEnv.DB, [{ title_id: titleId, year: 2020 }]);
+		const row = await typedEnv.DB.prepare(
+			"SELECT id FROM history LIMIT 1",
+		).first<{ id: number }>();
+
+		await callApp(typedEnv, {
+			method: "PUT",
+			path: `/history/${row!.id}`,
+			auth: true,
+			body: { display_name: "劇場版" },
+		});
+
+		const updated = await typedEnv.DB.prepare(
+			"SELECT display_name, year FROM history WHERE id = ?",
+		)
+			.bind(row!.id)
+			.first<{ display_name: string | null; year: number }>();
+		expect(updated?.display_name).toBe("劇場版");
+		expect(updated?.year).toBe(2020);
+	});
 });
 
 describe("POST /api/history validation", () => {

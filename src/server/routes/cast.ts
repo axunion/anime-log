@@ -1,5 +1,6 @@
 import { Hono } from "hono";
 import { z } from "zod";
+import { buildCastInsertStmts } from "../lib/cast";
 import { authMiddleware } from "../middleware/auth";
 import type { Bindings } from "../types";
 
@@ -16,6 +17,10 @@ const updateCastInput = z.object({
 	actor_name: z.string().min(1).optional(),
 	character_name: z.string().min(1).optional(),
 });
+
+async function requireTitle(db: D1Database, id: number) {
+	return db.prepare("SELECT 1 FROM titles WHERE id = ?").bind(id).first();
+}
 
 export const castRoutes = new Hono<{ Bindings: Bindings }>();
 
@@ -39,6 +44,8 @@ castRoutes.post("/titles/:id/cast", authMiddleware, async (c) => {
 	const titleId = Number(c.req.param("id"));
 	const body = castMemberInput.parse(await c.req.json());
 
+	if (!(await requireTitle(c.env.DB, titleId))) return c.json({ error: "Not found" }, 404);
+
 	const result = await c.env.DB.prepare(
 		`INSERT INTO cast_members (title_id, actor_name, character_name, sort_order)
      VALUES (?, ?, ?, COALESCE((SELECT MAX(sort_order)+1 FROM cast_members WHERE title_id = ?), 0))
@@ -53,15 +60,14 @@ castRoutes.post("/titles/:id/cast", authMiddleware, async (c) => {
 castRoutes.put("/titles/:id/cast", authMiddleware, async (c) => {
 	const titleId = Number(c.req.param("id"));
 	const body = castListInput.parse(await c.req.json());
+
+	if (!(await requireTitle(c.env.DB, titleId))) return c.json({ error: "Not found" }, 404);
+
 	const stmts = [
 		c.env.DB.prepare("DELETE FROM cast_members WHERE title_id = ?").bind(
 			titleId,
 		),
-		...body.cast.map((m, i) =>
-			c.env.DB.prepare(
-				"INSERT INTO cast_members (title_id, actor_name, character_name, sort_order) VALUES (?, ?, ?, ?)",
-			).bind(titleId, m.actor_name, m.character_name, i),
-		),
+		...buildCastInsertStmts(c.env.DB, titleId, body.cast),
 	];
 	// D1 batch limit is 100 statements per call
 	for (let i = 0; i < stmts.length; i += 100) {
@@ -74,7 +80,7 @@ castRoutes.put("/cast/:id", authMiddleware, async (c) => {
 	const id = Number(c.req.param("id"));
 	const body = updateCastInput.parse(await c.req.json());
 	await c.env.DB.prepare(
-		"UPDATE cast_members SET actor_name = COALESCE(?, actor_name), character_name = COALESCE(?, character_name) WHERE id = ?",
+		"UPDATE cast_members SET actor_name = COALESCE(?, actor_name), character_name = COALESCE(?, character_name), updated_at = datetime('now') WHERE id = ?",
 	)
 		.bind(body.actor_name ?? null, body.character_name ?? null, id)
 		.run();

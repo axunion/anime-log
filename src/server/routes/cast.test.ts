@@ -166,6 +166,30 @@ describe("POST /api/titles/:id/cast validation", () => {
 		});
 		expect(res.status).toBe(400);
 	});
+
+	it("returns 404 when title does not exist", async () => {
+		const res = await callApp(typedEnv, {
+			method: "POST",
+			path: "/titles/9999/cast",
+			auth: true,
+			body: { actor_name: "Actor", character_name: "Hero" },
+		});
+		expect(res.status).toBe(404);
+	});
+});
+
+describe("PUT /api/titles/:id/cast validation", () => {
+	beforeEach(() => applySchema(typedEnv.DB));
+
+	it("returns 404 when title does not exist", async () => {
+		const res = await callApp(typedEnv, {
+			method: "PUT",
+			path: "/titles/9999/cast",
+			auth: true,
+			body: { cast: [{ actor_name: "Actor", character_name: "Hero" }] },
+		});
+		expect(res.status).toBe(404);
+	});
 });
 
 describe("DELETE /api/cast/:id", () => {

@@ -15,7 +15,7 @@ const reorderHistory = z.object({
 
 const updateHistory = z.object({
 	display_name: z.string().nullable().optional(),
-	year: z.number().int(),
+	year: z.number().int().optional(),
 });
 
 export const historyRoutes = new Hono<{ Bindings: Bindings }>();
@@ -69,9 +69,9 @@ historyRoutes.put("/:id", authMiddleware, async (c) => {
 	const id = Number(c.req.param("id"));
 	const body = updateHistory.parse(await c.req.json());
 	await c.env.DB.prepare(
-		"UPDATE history SET display_name = ?, year = ? WHERE id = ?",
+		"UPDATE history SET display_name = ?, year = COALESCE(?, year), updated_at = datetime('now') WHERE id = ?",
 	)
-		.bind(body.display_name ?? null, body.year, id)
+		.bind(body.display_name ?? null, body.year ?? null, id)
 		.run();
 	return c.json({ ok: true });
 });

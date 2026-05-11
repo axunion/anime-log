@@ -1,5 +1,6 @@
 import { Hono } from "hono";
 import { z } from "zod";
+import { buildCastInsertStmts } from "../lib/cast";
 import { authMiddleware } from "../middleware/auth";
 import type { Bindings } from "../types";
 
@@ -58,12 +59,9 @@ titlesRoutes.post("/", authMiddleware, async (c) => {
 
 	if (body.cast && body.cast.length > 0) {
 		try {
-			const stmts = body.cast.map((m, i) =>
-				c.env.DB.prepare(
-					"INSERT INTO cast_members (title_id, actor_name, character_name, sort_order) VALUES (?, ?, ?, ?)",
-				).bind(result.id, m.actor_name, m.character_name, i),
+			await c.env.DB.batch(
+				buildCastInsertStmts(c.env.DB, result.id, body.cast),
 			);
-			await c.env.DB.batch(stmts);
 		} catch (err) {
 			// Compensate: delete the orphan title row if cast batch fails
 			await c.env.DB.prepare("DELETE FROM titles WHERE id = ?")

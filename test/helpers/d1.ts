@@ -12,7 +12,8 @@ const STATEMENTS = [
     actor_name TEXT NOT NULL,
     character_name TEXT NOT NULL,
     sort_order INTEGER NOT NULL DEFAULT 0,
-    created_at TEXT NOT NULL DEFAULT (datetime('now'))
+    created_at TEXT NOT NULL DEFAULT (datetime('now')),
+    updated_at TEXT
   )`,
 	"CREATE INDEX IF NOT EXISTS idx_cast_title_id ON cast_members(title_id)",
 	"CREATE INDEX IF NOT EXISTS idx_cast_actor_name ON cast_members(actor_name)",
@@ -22,7 +23,8 @@ const STATEMENTS = [
     display_name TEXT,
     year INTEGER NOT NULL,
     sort_order INTEGER NOT NULL DEFAULT 0,
-    created_at TEXT NOT NULL DEFAULT (datetime('now'))
+    created_at TEXT NOT NULL DEFAULT (datetime('now')),
+    updated_at TEXT
   )`,
 	"CREATE INDEX IF NOT EXISTS idx_history_title_id ON history(title_id)",
 ];
