@@ -19,12 +19,20 @@ Create `src/server/routes/<name>.ts` following this template:
 
 ```typescript
 import { Hono } from "hono";
+import { z } from "zod";
 import { authMiddleware } from "../middleware/auth";
 import type { Bindings } from "../types";
 
+const createMyItem = z.object({
+  some_text: z.string().min(1),
+});
+
+const updateMyItem = z.object({
+  some_text: z.string().min(1).optional(),
+});
+
 export const myRoutes = new Hono<{ Bindings: Bindings }>();
 
-// Read endpoints — no auth needed
 myRoutes.get("/", async (c) => {
   const { results } = await c.env.DB.prepare(
     "SELECT id, some_text FROM my_table ORDER BY sort_order"
@@ -32,9 +40,8 @@ myRoutes.get("/", async (c) => {
   return c.json(results);
 });
 
-// Write endpoints — see server.md for auth and D1 rules
 myRoutes.post("/", authMiddleware, async (c) => {
-  const body = await c.req.json<{ some_text: string }>();
+  const body = createMyItem.parse(await c.req.json());
   const result = await c.env.DB.prepare(
     "INSERT INTO my_table (some_text) VALUES (?) RETURNING id"
   ).bind(body.some_text).first<{ id: number }>();
@@ -43,10 +50,10 @@ myRoutes.post("/", authMiddleware, async (c) => {
 
 myRoutes.put("/:id", authMiddleware, async (c) => {
   const id = Number(c.req.param("id"));
-  const body = await c.req.json<{ some_text: string }>();
+  const body = updateMyItem.parse(await c.req.json());
   await c.env.DB.prepare(
-    "UPDATE my_table SET some_text = ? WHERE id = ?"
-  ).bind(body.some_text, id).run();
+    "UPDATE my_table SET some_text = COALESCE(?, some_text) WHERE id = ?"
+  ).bind(body.some_text ?? null, id).run();
   return c.json({ ok: true });
 });
 
@@ -56,6 +63,8 @@ myRoutes.delete("/:id", authMiddleware, async (c) => {
   return c.json({ ok: true });
 });
 ```
+
+**Zod schemas must be defined at the top of the file.** `ZodError` is caught globally in `index.ts` and returned as `400 Bad Request` — do not add per-route try/catch. Never use `c.req.json<T>()` with a TypeScript type alone; it provides no runtime validation.
 
 **Mount in `src/server/index.ts`:**
 ```typescript

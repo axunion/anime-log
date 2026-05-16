@@ -47,6 +47,8 @@ Admin UI token field (any non-empty string works locally).
 ```bash
 TOKEN="paste-token-here"
 
+# --- Titles ---
+
 # Create a title
 curl -s -X POST http://localhost:5173/api/titles \
   -H "Content-Type: application/json" \
@@ -62,6 +64,32 @@ curl -s -X PUT http://localhost:5173/api/titles/1 \
 # Delete a title
 curl -s -X DELETE http://localhost:5173/api/titles/1 \
   -H "Authorization: Bearer $TOKEN"
+
+# --- Cast ---
+
+# Add a cast member to a title
+curl -s -X POST http://localhost:5173/api/titles/1/cast \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer $TOKEN" \
+  -d '{"actor_name":"山田太郎","character_name":"主人公"}'
+
+# Bulk replace all cast for a title (DELETE + INSERT in one batch)
+curl -s -X PUT http://localhost:5173/api/titles/1/cast \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer $TOKEN" \
+  -d '{"cast":[{"actor_name":"山田太郎","character_name":"主人公"},{"actor_name":"鈴木花子","character_name":"ヒロイン"}]}'
+
+# Update a single cast member
+curl -s -X PUT http://localhost:5173/api/cast/1 \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer $TOKEN" \
+  -d '{"actor_name":"新しい名前"}'
+
+# Delete a cast member
+curl -s -X DELETE http://localhost:5173/api/cast/1 \
+  -H "Authorization: Bearer $TOKEN"
+
+# --- History ---
 
 # Reorder history
 curl -s -X PUT http://localhost:5173/api/history/reorder \

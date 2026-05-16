@@ -44,7 +44,8 @@ castRoutes.post("/titles/:id/cast", authMiddleware, async (c) => {
 	const titleId = Number(c.req.param("id"));
 	const body = castMemberInput.parse(await c.req.json());
 
-	if (!(await requireTitle(c.env.DB, titleId))) return c.json({ error: "Not found" }, 404);
+	if (!(await requireTitle(c.env.DB, titleId)))
+		return c.json({ error: "Not found" }, 404);
 
 	const result = await c.env.DB.prepare(
 		`INSERT INTO cast_members (title_id, actor_name, character_name, sort_order)
@@ -61,7 +62,8 @@ castRoutes.put("/titles/:id/cast", authMiddleware, async (c) => {
 	const titleId = Number(c.req.param("id"));
 	const body = castListInput.parse(await c.req.json());
 
-	if (!(await requireTitle(c.env.DB, titleId))) return c.json({ error: "Not found" }, 404);
+	if (!(await requireTitle(c.env.DB, titleId)))
+		return c.json({ error: "Not found" }, 404);
 
 	const stmts = [
 		c.env.DB.prepare("DELETE FROM cast_members WHERE title_id = ?").bind(

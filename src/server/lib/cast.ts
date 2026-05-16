@@ -6,5 +6,7 @@ export function buildCastInsertStmts(
 	const stmt = db.prepare(
 		"INSERT INTO cast_members (title_id, actor_name, character_name, sort_order) VALUES (?, ?, ?, ?)",
 	);
-	return members.map((m, i) => stmt.bind(titleId, m.actor_name, m.character_name, i));
+	return members.map((m, i) =>
+		stmt.bind(titleId, m.actor_name, m.character_name, i),
+	);
 }

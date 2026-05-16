@@ -100,7 +100,9 @@ describe("error handling", () => {
 	});
 
 	it("uses server error message when body contains error field", async () => {
-		mockFetch.mockResolvedValue(makeResponse({ error: "Not found" }, false, 404));
+		mockFetch.mockResolvedValue(
+			makeResponse({ error: "Not found" }, false, 404),
+		);
 		await expect(get("/missing")).rejects.toThrow("Not found");
 	});
 

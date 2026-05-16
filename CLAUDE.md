@@ -48,7 +48,8 @@ Project-specific skills for common workflows. Invoke them by name or with `/skil
 After any code change, check whether `.claude/rules/` or `.claude/skills/` need updating:
 
 - Modified server code → review `rules/server.md` and `skills/server-feature/SKILL.md`
-- Modified Vue components or composables → review `rules/vue.md` and `skills/client-feature/SKILL.md`
+- Modified Vue components → review `rules/vue.md` and `skills/client-feature/SKILL.md`
+- Modified composables → review `rules/composables.md` and `skills/client-feature/SKILL.md`
 - Modified migrations → review `rules/migrations.md` and `skills/migrate/SKILL.md`
 - Added or removed a feature layer → review `skills/anime-log-feature/SKILL.md`
 
@@ -61,7 +62,8 @@ Coding conventions are in `.claude/rules/` (path-scoped, auto-loaded when editin
 - `migrations.md` — D1/SQLite schema patterns (`migrations/**`)
 - `server.md` — Hono route and D1 query conventions (`src/server/**`)
 - `vue.md` — Vue 3 component conventions (`src/client/**/*.vue`)
-- `testing.md` — Test structure, patterns, and what to test/skip (auto-loaded for `*.test.ts`)
+- `composables.md` — Composable conventions: singleton pattern, race guard, mutation→re-fetch (`src/client/composables/*.ts`)
+- `testing.md` — Test structure, patterns, and what to test/skip (`**/*.test.ts`)
 
 ## Architecture
 

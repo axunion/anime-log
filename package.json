@@ -8,6 +8,7 @@
 		"build": "vite build",
 		"deploy": "vite build && wrangler deploy",
 		"typecheck": "vue-tsc --noEmit",
+		"check": "biome check . && vue-tsc --noEmit",
 		"fix": "biome check --write .",
 		"migrate:generate": "pnpm exec tsx scripts/migrate.ts",
 		"db:migrate": "wrangler d1 migrations apply anime-db --local",
