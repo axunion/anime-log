@@ -16,9 +16,11 @@ pnpm deploy           # Build then deploy to Cloudflare (requires valid database
 pnpm typecheck        # TypeScript type check (vue-tsc --noEmit)
 pnpm fix              # Biome lint + auto-fix (all files, respects .gitignore)
 
-pnpm migrate:generate # Regenerate migrations/0002_seed.sql from data/data.js + data/history.js
+pnpm db:generate      # Generate migration SQL from schema changes (drizzle-kit)
 pnpm db:migrate       # Apply migrations to local D1
 pnpm db:migrate:remote # Apply migrations to remote D1
+pnpm db:reset         # Wipe local D1 state and re-apply all migrations (fresh local DB)
+pnpm seed:generate    # Regenerate migrations/0002_seed.sql from data/data.js + data/history.js
 
 pnpm test             # Run all tests (client + server)
 pnpm test:client      # Client composable/API tests (Vitest + happy-dom)
@@ -105,10 +107,14 @@ Two independent Vue 3 apps (MPA). Each mounts via `createApp(App).mount("#app")`
 
 ### Database schema
 
+Schema source of truth: `src/server/db/schema.ts` (Drizzle ORM `sqliteTable` definitions).
+
 Three tables in D1 (SQLite):
 - `titles` (id, title UNIQUE, year, timestamps)
-- `cast_members` (title_id FK→titles CASCADE, actor_name, character_name, sort_order)
-- `history` (title_id FK→titles CASCADE, display_name, year, sort_order)
+- `cast_members` (title_id FK→titles CASCADE, actor_name, character_name, sort_order, updated_at nullable)
+- `history` (title_id FK→titles CASCADE, display_name nullable, year, sort_order, updated_at nullable)
+
+To add columns or tables: edit `schema.ts` → `pnpm db:generate` → `pnpm db:migrate`.
 
 ### Vite config notes
 

@@ -7,3 +7,4 @@ assets = { directory = "dist/client" }
 binding = "DB"
 database_name = "anime-db"
 database_id = "<作成後に設定>"
+migrations_dir = "migrations"

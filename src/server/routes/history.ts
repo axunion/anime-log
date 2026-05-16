@@ -1,73 +1,90 @@
+import { eq, sql } from "drizzle-orm";
+import type { BatchItem } from "drizzle-orm/batch";
+import { createInsertSchema } from "drizzle-zod";
 import { Hono } from "hono";
 import { z } from "zod";
+import { getDb } from "../db/client";
+import { history, titles } from "../db/schema";
+import { batchAll } from "../lib/cast";
 import { authMiddleware } from "../middleware/auth";
 import type { Bindings } from "../types";
 
-const createHistory = z.object({
-	title_id: z.number().int(),
-	display_name: z.string().optional(),
-	year: z.number().int(),
+const createHistory = createInsertSchema(history).pick({
+	title_id: true,
+	display_name: true,
+	year: true,
 });
 
 const reorderHistory = z.object({
 	ids: z.array(z.number().int()),
 });
 
-const updateHistory = z.object({
-	display_name: z.string().nullable().optional(),
-	year: z.number().int().optional(),
-});
+const updateHistory = createInsertSchema(history)
+	.pick({ display_name: true, year: true })
+	.partial();
 
 export const historyRoutes = new Hono<{ Bindings: Bindings }>();
 
 historyRoutes.get("/", async (c) => {
-	const { results } = await c.env.DB.prepare(
-		`SELECT h.id, h.display_name, h.year, h.sort_order, t.id AS title_id, t.title
-     FROM history h
-     JOIN titles t ON h.title_id = t.id
-     ORDER BY h.sort_order`,
-	).all();
-	return c.json(results);
+	const db = getDb(c.env.DB);
+	const rows = await db
+		.select({
+			id: history.id,
+			display_name: history.display_name,
+			year: history.year,
+			sort_order: history.sort_order,
+			title_id: titles.id,
+			title: titles.title,
+		})
+		.from(history)
+		.innerJoin(titles, eq(history.title_id, titles.id))
+		.orderBy(history.sort_order);
+	return c.json(rows);
 });
 
 historyRoutes.post("/", authMiddleware, async (c) => {
 	const body = createHistory.parse(await c.req.json());
+	const db = getDb(c.env.DB);
 
-	const result = await c.env.DB.prepare(
-		`INSERT INTO history (title_id, display_name, year, sort_order)
-     VALUES (?, ?, ?, COALESCE((SELECT MAX(sort_order)+1 FROM history), 0))
-     RETURNING id`,
-	)
-		.bind(body.title_id, body.display_name ?? null, body.year)
-		.first();
+	// sort_order via subquery avoids MAX+1 race condition
+	const [result] = await db
+		.insert(history)
+		.values({
+			title_id: body.title_id,
+			display_name: body.display_name ?? null,
+			year: body.year,
+			sort_order: sql`COALESCE((SELECT MAX(sort_order)+1 FROM history), 0)`,
+		})
+		.returning({ id: history.id });
 
 	return c.json(result, 201);
 });
 
 historyRoutes.delete("/:id", authMiddleware, async (c) => {
 	const id = Number(c.req.param("id"));
-	await c.env.DB.prepare("DELETE FROM history WHERE id = ?").bind(id).run();
+	const db = getDb(c.env.DB);
+	await db.delete(history).where(eq(history.id, id));
 	return c.json({ ok: true });
 });
 
 historyRoutes.put("/reorder", authMiddleware, async (c) => {
 	const body = reorderHistory.parse(await c.req.json());
-	const stmts = body.ids.map((id, i) =>
-		c.env.DB.prepare("UPDATE history SET sort_order = ? WHERE id = ?").bind(
-			i,
-			id,
-		),
+	const db = getDb(c.env.DB);
+	const stmts: BatchItem<"sqlite">[] = body.ids.map(
+		(id, i) =>
+			db
+				.update(history)
+				.set({ sort_order: i })
+				.where(eq(history.id, id)) as BatchItem<"sqlite">,
 	);
-	// D1 batch limit is 100 statements per call
-	for (let i = 0; i < stmts.length; i += 100) {
-		await c.env.DB.batch(stmts.slice(i, i + 100));
-	}
+	await batchAll(db, stmts);
 	return c.json({ ok: true });
 });
 
 historyRoutes.put("/:id", authMiddleware, async (c) => {
 	const id = Number(c.req.param("id"));
 	const body = updateHistory.parse(await c.req.json());
+	// display_name supports explicit null clearing; COALESCE used for year
 	await c.env.DB.prepare(
 		"UPDATE history SET display_name = ?, year = COALESCE(?, year), updated_at = datetime('now') WHERE id = ?",
 	)

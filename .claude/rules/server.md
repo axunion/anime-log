@@ -2,7 +2,7 @@
 paths: ["src/server/**"]
 ---
 
-# Server Conventions (Hono + Cloudflare D1)
+# Server Conventions (Hono + Cloudflare D1 + Drizzle ORM)
 
 ## Auth middleware
 
@@ -16,7 +16,7 @@ titlesRoutes.get("/", async (c) => { ... })
 
 ## Path parameters
 
-Always parse with `Number()` — D1 bindings require numbers, not strings:
+Always parse with `Number()`:
 
 ```ts
 const id = Number(c.req.param("id"))
@@ -24,17 +24,22 @@ const id = Number(c.req.param("id"))
 
 ## Input validation
 
-All `POST` and `PUT` handlers must validate request bodies with zod. Define schemas at the top of the file and call `.parse()` — `ZodError` is caught globally in `index.ts` and returned as `400 Bad Request`.
+All `POST` and `PUT` handlers must validate request bodies with zod. Derive schemas from `createInsertSchema` (drizzle-zod) to keep them in sync with the DB schema. Add `.min(1)` overrides for string fields, `.pick()` to restrict columns, and `.partial()` for update schemas.
 
 ```ts
 import { z } from "zod"
+import { createInsertSchema } from "drizzle-zod"
+import { titles } from "../db/schema"
 
-const createFoo = z.object({
-  name: z.string().min(1),
-  year: z.number().int(),
-})
+const createFoo = createInsertSchema(titles, {
+  title: z.string().min(1),
+}).pick({ title: true, year: true })
 
-foosRoutes.post("/", authMiddleware, async (c) => {
+const updateFoo = createInsertSchema(titles, {
+  title: z.string().min(1),
+}).pick({ title: true, year: true }).partial()
+
+fooRoutes.post("/", authMiddleware, async (c) => {
   const body = createFoo.parse(await c.req.json())
   // ...
 })
@@ -48,58 +53,93 @@ Do NOT use `c.req.json<T>()` with a TypeScript type alone — this provides no r
 - All other errors → 500 with `{ error: "Internal Server Error" }` (no internal details exposed)
 - Do not add per-route try/catch for validation — let it bubble to `onError`
 
-## D1 queries
+## Drizzle queries
 
-- Use `RETURNING id` on INSERT when the client needs the new ID
-- Use `c.env.DB.batch([...stmts])` for multiple related inserts — never loop individual awaits
-- Batch size limit is 100 statements per call; split with `stmts.slice(i, i + 100)` when needed
-- Use subquery for auto-incrementing `sort_order` to avoid two-query race conditions:
+Get a DB instance per-request via `getDb(c.env.DB)` from `src/server/db/client.ts`.
 
 ```ts
-// Single insert
-const result = await c.env.DB.prepare(
-  "INSERT INTO titles (title, year) VALUES (?, ?) RETURNING id"
-).bind(body.title, body.year).first<{ id: number }>()
+import { eq } from "drizzle-orm"
+import { getDb } from "../db/client"
+import { titles } from "../db/schema"
 
-// Batch insert — use buildCastInsertStmts() from lib/cast.ts for cast_members
-const stmts = items.map((item, i) =>
-  c.env.DB.prepare("INSERT INTO foo (...) VALUES (?, ?, ?)").bind(...)
-)
-await c.env.DB.batch(stmts)
+// SELECT
+const db = getDb(c.env.DB)
+const rows = await db.select({ id: titles.id, title: titles.title }).from(titles).orderBy(titles.title)
 
-// sort_order via subquery (avoids MAX+1 race condition)
+// INSERT with RETURNING
+const [result] = await db.insert(titles).values({ title: body.title, year: body.year }).returning({ id: titles.id })
+
+// UPDATE (simple)
+await db.update(titles).set({ title: body.title }).where(eq(titles.id, id))
+
+// DELETE
+await db.delete(titles).where(eq(titles.id, id))
+```
+
+### Batch operations
+
+Use `db.batch()` for multiple related statements. Wrap chunks with `asBatch()` from `lib/cast.ts` to satisfy the non-empty tuple type:
+
+```ts
+import { asBatch, buildCastInsertStmts } from "../lib/cast"
+
+const stmts = buildCastInsertStmts(db, titleId, body.cast)
+// D1 batch limit is 100 statements per call
+for (let i = 0; i < stmts.length; i += 100) {
+  await db.batch(asBatch(stmts.slice(i, i + 100)))
+}
+```
+
+### sort_order via subquery
+
+Use SQL subquery expression to avoid MAX+1 race conditions:
+
+```ts
+import { sql } from "drizzle-orm"
+
+await db.insert(foos).values({
+  name: body.name,
+  sort_order: sql`COALESCE((SELECT MAX(sort_order)+1 FROM foos), 0)`,
+}).returning({ id: foos.id })
+```
+
+### Partial updates (PUT)
+
+For NOT NULL fields that may be omitted, use raw SQL with `COALESCE`. For nullable fields that must support explicit null clearing, bind the value directly:
+
+```ts
+// NOT NULL partial update — keep COALESCE in raw SQL
 await c.env.DB.prepare(
-  "INSERT INTO foo (name, sort_order) VALUES (?, COALESCE((SELECT MAX(sort_order)+1 FROM foo), 0)) RETURNING id"
-).bind(name).first()
+  "UPDATE titles SET title = COALESCE(?, title), updated_at = datetime('now') WHERE id = ?"
+).bind(body.title ?? null, id).run()
+
+// Nullable field: omit or null → clear; string → set (Drizzle .set() handles this)
+await db.update(history).set({ display_name: body.display_name ?? null }).where(eq(history.id, id))
 ```
 
 ## Resource existence checks
 
-Before inserting a child row, verify the parent exists and return 404 if not (prevents FK violations leaking as 500):
+Before inserting a child row, verify the parent exists and return 404:
 
 ```ts
-const parent = await c.env.DB.prepare("SELECT 1 FROM titles WHERE id = ?")
-  .bind(id)
-  .first()
+const parent = await db.select({ id: titles.id }).from(titles).where(eq(titles.id, id)).get()
 if (!parent) return c.json({ error: "Not found" }, 404)
 ```
 
-## Partial updates (PUT)
+## Row types
 
-Use `COALESCE(?, column)` for NOT NULL fields that may be omitted from the request body.
-For nullable fields that must support explicit null clearing, use direct assignment:
+Import canonical row types from `src/server/types.ts` rather than writing inline type annotations:
 
 ```ts
-// Partial update: omit field → keep old value
-"UPDATE foo SET name = COALESCE(?, name), year = COALESCE(?, year) WHERE id = ?"
-
-// Nullable field: omit or null → clear; string → set
-"UPDATE history SET display_name = ?, year = COALESCE(?, year) WHERE id = ?"
+import type { Title, CastMember, HistoryEntry } from "../types"
 ```
 
 ## Adding a new route module
 
-Mount it in `src/server/index.ts`:
+1. Add schema to `src/server/db/schema.ts`
+2. Export row types from `src/server/types.ts`
+3. Create route file importing `getDb`, schema tables, and `createInsertSchema`
+4. Mount in `src/server/index.ts`:
 
 ```ts
 import { myRoutes } from "./routes/my"

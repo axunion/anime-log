@@ -1,38 +1,95 @@
+import { is, SQL } from "drizzle-orm";
+import { drizzle } from "drizzle-orm/d1";
+import {
+	getTableConfig,
+	type SQLiteColumn,
+	type SQLiteTable,
+} from "drizzle-orm/sqlite-core";
+import { cast_members, history, titles } from "../../src/server/db/schema";
+
+function defaultToSQL(val: unknown): string | undefined {
+	if (val === null || val === undefined) return undefined;
+	if (is(val, SQL)) {
+		const chunks = (val as SQL).queryChunks as Array<{ value: unknown }>;
+		return chunks
+			.map((c) => {
+				if (Array.isArray(c.value)) return (c.value as string[]).join("");
+				if (typeof c.value === "string") return c.value;
+				return "";
+			})
+			.join("");
+	}
+	if (typeof val === "string") return `'${val}'`;
+	return String(val);
+}
+
+function columnDDL(col: SQLiteColumn): string {
+	const isPK = col.primary;
+	const isAutoInc = (col as unknown as { autoIncrement: boolean })
+		.autoIncrement;
+	let def = `  "${col.name}" ${col.getSQLType().toUpperCase()}`;
+	if (isPK) {
+		def += " PRIMARY KEY";
+		if (isAutoInc) def += " AUTOINCREMENT";
+	}
+	if (col.notNull && !isPK) def += " NOT NULL";
+	if (col.isUnique) def += " UNIQUE";
+	if (col.hasDefault) {
+		const expr = defaultToSQL(col.default);
+		if (expr !== undefined) def += ` DEFAULT ${expr}`;
+	}
+	return def;
+}
+
+function buildCreateTable(table: SQLiteTable): string {
+	const { name, columns, foreignKeys } = getTableConfig(table);
+	const colDefs = columns.map(columnDDL);
+	const fkDefs = (
+		foreignKeys as Array<{
+			onDelete?: string;
+			reference: () => {
+				columns: SQLiteColumn[];
+				foreignTable: SQLiteTable;
+				foreignColumns: SQLiteColumn[];
+			};
+		}>
+	).map((fk) => {
+		const ref = fk.reference();
+		const fromCols = ref.columns.map((c) => `"${c.name}"`).join(", ");
+		const toTable = getTableConfig(ref.foreignTable).name;
+		const toCols = ref.foreignColumns.map((c) => `"${c.name}"`).join(", ");
+		let def = `  FOREIGN KEY (${fromCols}) REFERENCES "${toTable}" (${toCols})`;
+		if (fk.onDelete) def += ` ON DELETE ${fk.onDelete.toUpperCase()}`;
+		return def;
+	});
+	return `CREATE TABLE IF NOT EXISTS "${name}" (\n${[...colDefs, ...fkDefs].join(",\n")}\n)`;
+}
+
+function buildIndexStatements(table: SQLiteTable): string[] {
+	const { name: tableName, indexes } = getTableConfig(table);
+	return (
+		indexes as Array<{ config: { name: string; columns: SQLiteColumn[] } }>
+	).map((idx) => {
+		const cols = idx.config.columns.map((c) => `"${c.name}"`).join(", ");
+		return `CREATE INDEX IF NOT EXISTS "${idx.config.name}" ON "${tableName}" (${cols})`;
+	});
+}
+
 const STATEMENTS = [
-	`CREATE TABLE IF NOT EXISTS titles (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    title TEXT NOT NULL UNIQUE,
-    year INTEGER NOT NULL,
-    created_at TEXT NOT NULL DEFAULT (datetime('now')),
-    updated_at TEXT NOT NULL DEFAULT (datetime('now'))
-  )`,
-	`CREATE TABLE IF NOT EXISTS cast_members (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    title_id INTEGER NOT NULL REFERENCES titles(id) ON DELETE CASCADE,
-    actor_name TEXT NOT NULL,
-    character_name TEXT NOT NULL,
-    sort_order INTEGER NOT NULL DEFAULT 0,
-    created_at TEXT NOT NULL DEFAULT (datetime('now')),
-    updated_at TEXT
-  )`,
-	"CREATE INDEX IF NOT EXISTS idx_cast_title_id ON cast_members(title_id)",
-	"CREATE INDEX IF NOT EXISTS idx_cast_actor_name ON cast_members(actor_name)",
-	`CREATE TABLE IF NOT EXISTS history (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    title_id INTEGER NOT NULL REFERENCES titles(id) ON DELETE CASCADE,
-    display_name TEXT,
-    year INTEGER NOT NULL,
-    sort_order INTEGER NOT NULL DEFAULT 0,
-    created_at TEXT NOT NULL DEFAULT (datetime('now')),
-    updated_at TEXT
-  )`,
-	"CREATE INDEX IF NOT EXISTS idx_history_title_id ON history(title_id)",
+	buildCreateTable(titles),
+	buildCreateTable(cast_members),
+	...buildIndexStatements(cast_members),
+	buildCreateTable(history),
+	...buildIndexStatements(history),
 ];
 
 export async function applySchema(db: D1Database) {
-	for (const sql of STATEMENTS) {
-		await db.prepare(sql).run();
-	}
+	await db.batch(
+		STATEMENTS.map((ddl) => db.prepare(ddl)) as [
+			D1PreparedStatement,
+			...D1PreparedStatement[],
+		],
+	);
 	// Clear data between tests (order matters: child tables first)
 	await db.batch([
 		db.prepare("DELETE FROM history"),
@@ -45,11 +102,12 @@ export async function seedTitle(
 	db: D1Database,
 	{ title, year }: { title: string; year: number },
 ): Promise<number> {
-	const result = await db
-		.prepare("INSERT INTO titles (title, year) VALUES (?, ?) RETURNING id")
-		.bind(title, year)
-		.first<{ id: number }>();
-	return result!.id;
+	const drizzleDb = drizzle(db);
+	const [result] = await drizzleDb
+		.insert(titles)
+		.values({ title, year })
+		.returning({ id: titles.id });
+	return result.id;
 }
 
 export async function seedCast(
@@ -58,14 +116,15 @@ export async function seedCast(
 	cast: { actor_name: string; character_name: string }[],
 ) {
 	if (cast.length === 0) return;
-	const stmts = cast.map((m, i) =>
-		db
-			.prepare(
-				"INSERT INTO cast_members (title_id, actor_name, character_name, sort_order) VALUES (?, ?, ?, ?)",
-			)
-			.bind(titleId, m.actor_name, m.character_name, i),
+	const drizzleDb = drizzle(db);
+	await drizzleDb.insert(cast_members).values(
+		cast.map((m, i) => ({
+			title_id: titleId,
+			actor_name: m.actor_name,
+			character_name: m.character_name,
+			sort_order: i,
+		})),
 	);
-	await db.batch(stmts);
 }
 
 export async function seedHistory(
@@ -77,12 +136,13 @@ export async function seedHistory(
 	}[],
 ) {
 	if (entries.length === 0) return;
-	const stmts = entries.map((e, i) =>
-		db
-			.prepare(
-				"INSERT INTO history (title_id, display_name, year, sort_order) VALUES (?, ?, ?, ?)",
-			)
-			.bind(e.title_id, e.display_name ?? null, e.year, i),
+	const drizzleDb = drizzle(db);
+	await drizzleDb.insert(history).values(
+		entries.map((e, i) => ({
+			title_id: e.title_id,
+			display_name: e.display_name ?? null,
+			year: e.year,
+			sort_order: i,
+		})),
 	);
-	await db.batch(stmts);
 }

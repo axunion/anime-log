@@ -1,35 +1,30 @@
+import { asc, eq } from "drizzle-orm";
 import { Hono } from "hono";
+import { getDb } from "../db/client";
+import { cast_members, history, titles } from "../db/schema";
 import type { Bindings } from "../types";
-
-type DataRow = {
-	id: number;
-	title: string;
-	year: number;
-	actor_name: string | null;
-	character_name: string | null;
-};
-
-type HistoryRow = {
-	title: string;
-	display_name: string | null;
-	year: number;
-};
 
 export const exportRoutes = new Hono<{ Bindings: Bindings }>();
 
 exportRoutes.get("/data", async (c) => {
-	const { results } = await c.env.DB.prepare(
-		`SELECT t.id, t.title, t.year, c.actor_name, c.character_name
-     FROM titles t
-     LEFT JOIN cast_members c ON c.title_id = t.id
-     ORDER BY t.id, c.sort_order`,
-	).all<DataRow>();
+	const db = getDb(c.env.DB);
+	const rows = await db
+		.select({
+			id: titles.id,
+			title: titles.title,
+			year: titles.year,
+			actor_name: cast_members.actor_name,
+			character_name: cast_members.character_name,
+		})
+		.from(titles)
+		.leftJoin(cast_members, eq(cast_members.title_id, titles.id))
+		.orderBy(asc(titles.id), asc(cast_members.sort_order));
 
 	const map = new Map<
 		number,
 		{ title: string; year: number; cast: [string, string][] }
 	>();
-	for (const row of results) {
+	for (const row of rows) {
 		let entry = map.get(row.id);
 		if (!entry) {
 			entry = { title: row.title, year: row.year, cast: [] };
@@ -44,15 +39,19 @@ exportRoutes.get("/data", async (c) => {
 });
 
 exportRoutes.get("/history", async (c) => {
-	const { results } = await c.env.DB.prepare(
-		`SELECT t.title, h.display_name, h.year
-     FROM history h
-     JOIN titles t ON h.title_id = t.id
-     ORDER BY h.sort_order`,
-	).all<HistoryRow>();
+	const db = getDb(c.env.DB);
+	const rows = await db
+		.select({
+			title: titles.title,
+			display_name: history.display_name,
+			year: history.year,
+		})
+		.from(history)
+		.innerJoin(titles, eq(history.title_id, titles.id))
+		.orderBy(asc(history.sort_order));
 
 	return c.json(
-		results.map((r) =>
+		rows.map((r) =>
 			r.display_name === null
 				? { title: r.title, year: r.year }
 				: { title: r.title, name: r.display_name, year: r.year },

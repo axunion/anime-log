@@ -2,56 +2,79 @@
 paths: ["migrations/**"]
 ---
 
-# Migration Conventions (Cloudflare D1 / SQLite)
+# Migration Conventions (Cloudflare D1 / SQLite + Drizzle Kit)
+
+## Workflow
+
+Schema changes are driven by `src/server/db/schema.ts`. The standard workflow:
+
+```bash
+# 1. Edit src/server/db/schema.ts
+# 2. Generate migration SQL
+pnpm db:generate        # drizzle-kit generate → creates migrations/NNNN_xxx.sql
+
+# 3. Apply locally
+pnpm db:migrate         # wrangler d1 migrations apply anime-db --local
+
+# 4. Verify
+pnpm exec wrangler d1 execute anime-db --local --command "PRAGMA table_info(my_table)"
+
+# 5. Before deploying
+pnpm db:migrate:remote
+```
+
+Never write migration SQL by hand — always let `drizzle-kit generate` produce the diff.
 
 ## File naming
 
-`migrations/NNNN_descriptive_name.sql` — increment NNNN from the highest existing file.
+Files follow `NNNN_descriptive_name.sql` format. Drizzle Kit generates the next number automatically.
 
 Never modify `0002_seed.sql` — it contains personal data and is gitignored.
 
-## Schema patterns
+## Schema patterns in schema.ts
 
-```sql
-CREATE TABLE my_table (
-  id INTEGER PRIMARY KEY AUTOINCREMENT,
-  title_id INTEGER NOT NULL REFERENCES titles(id) ON DELETE CASCADE,
-  some_text TEXT NOT NULL,
-  sort_order INTEGER NOT NULL DEFAULT 0,
-  created_at TEXT NOT NULL DEFAULT (datetime('now')),
-  updated_at TEXT NOT NULL DEFAULT (datetime('now'))  -- mutable tables only
-);
+```ts
+import { sql } from "drizzle-orm"
+import { index, integer, sqliteTable, text } from "drizzle-orm/sqlite-core"
 
--- Index every FK column
-CREATE INDEX idx_my_table_title_id ON my_table(title_id);
+export const my_table = sqliteTable("my_table", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
+  title_id: integer("title_id")
+    .notNull()
+    .references(() => titles.id, { onDelete: "cascade" }),
+  some_text: text("some_text").notNull(),
+  sort_order: integer("sort_order").notNull().default(0),
+  created_at: text("created_at").notNull().default(sql`(datetime('now'))`),
+  updated_at: text("updated_at").notNull().default(sql`(datetime('now'))`),
+}, (t) => [
+  index("idx_my_table_title_id").on(t.title_id),
+])
 ```
 
-When adding `updated_at` to an **existing** table, SQLite prohibits non-constant defaults
-in `ALTER TABLE ADD COLUMN`. Use a nullable column instead; UPDATE handlers set it explicitly:
+## Adding updated_at to an existing table
 
-```sql
--- Cannot use DEFAULT (datetime('now')) in ALTER TABLE
-ALTER TABLE my_table ADD COLUMN updated_at TEXT;
--- Then in handlers: SET updated_at = datetime('now')
--- Existing rows will be NULL (meaning "never explicitly updated")
+SQLite prohibits `DEFAULT (datetime('now'))` in `ALTER TABLE ADD COLUMN`. Add it as nullable in schema.ts and set it explicitly in UPDATE handlers:
+
+```ts
+// In schema.ts — nullable (ALTER TABLE cannot have function default)
+updated_at: text("updated_at")
 ```
 
-## SQLite-only syntax
+```ts
+// In route handler
+await c.env.DB.prepare("UPDATE my_table SET ..., updated_at = datetime('now') WHERE id = ?").bind(id).run()
+```
 
-D1 is SQLite — avoid all Postgres-isms:
+## SQLite-only constraints
+
+D1 is SQLite — avoid Postgres-isms:
 
 | Use | Never use |
 |-----|-----------|
-| `INTEGER PRIMARY KEY AUTOINCREMENT` | `SERIAL` |
-| `TEXT DEFAULT (datetime('now'))` | `TIMESTAMP`, `NOW()` |
-| `TEXT` | `VARCHAR`, `ENUM` |
-| `ALTER TABLE t ADD COLUMN ...` | `DROP COLUMN`, `RENAME COLUMN` (not supported in older D1) |
+| `integer("id").primaryKey({ autoIncrement: true })` | `SERIAL` |
+| `text("created_at").default(sql\`(datetime('now'))\`)` | `TIMESTAMP`, `NOW()` |
+| `text("name")` | `VARCHAR`, `ENUM` |
 
-## After writing a migration
+## Baseline note
 
-```bash
-pnpm db:migrate          # apply locally
-pnpm exec wrangler d1 execute anime-db --local --command "SELECT name FROM sqlite_master WHERE type='table'"
-```
-
-Remember: run `pnpm db:migrate:remote` before deploying to production.
+`migrations/0003_drizzle_baseline.sql` is an empty marker that tells Drizzle Kit the baseline state (schema as of 2026-05-17). Future `pnpm db:generate` will produce `0004_xxx.sql` and beyond. The `migrations/meta/` directory is committed and must not be deleted.

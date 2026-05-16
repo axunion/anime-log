@@ -10,7 +10,7 @@ description: >
 # Server Feature — Hono Route + TypeScript Types
 
 This covers Layer 2 (Hono route) and Layer 3 (TypeScript types) of the anime-log stack.
-The project uses **Cloudflare Workers + D1 + Hono**.
+The project uses **Cloudflare Workers + D1 + Hono + Drizzle ORM**.
 Coding conventions are defined in `.claude/rules/server.md` — follow them exactly.
 
 ## Layer 2: Hono Route Module
@@ -18,53 +18,61 @@ Coding conventions are defined in `.claude/rules/server.md` — follow them exac
 Create `src/server/routes/<name>.ts` following this template:
 
 ```typescript
+import { eq } from "drizzle-orm";
+import { createInsertSchema } from "drizzle-zod";
 import { Hono } from "hono";
 import { z } from "zod";
+import { getDb } from "../db/client";
+import { my_table } from "../db/schema";
 import { authMiddleware } from "../middleware/auth";
 import type { Bindings } from "../types";
 
-const createMyItem = z.object({
+const createMyItem = createInsertSchema(my_table, {
   some_text: z.string().min(1),
-});
+}).pick({ some_text: true });
 
-const updateMyItem = z.object({
-  some_text: z.string().min(1).optional(),
-});
+const updateMyItem = createInsertSchema(my_table, {
+  some_text: z.string().min(1),
+}).pick({ some_text: true }).partial();
 
 export const myRoutes = new Hono<{ Bindings: Bindings }>();
 
 myRoutes.get("/", async (c) => {
-  const { results } = await c.env.DB.prepare(
-    "SELECT id, some_text FROM my_table ORDER BY sort_order"
-  ).all();
-  return c.json(results);
+  const db = getDb(c.env.DB);
+  const rows = await db
+    .select({ id: my_table.id, some_text: my_table.some_text })
+    .from(my_table)
+    .orderBy(my_table.sort_order);
+  return c.json(rows);
 });
 
 myRoutes.post("/", authMiddleware, async (c) => {
   const body = createMyItem.parse(await c.req.json());
-  const result = await c.env.DB.prepare(
-    "INSERT INTO my_table (some_text) VALUES (?) RETURNING id"
-  ).bind(body.some_text).first<{ id: number }>();
+  const db = getDb(c.env.DB);
+  const [result] = await db
+    .insert(my_table)
+    .values({ some_text: body.some_text })
+    .returning({ id: my_table.id });
   return c.json(result, 201);
 });
 
 myRoutes.put("/:id", authMiddleware, async (c) => {
   const id = Number(c.req.param("id"));
   const body = updateMyItem.parse(await c.req.json());
+  // COALESCE pattern keeps sql-level semantics; updated_at uses SQLite datetime()
   await c.env.DB.prepare(
-    "UPDATE my_table SET some_text = COALESCE(?, some_text) WHERE id = ?"
+    "UPDATE my_table SET some_text = COALESCE(?, some_text), updated_at = datetime('now') WHERE id = ?"
   ).bind(body.some_text ?? null, id).run();
   return c.json({ ok: true });
 });
 
 myRoutes.delete("/:id", authMiddleware, async (c) => {
   const id = Number(c.req.param("id"));
-  await c.env.DB.prepare("DELETE FROM my_table WHERE id = ?").bind(id).run();
+  const db = getDb(c.env.DB);
+  await db.delete(my_table).where(eq(my_table.id, id));
   return c.json({ ok: true });
 });
 ```
-
-**Zod schemas must be defined at the top of the file.** `ZodError` is caught globally in `index.ts` and returned as `400 Bad Request` — do not add per-route try/catch. Never use `c.req.json<T>()` with a TypeScript type alone; it provides no runtime validation.
 
 **Mount in `src/server/index.ts`:**
 ```typescript
@@ -77,6 +85,19 @@ app.route("/api/my", myRoutes);
 
 ## Layer 3: TypeScript Types
 
+### Server-side (row types)
+
+Add to `src/server/types.ts` via `InferSelectModel`:
+
+```typescript
+import type { InferSelectModel } from "drizzle-orm";
+import type { my_table } from "./db/schema";
+
+export type MyRow = InferSelectModel<typeof my_table>;
+```
+
+### Client-side (API response types)
+
 Add to `src/client/lib/types.ts`:
 
 ```typescript
@@ -87,7 +108,7 @@ export type MyItem = {
 };
 ```
 
-Keep types minimal — only include fields the client actually uses. Don't mirror the full DB schema.
+Keep client types minimal — only include fields the client actually uses.
 
 ---
 
@@ -96,7 +117,8 @@ Keep types minimal — only include fields the client actually uses. Don't mirro
 - [ ] Route file created in `src/server/routes/`
 - [ ] Route mounted in `src/server/index.ts`
 - [ ] Write endpoints all use `authMiddleware`
-- [ ] Types added to `src/client/lib/types.ts`
+- [ ] Server row type added to `src/server/types.ts`
+- [ ] Client type added to `src/client/lib/types.ts`
 - [ ] Test with `pnpm dev` (check worker logs in the terminal)
 
 **Next step:** Add the Vue composable and component with the `client-feature` skill.

@@ -1,26 +1,18 @@
+import { eq, sql } from "drizzle-orm";
+import type { BatchItem } from "drizzle-orm/batch";
 import { Hono } from "hono";
 import { z } from "zod";
-import { buildCastInsertStmts } from "../lib/cast";
+import { getDb } from "../db/client";
+import { cast_members, titles } from "../db/schema";
+import { batchAll, buildCastInsertStmts, castMemberInput } from "../lib/cast";
 import { authMiddleware } from "../middleware/auth";
 import type { Bindings } from "../types";
-
-const castMemberInput = z.object({
-	actor_name: z.string().min(1),
-	character_name: z.string().min(1),
-});
 
 const castListInput = z.object({
 	cast: z.array(castMemberInput),
 });
 
-const updateCastInput = z.object({
-	actor_name: z.string().min(1).optional(),
-	character_name: z.string().min(1).optional(),
-});
-
-async function requireTitle(db: D1Database, id: number) {
-	return db.prepare("SELECT 1 FROM titles WHERE id = ?").bind(id).first();
-}
+const updateCastInput = castMemberInput.partial();
 
 export const castRoutes = new Hono<{ Bindings: Bindings }>();
 
@@ -28,32 +20,44 @@ castRoutes.get("/cast", async (c) => {
 	const actor = c.req.query("actor");
 	if (!actor) return c.json({ error: "actor query param required" }, 400);
 
-	const { results } = await c.env.DB.prepare(
-		`SELECT cm.id, cm.character_name, t.id AS title_id, t.title, t.year
-     FROM cast_members cm
-     JOIN titles t ON cm.title_id = t.id
-     WHERE cm.actor_name = ?
-     ORDER BY t.title`,
-	)
-		.bind(actor)
-		.all();
-	return c.json(results);
+	const db = getDb(c.env.DB);
+	const rows = await db
+		.select({
+			id: cast_members.id,
+			character_name: cast_members.character_name,
+			title_id: titles.id,
+			title: titles.title,
+			year: titles.year,
+		})
+		.from(cast_members)
+		.innerJoin(titles, eq(cast_members.title_id, titles.id))
+		.where(eq(cast_members.actor_name, actor))
+		.orderBy(titles.title);
+	return c.json(rows);
 });
 
 castRoutes.post("/titles/:id/cast", authMiddleware, async (c) => {
 	const titleId = Number(c.req.param("id"));
 	const body = castMemberInput.parse(await c.req.json());
+	const db = getDb(c.env.DB);
 
-	if (!(await requireTitle(c.env.DB, titleId)))
-		return c.json({ error: "Not found" }, 404);
+	const title = await db
+		.select({ id: titles.id })
+		.from(titles)
+		.where(eq(titles.id, titleId))
+		.get();
+	if (!title) return c.json({ error: "Not found" }, 404);
 
-	const result = await c.env.DB.prepare(
-		`INSERT INTO cast_members (title_id, actor_name, character_name, sort_order)
-     VALUES (?, ?, ?, COALESCE((SELECT MAX(sort_order)+1 FROM cast_members WHERE title_id = ?), 0))
-     RETURNING id`,
-	)
-		.bind(titleId, body.actor_name, body.character_name, titleId)
-		.first();
+	// sort_order via subquery avoids MAX+1 race condition
+	const [result] = await db
+		.insert(cast_members)
+		.values({
+			title_id: titleId,
+			actor_name: body.actor_name,
+			character_name: body.character_name,
+			sort_order: sql`COALESCE((SELECT MAX(sort_order)+1 FROM cast_members WHERE title_id = ${titleId}), 0)`,
+		})
+		.returning({ id: cast_members.id });
 
 	return c.json(result, 201);
 });
@@ -61,26 +65,31 @@ castRoutes.post("/titles/:id/cast", authMiddleware, async (c) => {
 castRoutes.put("/titles/:id/cast", authMiddleware, async (c) => {
 	const titleId = Number(c.req.param("id"));
 	const body = castListInput.parse(await c.req.json());
+	const db = getDb(c.env.DB);
 
-	if (!(await requireTitle(c.env.DB, titleId)))
-		return c.json({ error: "Not found" }, 404);
+	const title = await db
+		.select({ id: titles.id })
+		.from(titles)
+		.where(eq(titles.id, titleId))
+		.get();
+	if (!title) return c.json({ error: "Not found" }, 404);
 
-	const stmts = [
-		c.env.DB.prepare("DELETE FROM cast_members WHERE title_id = ?").bind(
-			titleId,
-		),
-		...buildCastInsertStmts(c.env.DB, titleId, body.cast),
+	const deleteStmt = db
+		.delete(cast_members)
+		.where(eq(cast_members.title_id, titleId));
+	const insertStmts = buildCastInsertStmts(db, titleId, body.cast);
+	const allStmts: BatchItem<"sqlite">[] = [
+		deleteStmt as BatchItem<"sqlite">,
+		...insertStmts,
 	];
-	// D1 batch limit is 100 statements per call
-	for (let i = 0; i < stmts.length; i += 100) {
-		await c.env.DB.batch(stmts.slice(i, i + 100));
-	}
+	await batchAll(db, allStmts);
 	return c.json({ ok: true });
 });
 
 castRoutes.put("/cast/:id", authMiddleware, async (c) => {
 	const id = Number(c.req.param("id"));
 	const body = updateCastInput.parse(await c.req.json());
+	// COALESCE pattern keeps sql-level semantics; updated_at uses SQLite datetime()
 	await c.env.DB.prepare(
 		"UPDATE cast_members SET actor_name = COALESCE(?, actor_name), character_name = COALESCE(?, character_name), updated_at = datetime('now') WHERE id = ?",
 	)
@@ -91,8 +100,7 @@ castRoutes.put("/cast/:id", authMiddleware, async (c) => {
 
 castRoutes.delete("/cast/:id", authMiddleware, async (c) => {
 	const id = Number(c.req.param("id"));
-	await c.env.DB.prepare("DELETE FROM cast_members WHERE id = ?")
-		.bind(id)
-		.run();
+	const db = getDb(c.env.DB);
+	await db.delete(cast_members).where(eq(cast_members.id, id));
 	return c.json({ ok: true });
 });

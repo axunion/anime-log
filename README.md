@@ -41,18 +41,18 @@ The dev server uses a local D1 (SQLite) database stored under `.wrangler/state/`
 pnpm db:migrate
 ```
 
-This applies `migrations/0001_schema.sql` and creates empty `titles`, `cast_members`, and `history` tables. The app works but shows no data.
+This applies all migration files under `migrations/` and creates empty `titles`, `cast_members`, and `history` tables. The app works but shows no data.
 
 **With seed data from legacy JS files:**
 
 If you have `data/data.js` and `data/history.js` (the legacy export format):
 
 ```bash
-pnpm migrate:generate   # generates migrations/0002_seed.sql from data/data.js + data/history.js
-pnpm db:migrate         # applies all pending migrations including the seed
+pnpm seed:generate   # generates migrations/0002_seed.sql from data/data.js + data/history.js
+pnpm db:migrate      # applies all pending migrations including the seed
 ```
 
-`migrate:generate` warns about history entries whose title does not exist in `data.js` and creates placeholder title rows for them.
+`seed:generate` warns about history entries whose title does not exist in `data.js` and creates placeholder title rows for them.
 
 **With manually written seed data:**
 
@@ -88,6 +88,7 @@ pnpm typecheck   # TypeScript type check (vue-tsc --noEmit)
 pnpm fix         # Biome lint + auto-fix (all files, respects .gitignore)
 pnpm test        # Run all tests (client composables + server routes)
 pnpm build       # Production build → dist/client/ and dist/anime_log/
+pnpm db:reset    # Wipe local D1 state and re-apply all migrations (fresh local DB)
 ```
 
 ---

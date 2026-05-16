@@ -7,27 +7,38 @@ description: >
   new feature (via the anime-log-feature skill) requires schema changes.
 ---
 
-# D1 Migration Creator
+# D1 Migration Creator (Drizzle Kit workflow)
 
-This project uses Cloudflare D1 (SQLite). Migrations live in `migrations/` as numbered SQL files.
-SQL conventions are defined in `.claude/rules/migrations.md` — follow them exactly.
+This project uses Cloudflare D1 (SQLite) managed by Drizzle Kit. Schema is defined in
+`src/server/db/schema.ts`. SQL conventions are in `.claude/rules/migrations.md`.
 
 ## Steps
 
-### 1. Determine the next migration number
+### 1. Edit `src/server/db/schema.ts`
 
-List `migrations/` and find the highest `NNNN` prefix. The new file must be named:
+Add the new table or column following conventions in `.claude/rules/migrations.md`:
+
+```ts
+export const my_table = sqliteTable("my_table", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
+  title_id: integer("title_id").notNull().references(() => titles.id, { onDelete: "cascade" }),
+  name: text("name").notNull(),
+  sort_order: integer("sort_order").notNull().default(0),
+  created_at: text("created_at").notNull().default(sql`(datetime('now'))`),
+  updated_at: text("updated_at").notNull().default(sql`(datetime('now'))`),
+}, (t) => [
+  index("idx_my_table_title_id").on(t.title_id),
+])
 ```
-migrations/<NNNN+1>_<descriptive_snake_case_name>.sql
+
+### 2. Generate the migration SQL
+
+```bash
+pnpm db:generate
 ```
 
-Example: if `0002_seed.sql` is the highest, the next file is `0003_<name>.sql`.
-
-### 2. Write the SQL
-
-Follow the conventions in `.claude/rules/migrations.md`:
-- Table structure, column types, index patterns
-- SQLite-only syntax (no Postgres-isms)
+This runs `drizzle-kit generate`, reads the diff vs `migrations/meta/0003_snapshot.json`,
+and writes a new `migrations/NNNN_xxx.sql` file.
 
 ### 3. Apply locally
 
@@ -38,12 +49,23 @@ pnpm db:migrate
 ### 4. Verify
 
 ```bash
-pnpm exec wrangler d1 execute anime-db --local --command "SELECT name FROM sqlite_master WHERE type='table' ORDER BY name"
+pnpm exec wrangler d1 execute anime-db --local --command "PRAGMA table_info(my_table)"
 ```
 
-Confirm the new table (or column) appears.
+Confirm the new table or column appears.
 
-### 5. Report
+### 5. Update types.ts
+
+Export the new row type from `src/server/types.ts`:
+
+```ts
+import type { InferSelectModel } from "drizzle-orm"
+import type { my_table } from "./db/schema"
+
+export type MyRow = InferSelectModel<typeof my_table>
+```
+
+### 6. Report
 
 State the migration file path and confirm it applied cleanly. Remind the user:
 
@@ -52,6 +74,7 @@ State the migration file path and confirm it applied cleanly. Remind the user:
 ## Important notes
 
 - **Never touch `0002_seed.sql`** — it contains personal data and is gitignored.
-- Migration files are applied in lexicographic order, so the NNNN prefix must be correct.
-- After creating the migration, this feature likely also needs a Hono route, TypeScript types,
-  and a Vue composable — refer to the `anime-log-feature` skill for the full checklist.
+- **Never hand-write migration SQL** — always use `pnpm db:generate` to get the diff.
+- The `migrations/meta/` directory must stay committed; do not delete it.
+- After creating the migration, a new feature also needs a Hono route and Vue composable —
+  refer to the `anime-log-feature` skill for the full checklist.
