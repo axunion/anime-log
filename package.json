@@ -14,7 +14,7 @@
 		"db:migrate": "wrangler d1 migrations apply anime-db --local",
 		"db:migrate:remote": "wrangler d1 migrations apply anime-db --remote",
 		"db:reset": "rm -rf .wrangler/state/v3/d1 && pnpm db:migrate",
-		"seed:generate": "pnpm exec tsx scripts/migrate.ts",
+		"seed:import": "pnpm exec tsx scripts/seed.ts",
 		"test": "pnpm run test:client && pnpm run test:server",
 		"test:client": "vitest run --config vitest.config.ts",
 		"test:server": "vitest run --config vitest.workers.config.ts",

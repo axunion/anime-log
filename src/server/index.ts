@@ -3,6 +3,7 @@ import { ZodError } from "zod";
 import { castRoutes } from "./routes/cast";
 import { exportRoutes } from "./routes/export";
 import { historyRoutes } from "./routes/history";
+import { importRoutes } from "./routes/import";
 import { titlesRoutes } from "./routes/titles";
 import type { Bindings } from "./types";
 
@@ -18,6 +19,7 @@ app.route("/api/titles", titlesRoutes);
 app.route("/api", castRoutes);
 app.route("/api/history", historyRoutes);
 app.route("/api/export", exportRoutes);
+app.route("/api/import", importRoutes);
 
 app.onError((err, c) => {
 	if (err instanceof ZodError) {

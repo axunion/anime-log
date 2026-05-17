@@ -10,10 +10,10 @@ dist/
 src/client/.wrangler/
 .dev.vars
 .dev.vars.*
+!.dev.vars.example
 
 # Project data (personal, not committed)
 data/
-migrations/0002_seed.sql
 
 # OS
 .DS_Store

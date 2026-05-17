@@ -10,6 +10,7 @@ Built with Cloudflare Workers + D1 (SQLite) + Hono + Vite + Vue 3 + TypeScript.
 - Search by voice actor across all titles
 - Watch history tracking with drag-and-drop reordering
 - Admin UI for managing titles, cast, and history
+- Export data as JSON (titles/cast and history separately)
 
 ## Architecture
 
@@ -35,34 +36,13 @@ pnpm install
 
 The dev server uses a local D1 (SQLite) database stored under `.wrangler/state/`.
 
-**Schema only (empty database):**
+Apply the schema migrations to create empty tables:
 
 ```bash
 pnpm db:migrate
 ```
 
-This applies all migration files under `migrations/` and creates empty `titles`, `cast_members`, and `history` tables. The app works but shows no data.
-
-**With seed data from legacy JS files:**
-
-If you have `data/data.js` and `data/history.js` (the legacy export format):
-
-```bash
-pnpm seed:generate   # generates migrations/0002_seed.sql from data/data.js + data/history.js
-pnpm db:migrate      # applies all pending migrations including the seed
-```
-
-`seed:generate` warns about history entries whose title does not exist in `data.js` and creates placeholder title rows for them.
-
-**With manually written seed data:**
-
-Copy the example and edit it:
-
-```bash
-cp migrations/0002_seed.sql.example migrations/0002_seed.sql
-# edit migrations/0002_seed.sql
-pnpm db:migrate
-```
+This creates `titles`, `cast_members`, and `history` tables. The app works but shows no data yet.
 
 ### 3. Start the dev server
 
@@ -78,6 +58,60 @@ Opens at **http://localhost:5173**. The dev server runs both Vite (HMR) and the 
 | Admin UI | http://localhost:5173/admin.html |
 
 The admin UI requires an API token. In dev mode any non-empty string works — enter it in the Admin UI token field (stored in `localStorage`).
+
+### 4. Load initial data
+
+There are two ways to populate the database with your data.
+
+#### Import from legacy JS files (CLI)
+
+If you have `data/data.js` and `data/history.js` in the legacy `PAGE.data = [...]` format, use the seed script. The dev server must be running:
+
+```bash
+# Terminal 1 (keep running)
+pnpm dev
+
+# Terminal 2
+API_TOKEN=<any-non-empty-string> pnpm seed:import
+```
+
+`seed:import` reads both files, automatically injects placeholder title rows for any history entries whose title is not in `data.js`, then POSTs to `POST /api/import/data` and `POST /api/import/history` in order.
+
+The script also accepts JSON files (`data/data.json` / `data/history.json`) and falls back to the `.js` format if JSON is not found.
+
+---
+
+## Data Format
+
+The export/import JSON format is the same for both the Admin UI and the seed script.
+
+**Titles and cast** (`data.json`):
+
+```json
+[
+  {
+    "title": "Example Anime",
+    "year": 2024,
+    "cast": [
+      ["Actor Name", "Character Name"],
+      ["Actor Name 2", "Character Name 2"]
+    ]
+  }
+]
+```
+
+**Watch history** (`history.json`):
+
+```json
+[
+  { "title": "Example Anime", "year": 2024 },
+  { "title": "Another Anime", "name": "Another Anime: Movie Edition", "year": 2023 }
+]
+```
+
+- `title` must match an existing title in the titles table
+- `name` (optional) is a display name shown in the history list instead of `title`
+- Order in the array is preserved as the display sort order
 
 ---
 
@@ -127,8 +161,6 @@ database_id = "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"   # ← paste here
 pnpm db:migrate:remote
 ```
 
-To also apply seed data, make sure `migrations/0002_seed.sql` exists first (see [With seed data](#with-seed-data-from-legacy-js-files) above), then run the command above.
-
 **3. Set the admin API token:**
 
 ```bash
@@ -144,3 +176,11 @@ pnpm deploy
 ```
 
 This builds the client and Worker, then uploads both to Cloudflare. The Worker URL is shown in the output (e.g. `https://anime-log.<your-subdomain>.workers.dev`).
+
+**5. Seed initial data (optional):**
+
+```bash
+BASE_URL=https://anime-log.<your-subdomain>.workers.dev \
+API_TOKEN=<your-api-token> \
+pnpm seed:import
+```

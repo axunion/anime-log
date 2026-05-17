@@ -20,7 +20,7 @@ pnpm db:generate      # Generate migration SQL from schema changes (drizzle-kit)
 pnpm db:migrate       # Apply migrations to local D1
 pnpm db:migrate:remote # Apply migrations to remote D1
 pnpm db:reset         # Wipe local D1 state and re-apply all migrations (fresh local DB)
-pnpm seed:generate    # Regenerate migrations/0002_seed.sql from data/data.js + data/history.js
+pnpm seed:import      # Import data from data/data.js + data/history.js via the import API (requires pnpm dev running and API_TOKEN env var)
 
 pnpm test             # Run all tests (client + server)
 pnpm test:client      # Client composable/API tests (Vitest + happy-dom)
@@ -124,11 +124,20 @@ To add columns or tables: edit `schema.ts` → `pnpm db:generate` → `pnpm db:m
 - `persistState: { path: resolve(__dirname, '.wrangler/state') }` — forces the plugin to use the project-root `.wrangler/state` instead of creating a separate one under `src/client/.wrangler/state`.
 - Worker build output goes to `dist/anime_log/`; client assets to `dist/client/`. The generated `dist/anime_log/wrangler.json` references `"assets": {"directory": "../client"}`.
 
-### Data migration
+### Data seeding
 
-`data/data.js` and `data/history.js` (gitignored) are legacy JS files with `PAGE.data = [...]` assignments. `scripts/migrate.ts` parses them via `eval()` (handles single-quoted keys), generates `migrations/0002_seed.sql`, and warns on history entries whose title doesn't exist in data.js (creates placeholder title rows).
+`data/data.js` and `data/history.js` (gitignored) are legacy JS files with `PAGE.data = [...]` assignments. `scripts/seed.ts` parses them via `eval()` (handles single-quoted keys), injects placeholder title rows for any orphan history entries, then POSTs to `POST /api/import/data` and `POST /api/import/history`.
 
-`migrations/0002_seed.sql` is gitignored (personal data). `migrations/0002_seed.sql.example` serves as a template. Generate the real file with `pnpm migrate:generate`.
+To seed a fresh local DB:
+```bash
+pnpm db:reset       # apply schema only
+pnpm dev            # start dev server (separate terminal)
+API_TOKEN=<token> pnpm seed:import
+```
+
+For remote: `BASE_URL=https://<deployed-url> API_TOKEN=<prod-token> pnpm seed:import`
+
+Data can also be backed up and restored via the Admin UI Export/Import buttons, which use the same endpoints.
 
 ## Deployment checklist
 
@@ -136,3 +145,4 @@ To add columns or tables: edit `schema.ts` → `pnpm db:generate` → `pnpm db:m
 2. `pnpm db:migrate:remote`
 3. `wrangler secret put API_TOKEN`
 4. `pnpm deploy`
+5. `BASE_URL=https://<deployed-url> API_TOKEN=<prod-token> pnpm seed:import`

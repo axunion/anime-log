@@ -126,5 +126,4 @@ const tabs: { id: AdminTab; label: string }[] = [
 	background: var(--hover-overlay);
 	color: var(--contrast-color);
 }
-
 </style>
