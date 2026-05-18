@@ -1,1 +1,0 @@
--- Drizzle baseline marker (no-op)

@@ -25,11 +25,17 @@ pnpm db:migrate:remote
 
 Never write migration SQL by hand — always let `drizzle-kit generate` produce the diff.
 
+Additional drizzle-kit scripts:
+
+```bash
+pnpm db:check   # verify journal/snapshot integrity — run after manual edits to catch drift
+pnpm db:drop    # interactively drop the latest generated migration (pre-release iteration)
+pnpm db:studio  # open Drizzle Studio in the browser against local D1
+```
+
 ## File naming
 
 Files follow `NNNN_descriptive_name.sql` format. Drizzle Kit generates the next number automatically.
-
-Never modify `0002_seed.sql` — it contains personal data and is gitignored.
 
 ## Schema patterns in schema.ts
 
@@ -75,6 +81,4 @@ D1 is SQLite — avoid Postgres-isms:
 | `text("created_at").default(sql\`(datetime('now'))\`)` | `TIMESTAMP`, `NOW()` |
 | `text("name")` | `VARCHAR`, `ENUM` |
 
-## Baseline note
-
-`migrations/0003_drizzle_baseline.sql` is an empty marker that tells Drizzle Kit the baseline state (schema as of 2026-05-17). Future `pnpm db:generate` will produce `0004_xxx.sql` and beyond. The `migrations/meta/` directory is committed and must not be deleted.
+The `migrations/meta/` directory is committed and must not be deleted — it is Drizzle Kit's internal journal and snapshot store.

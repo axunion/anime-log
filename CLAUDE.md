@@ -17,6 +17,9 @@ pnpm typecheck        # TypeScript type check (vue-tsc --noEmit)
 pnpm fix              # Biome lint + auto-fix (all files, respects .gitignore)
 
 pnpm db:generate      # Generate migration SQL from schema changes (drizzle-kit)
+pnpm db:check         # Verify migration journal/snapshot integrity (drizzle-kit)
+pnpm db:drop          # Interactively drop the latest generated migration (pre-release iteration)
+pnpm db:studio        # Open Drizzle Studio against local D1 (requires db:migrate run first)
 pnpm db:migrate       # Apply migrations to local D1
 pnpm db:migrate:remote # Apply migrations to remote D1
 pnpm db:reset         # Wipe local D1 state and re-apply all migrations (fresh local DB)

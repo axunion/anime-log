@@ -12,6 +12,9 @@ description: >
 This project uses Cloudflare D1 (SQLite) managed by Drizzle Kit. Schema is defined in
 `src/server/db/schema.ts`. SQL conventions are in `.claude/rules/migrations.md`.
 
+Baseline migration is `migrations/0000_salty_hydra.sql` (generated 2026-05-18 from `schema.ts`).
+Future `pnpm db:generate` will produce `0001_xxx.sql` and beyond.
+
 ## Steps
 
 ### 1. Edit `src/server/db/schema.ts`
@@ -37,7 +40,7 @@ export const my_table = sqliteTable("my_table", {
 pnpm db:generate
 ```
 
-This runs `drizzle-kit generate`, reads the diff vs `migrations/meta/0003_snapshot.json`,
+This runs `drizzle-kit generate`, reads the diff vs the latest snapshot in `migrations/meta/`,
 and writes a new `migrations/NNNN_xxx.sql` file.
 
 ### 3. Apply locally
@@ -73,7 +76,6 @@ State the migration file path and confirm it applied cleanly. Remind the user:
 
 ## Important notes
 
-- **Never touch `0002_seed.sql`** — it contains personal data and is gitignored.
 - **Never hand-write migration SQL** — always use `pnpm db:generate` to get the diff.
 - The `migrations/meta/` directory must stay committed; do not delete it.
 - After creating the migration, a new feature also needs a Hono route and Vue composable —
