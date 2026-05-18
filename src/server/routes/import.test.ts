@@ -24,12 +24,34 @@ describe("POST /api/import/data", () => {
 		expect(res.status).toBe(401);
 	});
 
+	it("returns 400 when confirm param is missing", async () => {
+		const res = await callApp(typedEnv, {
+			method: "POST",
+			path: "/import/data",
+			auth: true,
+			body: [],
+		});
+		expect(res.status).toBe(400);
+		const data = (await res.json()) as { error: string };
+		expect(data.error).toMatch(/Missing confirmation/);
+	});
+
+	it("returns 400 when confirm param has wrong value", async () => {
+		const res = await callApp(typedEnv, {
+			method: "POST",
+			path: "/import/data?confirm=wrong",
+			auth: true,
+			body: [],
+		});
+		expect(res.status).toBe(400);
+	});
+
 	it("replaces all titles and cast with imported data", async () => {
 		await seedTitle(typedEnv.DB, { title: "Old Anime", year: 2000 });
 
 		const res = await callApp(typedEnv, {
 			method: "POST",
-			path: "/import/data",
+			path: "/import/data?confirm=replace-all",
 			auth: true,
 			body: [
 				{
@@ -69,7 +91,7 @@ describe("POST /api/import/data", () => {
 
 		const res = await callApp(typedEnv, {
 			method: "POST",
-			path: "/import/data",
+			path: "/import/data?confirm=replace-all",
 			auth: true,
 			body: [{ title: "Fresh Title", year: 2024, cast: [] }],
 		});
@@ -83,7 +105,7 @@ describe("POST /api/import/data", () => {
 	it("returns 400 for invalid body (empty title)", async () => {
 		const res = await callApp(typedEnv, {
 			method: "POST",
-			path: "/import/data",
+			path: "/import/data?confirm=replace-all",
 			auth: true,
 			body: [{ title: "", year: 2024, cast: [] }],
 		});
@@ -93,7 +115,7 @@ describe("POST /api/import/data", () => {
 	it("returns 400 for malformed cast tuple", async () => {
 		const res = await callApp(typedEnv, {
 			method: "POST",
-			path: "/import/data",
+			path: "/import/data?confirm=replace-all",
 			auth: true,
 			body: [{ title: "Anime", year: 2024, cast: [["Actor Only"]] }],
 		});
@@ -103,7 +125,7 @@ describe("POST /api/import/data", () => {
 	it("handles titles with no cast", async () => {
 		const res = await callApp(typedEnv, {
 			method: "POST",
-			path: "/import/data",
+			path: "/import/data?confirm=replace-all",
 			auth: true,
 			body: [{ title: "No Cast", year: 2024 }],
 		});
@@ -125,7 +147,7 @@ describe("POST /api/import/data", () => {
 
 		const res = await callApp(typedEnv, {
 			method: "POST",
-			path: "/import/data",
+			path: "/import/data?confirm=replace-all",
 			auth: true,
 			body: [{ title: "Big Cast", year: 2024, cast }],
 		});
@@ -149,6 +171,28 @@ describe("POST /api/import/history", () => {
 		expect(res.status).toBe(401);
 	});
 
+	it("returns 400 when confirm param is missing", async () => {
+		const res = await callApp(typedEnv, {
+			method: "POST",
+			path: "/import/history",
+			auth: true,
+			body: [],
+		});
+		expect(res.status).toBe(400);
+		const data = (await res.json()) as { error: string };
+		expect(data.error).toMatch(/Missing confirmation/);
+	});
+
+	it("returns 400 when confirm param has wrong value", async () => {
+		const res = await callApp(typedEnv, {
+			method: "POST",
+			path: "/import/history?confirm=wrong",
+			auth: true,
+			body: [],
+		});
+		expect(res.status).toBe(400);
+	});
+
 	it("replaces existing history with imported data", async () => {
 		const id = await seedTitle(typedEnv.DB, { title: "Eva", year: 1995 });
 		await seedHistory(typedEnv.DB, [{ title_id: id, year: 2020 }]);
@@ -157,7 +201,7 @@ describe("POST /api/import/history", () => {
 
 		const res = await callApp(typedEnv, {
 			method: "POST",
-			path: "/import/history",
+			path: "/import/history?confirm=replace-all",
 			auth: true,
 			body: [
 				{ title: "Eva", year: 2023 },
@@ -179,7 +223,7 @@ describe("POST /api/import/history", () => {
 	it("returns 400 with unknown title in response body", async () => {
 		const res = await callApp(typedEnv, {
 			method: "POST",
-			path: "/import/history",
+			path: "/import/history?confirm=replace-all",
 			auth: true,
 			body: [{ title: "Unknown Anime", year: 2024 }],
 		});
@@ -197,7 +241,7 @@ describe("POST /api/import/history", () => {
 
 		await callApp(typedEnv, {
 			method: "POST",
-			path: "/import/history",
+			path: "/import/history?confirm=replace-all",
 			auth: true,
 			body: [{ title: "Eva", year: 2024 }],
 		});
@@ -218,7 +262,7 @@ describe("POST /api/import/history", () => {
 
 		const res = await callApp(typedEnv, {
 			method: "POST",
-			path: "/import/history",
+			path: "/import/history?confirm=replace-all",
 			auth: true,
 			body: [],
 		});

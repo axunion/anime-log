@@ -28,6 +28,9 @@ const importHistoryItem = createInsertSchema(history)
 const importHistorySchema = z.array(importHistoryItem);
 
 importRoutes.post("/data", authMiddleware, async (c) => {
+	if (c.req.query("confirm") !== "replace-all") {
+		return c.json({ error: "Missing confirmation: add ?confirm=replace-all" }, 400);
+	}
 	const body = importDataSchema.parse(await c.req.json());
 	const db = getDb(c.env.DB);
 
@@ -59,6 +62,9 @@ importRoutes.post("/data", authMiddleware, async (c) => {
 });
 
 importRoutes.post("/history", authMiddleware, async (c) => {
+	if (c.req.query("confirm") !== "replace-all") {
+		return c.json({ error: "Missing confirmation: add ?confirm=replace-all" }, 400);
+	}
 	const body = importHistorySchema.parse(await c.req.json());
 	const db = getDb(c.env.DB);
 

@@ -10,7 +10,8 @@
 		"noEmit": true,
 		"isolatedModules": true,
 		"moduleDetection": "force",
-		"skipLibCheck": true
+		"skipLibCheck": true,
+		"allowImportingTsExtensions": true
 	},
 	"include": ["vite.config.ts", "scripts/**/*"]
 }

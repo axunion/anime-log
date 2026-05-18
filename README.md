@@ -61,29 +61,51 @@ The admin UI requires an API token. In dev mode any non-empty string works — e
 
 ### 4. Load initial data
 
-There are two ways to populate the database with your data.
+There are three ways to move data in and out.
 
-#### Import from legacy JS files (CLI)
+#### Seed local DB from JSON files (CLI)
 
-If you have `data/data.js` and `data/history.js` in the legacy `PAGE.data = [...]` format, use the seed script. The dev server must be running:
+Place `data/data.json` and `data/history.json` (gitignored) in the project root — use the Admin UI Export button to obtain these files — then run with the dev server running:
 
 ```bash
 # Terminal 1 (keep running)
 pnpm dev
 
 # Terminal 2
-API_TOKEN=<any-non-empty-string> pnpm seed:import
+pnpm seed:local
 ```
 
-`seed:import` reads both files, automatically injects placeholder title rows for any history entries whose title is not in `data.js`, then POSTs to `POST /api/import/data` and `POST /api/import/history` in order.
+`seed:local` always targets `http://localhost:5173` and reads the token from `.dev.vars`.
 
-The script also accepts JSON files (`data/data.json` / `data/history.json`) and falls back to the `.js` format if JSON is not found.
+#### Backup and restore via Admin UI
+
+The recommended round-trip for everyday backups:
+
+- **Export:** Admin UI → Export button → saves `data.json` + `history.json` locally.
+- **Import:** Admin UI → Import button → select both files → confirm.
+
+#### Restore to any URL (CLI)
+
+Use this after an initial deployment or to restore from a backup file.
+
+Add `PROD_API_TOKEN=<your-production-token>` to `.dev.vars` once, then:
+
+```bash
+pnpm restore \
+  --url https://anime-log.<your-subdomain>.workers.dev \
+  --data data/data.json \
+  --history data/history.json \
+  --yes-replace-all
+```
+
+The token is resolved in order: `--token` flag → `API_TOKEN` env var → `PROD_API_TOKEN` in `.dev.vars`.
+Without `--yes-replace-all`, the command prints a dry-run summary and exits without making changes.
 
 ---
 
 ## Data Format
 
-The export/import JSON format is the same for both the Admin UI and the seed script.
+The export/import JSON format is the same for both the Admin UI and the CLI scripts.
 
 **Titles and cast** (`data.json`):
 
@@ -179,8 +201,12 @@ This builds the client and Worker, then uploads both to Cloudflare. The Worker U
 
 **5. Seed initial data (optional):**
 
+Add `PROD_API_TOKEN=<your-api-token>` to `.dev.vars`, then:
+
 ```bash
-BASE_URL=https://anime-log.<your-subdomain>.workers.dev \
-API_TOKEN=<your-api-token> \
-pnpm seed:import
+pnpm restore \
+  --url https://anime-log.<your-subdomain>.workers.dev \
+  --data data/data.json \
+  --history data/history.json \
+  --yes-replace-all
 ```

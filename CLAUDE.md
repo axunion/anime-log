@@ -23,7 +23,8 @@ pnpm db:studio        # Open Drizzle Studio against local D1 (requires db:migrat
 pnpm db:migrate       # Apply migrations to local D1
 pnpm db:migrate:remote # Apply migrations to remote D1
 pnpm db:reset         # Wipe local D1 state and re-apply all migrations (fresh local DB)
-pnpm seed:import      # Import data from data/data.js + data/history.js via the import API (requires pnpm dev running and API_TOKEN env var)
+pnpm seed:local       # Seed local DB from data/data.json + data/history.json (requires pnpm dev running)
+pnpm restore          # Restore data to any URL from JSON files (--url, --data, --history, --yes-replace-all)
 
 pnpm test             # Run all tests (client + server)
 pnpm test:client      # Client composable/API tests (Vitest + happy-dom)
@@ -127,20 +128,33 @@ To add columns or tables: edit `schema.ts` → `pnpm db:generate` → `pnpm db:m
 - `persistState: { path: resolve(__dirname, '.wrangler/state') }` — forces the plugin to use the project-root `.wrangler/state` instead of creating a separate one under `src/client/.wrangler/state`.
 - Worker build output goes to `dist/anime_log/`; client assets to `dist/client/`. The generated `dist/anime_log/wrangler.json` references `"assets": {"directory": "../client"}`.
 
-### Data seeding
+### Data management
 
-`data/data.js` and `data/history.js` (gitignored) are legacy JS files with `PAGE.data = [...]` assignments. `scripts/seed.ts` parses them via `eval()` (handles single-quoted keys), injects placeholder title rows for any orphan history entries, then POSTs to `POST /api/import/data` and `POST /api/import/history`.
+Three workflows for moving data in and out:
 
-To seed a fresh local DB:
+**Local DB initialization** — seed from `data/data.json` + `data/history.json` (gitignored, JSON only):
 ```bash
-pnpm db:reset       # apply schema only
-pnpm dev            # start dev server (separate terminal)
-API_TOKEN=<token> pnpm seed:import
+pnpm db:reset         # apply schema only
+pnpm dev              # start dev server (separate terminal)
+pnpm seed:local       # reads data/data.json + data/history.json, POSTs to localhost
 ```
 
-For remote: `BASE_URL=https://<deployed-url> API_TOKEN=<prod-token> pnpm seed:import`
+**Backup and restore via Admin UI** — the recommended round-trip for everyday use:
+- Export: Admin UI → Export button → saves `data.json` + `history.json` locally
+- Import: Admin UI → Import button → select both files → confirm
 
-Data can also be backed up and restored via the Admin UI Export/Import buttons, which use the same endpoints.
+**CLI restore to any URL** — use after initial deployment or to restore from a backup file:
+```bash
+pnpm restore \
+  --url https://<deployed-url> \
+  --data data/data.json \
+  --history data/history.json \
+  --yes-replace-all
+```
+Token is resolved in order: `--token` flag → `API_TOKEN` env var → `PROD_API_TOKEN` in `.dev.vars`.
+Without `--yes-replace-all`, prints a dry-run summary and exits without writing.
+
+Both import endpoints (`POST /api/import/data`, `POST /api/import/history`) require `?confirm=replace-all` and a Bearer token. They perform a full destructive replace (all existing titles/cast/history are deleted first).
 
 ## Deployment checklist
 
@@ -148,4 +162,4 @@ Data can also be backed up and restored via the Admin UI Export/Import buttons, 
 2. `pnpm db:migrate:remote`
 3. `wrangler secret put API_TOKEN`
 4. `pnpm deploy`
-5. `BASE_URL=https://<deployed-url> API_TOKEN=<prod-token> pnpm seed:import`
+5. Add `PROD_API_TOKEN=<prod-token>` to `.dev.vars`, then: `pnpm restore --url https://<deployed-url> --data data/data.json --history data/history.json --yes-replace-all`
