@@ -1,12 +1,12 @@
 <script setup lang="ts">
 import { Download, Upload } from "lucide-vue-next";
 import { type Ref, ref } from "vue";
+import Modal from "../../components/Modal.vue";
 import { useConfirm } from "../../composables/useConfirm";
 import { useHistory } from "../../composables/useHistory";
 import { useTitles } from "../../composables/useTitles";
 import { get, post } from "../../lib/api";
 import type { AdminTab } from "../../lib/types";
-import Modal from "../../components/Modal.vue";
 
 defineProps<{ modelValue: AdminTab }>();
 defineEmits<{ "update:modelValue": [tab: AdminTab] }>();
@@ -67,7 +67,8 @@ async function readJson(file: File): Promise<unknown> {
 				reject(new Error(`${file.name} は有効な JSON ではありません`));
 			}
 		};
-		reader.onerror = () => reject(new Error(`${file.name} の読み込みに失敗しました`));
+		reader.onerror = () =>
+			reject(new Error(`${file.name} の読み込みに失敗しました`));
 		reader.readAsText(file);
 	});
 }
@@ -97,7 +98,8 @@ async function onImport() {
 		importModalOpen.value = false;
 		await Promise.all([fetchTitles(), fetchHistory()]);
 	} catch (err) {
-		importError.value = err instanceof Error ? err.message : "インポートに失敗しました";
+		importError.value =
+			err instanceof Error ? err.message : "インポートに失敗しました";
 	} finally {
 		importing.value = false;
 	}

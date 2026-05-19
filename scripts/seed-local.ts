@@ -11,7 +11,9 @@ const token =
 	readVarsFileToken(resolve(root, ".dev.vars"), "API_TOKEN");
 
 if (!token) {
-	console.error("Error: API_TOKEN is required. Set it in .dev.vars or pass as an env var.");
+	console.error(
+		"Error: API_TOKEN is required. Set it in .dev.vars or pass as an env var.",
+	);
 	process.exit(1);
 }
 
@@ -27,7 +29,9 @@ try {
 	dataPayload = readDataArray(dataPath, "data");
 } catch (err) {
 	console.error(`Error: ${err instanceof Error ? err.message : err}`);
-	console.error("Export data from the Admin UI first, or place data/data.js with PAGE.data.");
+	console.error(
+		"Export data from the Admin UI first, or place data/data.js with PAGE.data.",
+	);
 	process.exit(1);
 }
 
@@ -40,16 +44,24 @@ try {
 	historyPayload = readDataArray(historyPath, "history");
 } catch (err) {
 	console.error(`Error: ${err instanceof Error ? err.message : err}`);
-	console.error("Export history from the Admin UI first, or place data/history.js with PAGE.history.");
+	console.error(
+		"Export history from the Admin UI first, or place data/history.js with PAGE.history.",
+	);
 	process.exit(1);
 }
 
 // Filter history entries whose title doesn't exist in the data set (legacy data inconsistency).
-const titleSet = new Set(dataPayload.map((e) => (e as { title?: unknown }).title));
+const titleSet = new Set(
+	dataPayload.map((e) => (e as { title?: unknown }).title),
+);
 const before = historyPayload.length;
-historyPayload = historyPayload.filter((e) => titleSet.has((e as { title?: unknown }).title));
+historyPayload = historyPayload.filter((e) =>
+	titleSet.has((e as { title?: unknown }).title),
+);
 if (historyPayload.length < before) {
-	console.warn(`  [warn] Skipped ${before - historyPayload.length} history entries with unknown title`);
+	console.warn(
+		`  [warn] Skipped ${before - historyPayload.length} history entries with unknown title`,
+	);
 }
 
 console.log(`Seeding local DB at ${BASE_URL} ...`);

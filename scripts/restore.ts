@@ -38,12 +38,16 @@ Without --yes-replace-all, prints a dry-run summary and exits.`);
 }
 
 if (!token) {
-	console.error("Error: API token is required. Pass --token, set API_TOKEN env var, or add PROD_API_TOKEN to .dev.vars.");
+	console.error(
+		"Error: API token is required. Pass --token, set API_TOKEN env var, or add PROD_API_TOKEN to .dev.vars.",
+	);
 	process.exit(1);
 }
 
 if (url.startsWith("http://localhost")) {
-	console.warn("Warning: targeting localhost. Did you mean to use `pnpm seed:local` instead?");
+	console.warn(
+		"Warning: targeting localhost. Did you mean to use `pnpm seed:local` instead?",
+	);
 }
 
 let dataPayload: unknown[];
@@ -52,22 +56,30 @@ let historyPayload: unknown[];
 try {
 	dataPayload = readDataArray(dataPath, "data");
 } catch (err) {
-	console.error(`Error reading ${dataPath}: ${err instanceof Error ? err.message : err}`);
+	console.error(
+		`Error reading ${dataPath}: ${err instanceof Error ? err.message : err}`,
+	);
 	process.exit(1);
 }
 
 try {
 	historyPayload = readDataArray(historyPath, "history");
 } catch (err) {
-	console.error(`Error reading ${historyPath}: ${err instanceof Error ? err.message : err}`);
+	console.error(
+		`Error reading ${historyPath}: ${err instanceof Error ? err.message : err}`,
+	);
 	process.exit(1);
 }
 
 if (!confirmed) {
 	console.log("Dry run — pass --yes-replace-all to execute.");
 	console.log(`  Target:           ${url}`);
-	console.log(`  Titles to import: ${Array.isArray(dataPayload) ? dataPayload.length : "?"}`);
-	console.log(`  History to import:${Array.isArray(historyPayload) ? historyPayload.length : "?"}`);
+	console.log(
+		`  Titles to import: ${Array.isArray(dataPayload) ? dataPayload.length : "?"}`,
+	);
+	console.log(
+		`  History to import:${Array.isArray(historyPayload) ? historyPayload.length : "?"}`,
+	);
 	console.log("\nNo changes made.");
 	process.exit(0);
 }

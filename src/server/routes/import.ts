@@ -32,7 +32,10 @@ const importHistorySchema = z.array(importHistoryItem);
 
 importRoutes.post("/data", authMiddleware, async (c) => {
 	if (c.req.query("confirm") !== "replace-all") {
-		return c.json({ error: "Missing confirmation: add ?confirm=replace-all" }, 400);
+		return c.json(
+			{ error: "Missing confirmation: add ?confirm=replace-all" },
+			400,
+		);
 	}
 	const body = importDataSchema.parse(await c.req.json());
 	const db = getDb(c.env.DB);
@@ -43,8 +46,9 @@ importRoutes.post("/data", authMiddleware, async (c) => {
 
 	// D1 limits bound parameters to 100 per statement; titles has 2 columns → max 50 rows per chunk.
 	const TITLE_CHUNK = 50;
-	const chunks = Array.from({ length: Math.ceil(body.length / TITLE_CHUNK) }, (_, i) =>
-		body.slice(i * TITLE_CHUNK, (i + 1) * TITLE_CHUNK),
+	const chunks = Array.from(
+		{ length: Math.ceil(body.length / TITLE_CHUNK) },
+		(_, i) => body.slice(i * TITLE_CHUNK, (i + 1) * TITLE_CHUNK),
 	);
 	const inserted = (
 		await Promise.all(
@@ -77,7 +81,10 @@ importRoutes.post("/data", authMiddleware, async (c) => {
 
 importRoutes.post("/history", authMiddleware, async (c) => {
 	if (c.req.query("confirm") !== "replace-all") {
-		return c.json({ error: "Missing confirmation: add ?confirm=replace-all" }, 400);
+		return c.json(
+			{ error: "Missing confirmation: add ?confirm=replace-all" },
+			400,
+		);
 	}
 	const body = importHistorySchema.parse(await c.req.json());
 	const db = getDb(c.env.DB);
