@@ -23,8 +23,8 @@ pnpm db:studio        # Open Drizzle Studio against local D1 (requires db:migrat
 pnpm db:migrate       # Apply migrations to local D1
 pnpm db:migrate:remote # Apply migrations to remote D1
 pnpm db:reset         # Wipe local D1 state and re-apply all migrations (fresh local DB)
-pnpm seed:local       # Seed local DB from data/data.json + data/history.json (requires pnpm dev running)
-pnpm restore          # Restore data to any URL from JSON files (--url, --data, --history, --yes-replace-all)
+pnpm seed:local       # Seed local DB from data/data.{json,js} (prefers .json; requires pnpm dev running)
+pnpm restore          # Restore data to any URL from data files (--url, --data, --history, --yes-replace-all; accepts .json or .js)
 
 pnpm test             # Run all tests (client + server)
 pnpm test:client      # Client composable/API tests (Vitest + happy-dom)
@@ -132,11 +132,11 @@ To add columns or tables: edit `schema.ts` → `pnpm db:generate` → `pnpm db:m
 
 Three workflows for moving data in and out:
 
-**Local DB initialization** — seed from `data/data.json` + `data/history.json` (gitignored, JSON only):
+**Local DB initialization** — seed from `data/data.{json,js}` + `data/history.{json,js}` (gitignored):
 ```bash
 pnpm db:reset         # apply schema only
 pnpm dev              # start dev server (separate terminal)
-pnpm seed:local       # reads data/data.json + data/history.json, POSTs to localhost
+pnpm seed:local       # auto-detects .json (preferred) or legacy .js (PAGE.data / PAGE.history), POSTs to localhost
 ```
 
 **Backup and restore via Admin UI** — the recommended round-trip for everyday use:

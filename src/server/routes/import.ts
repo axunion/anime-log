@@ -12,6 +12,7 @@ export const importRoutes = new Hono<{ Bindings: Bindings }>();
 
 const importDataItem = createInsertSchema(titles, {
 	title: z.string().min(1),
+	year: z.coerce.number().int(),
 })
 	.pick({ title: true, year: true })
 	.extend({
@@ -19,7 +20,9 @@ const importDataItem = createInsertSchema(titles, {
 	});
 const importDataSchema = z.array(importDataItem);
 
-const importHistoryItem = createInsertSchema(history)
+const importHistoryItem = createInsertSchema(history, {
+	year: z.coerce.number().int(),
+})
 	.pick({ year: true })
 	.extend({
 		title: z.string().min(1),
@@ -38,10 +41,21 @@ importRoutes.post("/data", authMiddleware, async (c) => {
 
 	if (body.length === 0) return c.json({ imported: 0 });
 
-	const inserted = await db
-		.insert(titles)
-		.values(body.map((e) => ({ title: e.title, year: e.year })))
-		.returning({ id: titles.id });
+	// D1 limits bound parameters to 100 per statement; titles has 2 columns → max 50 rows per chunk.
+	const TITLE_CHUNK = 50;
+	const chunks = Array.from({ length: Math.ceil(body.length / TITLE_CHUNK) }, (_, i) =>
+		body.slice(i * TITLE_CHUNK, (i + 1) * TITLE_CHUNK),
+	);
+	const inserted = (
+		await Promise.all(
+			chunks.map((chunk) =>
+				db
+					.insert(titles)
+					.values(chunk.map((e) => ({ title: e.title, year: e.year })))
+					.returning({ id: titles.id }),
+			),
+		)
+	).flat();
 
 	const castStmts = body.flatMap((entry, i) =>
 		buildCastInsertStmts(

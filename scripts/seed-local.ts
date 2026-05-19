@@ -1,6 +1,6 @@
-import { readFileSync } from "node:fs";
-import { resolve } from "node:path";
+import { relative, resolve } from "node:path";
 import { postImport } from "./lib/import-client.ts";
+import { readDataArray, resolveDataFile } from "./lib/read-data-file.ts";
 import { readVarsFileToken, root } from "./lib/vars.ts";
 
 const BASE_URL = "http://localhost:5173";
@@ -15,21 +15,41 @@ if (!token) {
 	process.exit(1);
 }
 
-let dataPayload: unknown;
-let historyPayload: unknown;
+let dataPayload!: unknown[];
+let historyPayload!: unknown[];
 
 try {
-	dataPayload = JSON.parse(readFileSync(resolve(root, "data/data.json"), "utf-8"));
-} catch {
-	console.error("Error: data/data.json not found. Export data from the Admin UI first.");
+	const dataPath = resolveDataFile(
+		resolve(root, "data/data.json"),
+		resolve(root, "data/data.js"),
+	);
+	console.log(`Using data file:    ${relative(root, dataPath)}`);
+	dataPayload = readDataArray(dataPath, "data");
+} catch (err) {
+	console.error(`Error: ${err instanceof Error ? err.message : err}`);
+	console.error("Export data from the Admin UI first, or place data/data.js with PAGE.data.");
 	process.exit(1);
 }
 
 try {
-	historyPayload = JSON.parse(readFileSync(resolve(root, "data/history.json"), "utf-8"));
-} catch {
-	console.error("Error: data/history.json not found. Export history from the Admin UI first.");
+	const historyPath = resolveDataFile(
+		resolve(root, "data/history.json"),
+		resolve(root, "data/history.js"),
+	);
+	console.log(`Using history file: ${relative(root, historyPath)}`);
+	historyPayload = readDataArray(historyPath, "history");
+} catch (err) {
+	console.error(`Error: ${err instanceof Error ? err.message : err}`);
+	console.error("Export history from the Admin UI first, or place data/history.js with PAGE.history.");
 	process.exit(1);
+}
+
+// Filter history entries whose title doesn't exist in the data set (legacy data inconsistency).
+const titleSet = new Set(dataPayload.map((e) => (e as { title?: unknown }).title));
+const before = historyPayload.length;
+historyPayload = historyPayload.filter((e) => titleSet.has((e as { title?: unknown }).title));
+if (historyPayload.length < before) {
+	console.warn(`  [warn] Skipped ${before - historyPayload.length} history entries with unknown title`);
 }
 
 console.log(`Seeding local DB at ${BASE_URL} ...`);

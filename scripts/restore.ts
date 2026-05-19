@@ -1,7 +1,7 @@
-import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { parseArgs } from "node:util";
 import { postImport } from "./lib/import-client.ts";
+import { readDataArray } from "./lib/read-data-file.ts";
 import { readVarsFileToken, root } from "./lib/vars.ts";
 
 const { values } = parseArgs({
@@ -50,14 +50,14 @@ let dataPayload: unknown[];
 let historyPayload: unknown[];
 
 try {
-	dataPayload = JSON.parse(readFileSync(dataPath, "utf-8")) as unknown[];
+	dataPayload = readDataArray(dataPath, "data");
 } catch (err) {
 	console.error(`Error reading ${dataPath}: ${err instanceof Error ? err.message : err}`);
 	process.exit(1);
 }
 
 try {
-	historyPayload = JSON.parse(readFileSync(historyPath, "utf-8")) as unknown[];
+	historyPayload = readDataArray(historyPath, "history");
 } catch (err) {
 	console.error(`Error reading ${historyPath}: ${err instanceof Error ? err.message : err}`);
 	process.exit(1);

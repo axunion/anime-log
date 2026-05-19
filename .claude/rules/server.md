@@ -78,17 +78,35 @@ await db.delete(titles).where(eq(titles.id, id))
 
 ### Batch operations
 
-Use `db.batch()` for multiple related statements. Wrap chunks with `asBatch()` from `lib/cast.ts` to satisfy the non-empty tuple type:
+Use `db.batch()` for multiple related statements. Wrap chunks with `asBatch()` from `lib/cast.ts` to satisfy the non-empty tuple type. Use `batchAll()` to handle the 100-statement-per-call limit automatically:
 
 ```ts
-import { asBatch, buildCastInsertStmts } from "../lib/cast"
+import { asBatch, batchAll, buildCastInsertStmts } from "../lib/cast"
 
 const stmts = buildCastInsertStmts(db, titleId, body.cast)
-// D1 batch limit is 100 statements per call
-for (let i = 0; i < stmts.length; i += 100) {
-  await db.batch(asBatch(stmts.slice(i, i + 100)))
-}
+await batchAll(db, stmts)
 ```
+
+### Bulk INSERT and the D1 parameter limit
+
+D1 limits each prepared statement to **100 bound parameters**. For `INSERT ... VALUES (...)` with N bound columns, max rows per chunk = `floor(100 / N)`. Exceeding this throws `D1_ERROR: too many SQL variables`.
+
+Use `Promise.all` to insert chunks concurrently; `flat()` preserves insertion order for subsequent `RETURNING` lookups:
+
+```ts
+// titles has 2 bound columns (title, year) → 50 rows per chunk
+const CHUNK = Math.floor(100 / 2);
+const chunks = Array.from({ length: Math.ceil(data.length / CHUNK) }, (_, i) =>
+  data.slice(i * CHUNK, (i + 1) * CHUNK),
+);
+const inserted = (
+  await Promise.all(
+    chunks.map((chunk) => db.insert(table).values(chunk).returning({ id: table.id })),
+  )
+).flat();
+```
+
+> `batchAll` chunks *statements* (100 per `db.batch()` call) — a separate limit from the per-statement parameter count.
 
 ### sort_order via subquery
 

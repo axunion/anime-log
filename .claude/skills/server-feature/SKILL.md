@@ -120,5 +120,6 @@ Keep client types minimal — only include fields the client actually uses.
 - [ ] Server row type added to `src/server/types.ts`
 - [ ] Client type added to `src/client/lib/types.ts`
 - [ ] Test with `pnpm dev` (check worker logs in the terminal)
+- [ ] For bulk INSERT: chunk at `floor(100 / bound_columns)` rows (D1 parameter limit — see `rules/server.md`)
 
 **Next step:** Add the Vue composable and component with the `client-feature` skill.
