@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Library, Plus } from "lucide-vue-next";
+import { Library, Plus, X } from "lucide-vue-next";
 import { ref } from "vue";
 import { useFilter } from "../../composables/useFilter";
 import { useTitles } from "../../composables/useTitles";
@@ -62,7 +62,12 @@ async function onDeleteTitle(id: number) {
 		</form>
 
 		<div class="admin-form title-filter">
-			<input class="admin-form-input" v-model="query" type="text" placeholder="フィルター" />
+			<div class="filter-wrap">
+				<input class="admin-form-input" v-model="query" type="text" placeholder="フィルター" />
+				<button v-if="query" type="button" class="filter-clear" @click="query = ''" aria-label="フィルターをクリア">
+					<X :size="12" :stroke-width="2.5" />
+				</button>
+			</div>
 		</div>
 		<ul class="admin-list">
 			<TitleSearchItem

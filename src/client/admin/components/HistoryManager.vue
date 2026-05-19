@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { History as HistoryIcon, Plus } from "lucide-vue-next";
+import { History as HistoryIcon, Plus, X } from "lucide-vue-next";
 import { ref } from "vue";
 import draggable from "vuedraggable";
 import { useConfirm } from "../../composables/useConfirm";
@@ -20,10 +20,15 @@ const showSuggest = ref(false);
 const displayName = ref("");
 const year = ref("");
 
-const { filtered } = useFilter(
+const { filtered: titleSuggestions } = useFilter(
 	titles,
 	(t) => `${t.title} ${t.year}`,
 	titleQuery,
+);
+
+const { query: filterQuery, filtered: filteredHistory } = useFilter(
+	history,
+	(h) => h.title,
 );
 
 function onTitleQueryInput() {
@@ -52,6 +57,10 @@ async function onAdd() {
 
 async function onDragEnd(event: { oldIndex?: number; newIndex?: number }) {
 	if (event.oldIndex !== event.newIndex) await persistOrder();
+}
+
+function onFilterByTitle(title: string) {
+	filterQuery.value = title;
 }
 
 async function onDelete(id: number) {
@@ -84,10 +93,10 @@ async function onDelete(id: number) {
 				/>
 				<ul
 					class="title-suggest"
-					v-if="showSuggest && titleQuery && filtered.length"
+					v-if="showSuggest && titleQuery && titleSuggestions.length"
 				>
 					<li
-						v-for="t in filtered"
+						v-for="t in titleSuggestions"
 						:key="t.id"
 						@mousedown.prevent="selectTitle(t)"
 					>
@@ -103,7 +112,22 @@ async function onDelete(id: number) {
 			</button>
 		</form>
 
+		<div class="admin-form history-filter">
+			<div class="filter-wrap">
+				<input
+					class="admin-form-input"
+					type="text"
+					v-model="filterQuery"
+					placeholder="フィルター"
+				/>
+				<button v-if="filterQuery" type="button" class="filter-clear" @click="filterQuery = ''" aria-label="フィルターをクリア">
+					<X :size="12" :stroke-width="2.5" />
+				</button>
+			</div>
+		</div>
+
 		<draggable
+			v-if="!filterQuery"
 			v-model="history"
 			tag="ul"
 			class="admin-list"
@@ -117,9 +141,21 @@ async function onDelete(id: number) {
 					:entry="entry"
 					@update="updateHistory(entry.id, $event)"
 					@delete="onDelete(entry.id)"
+					@filter-by-title="onFilterByTitle"
 				/>
 			</template>
 		</draggable>
+		<ul v-else class="admin-list">
+			<HistoryItem
+				v-for="entry in filteredHistory"
+				:key="entry.id"
+				:entry="entry"
+				:draggable="false"
+				@update="updateHistory(entry.id, $event)"
+				@delete="onDelete(entry.id)"
+				@filter-by-title="onFilterByTitle"
+			/>
+		</ul>
 	</section>
 </template>
 
@@ -161,6 +197,13 @@ async function onDelete(id: number) {
 
 .title-suggest li:hover {
 	background: var(--glass-bg);
+}
+
+.history-filter {
+	border-top: 1px solid var(--glass-border);
+	margin-bottom: 0.5em;
+	margin-top: 0.75em;
+	padding-top: 1em;
 }
 
 @media screen and (max-width: 640px) {

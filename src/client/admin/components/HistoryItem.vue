@@ -1,15 +1,20 @@
 <script setup lang="ts">
-import { GripVertical, Trash2 } from "lucide-vue-next";
+import { GripVertical, ListFilter, Trash2 } from "lucide-vue-next";
 import { ref, watch } from "vue";
 import type { HistoryEntry } from "../../lib/types";
 
-const props = defineProps<{
-	entry: HistoryEntry;
-}>();
+const props = withDefaults(
+	defineProps<{
+		entry: HistoryEntry;
+		draggable?: boolean;
+	}>(),
+	{ draggable: true },
+);
 
 const emit = defineEmits<{
 	delete: [];
 	update: [payload: { display_name: string | null; year: number }];
+	"filter-by-title": [title: string];
 }>();
 
 const displayName = ref(props.entry.display_name ?? "");
@@ -39,10 +44,18 @@ function onBlur() {
 
 <template>
 	<li class="history-item">
-		<span class="drag-handle">
+		<span class="drag-handle" :class="{ 'drag-handle--hidden': !draggable }">
 			<GripVertical :size="16" :stroke-width="1.75" />
 		</span>
-		<span class="item-title">{{ entry.title }}</span>
+		<button
+			type="button"
+			class="item-title"
+			:title="`「${entry.title}」でフィルター`"
+			@click="emit('filter-by-title', entry.title)"
+		>
+			<ListFilter class="item-title-icon" :size="10" :stroke-width="2" />
+			<span>{{ entry.title }}</span>
+		</button>
 		<input
 			class="item-input item-input--name"
 			type="text"
@@ -81,13 +94,34 @@ function onBlur() {
 }
 
 .item-title {
+	align-items: center;
+	background: none;
+	border: none;
 	color: var(--text-muted);
+	cursor: pointer;
+	display: flex;
 	flex: 0 1 120px;
 	font-size: 12px;
+	gap: 0.3em;
 	min-width: 0;
 	overflow: hidden;
-	text-overflow: ellipsis;
+	padding: 0;
+	text-align: left;
 	white-space: nowrap;
+}
+
+.item-title span {
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+
+.item-title-icon {
+	display: none;
+	flex-shrink: 0;
+}
+
+.item-title:hover .item-title-icon {
+	display: inline-flex;
 }
 
 .item-input {
@@ -126,6 +160,11 @@ function onBlur() {
 
 .drag-handle:active {
 	cursor: grabbing;
+}
+
+.drag-handle--hidden {
+	cursor: default;
+	opacity: 0.15;
 }
 
 .btn-delete {

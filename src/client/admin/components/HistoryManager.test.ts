@@ -23,7 +23,32 @@ vi.mock("../../composables/useTitles", async () => {
 
 vi.mock("../../composables/useHistory", async () => {
 	const { ref } = await import("vue");
-	const history = ref([]);
+	const history = ref([
+		{
+			id: 1,
+			title_id: 1,
+			title: "One Piece",
+			display_name: null,
+			year: 2020,
+			sort_order: 0,
+		},
+		{
+			id: 2,
+			title_id: 1,
+			title: "One Piece",
+			display_name: null,
+			year: 2023,
+			sort_order: 1,
+		},
+		{
+			id: 3,
+			title_id: 2,
+			title: "Naruto",
+			display_name: null,
+			year: 2021,
+			sort_order: 2,
+		},
+	]);
 
 	return {
 		useHistory: () => ({
@@ -58,6 +83,64 @@ describe("HistoryManager", () => {
 		deleteHistoryMock.mockReset();
 		persistOrderMock.mockReset();
 		confirmMock.mockReset();
+	});
+
+	it("renders draggable list when filter is empty", () => {
+		const wrapper = mount(HistoryManager, {
+			global: {
+				stubs: { draggable: DraggableStub, HistoryItem: true },
+			},
+		});
+
+		expect(wrapper.find(".draggable-stub").exists()).toBe(true);
+		expect(
+			wrapper.find("ul:not(.draggable-stub):not(.title-suggest)").exists(),
+		).toBe(false);
+	});
+
+	it("switches to plain list and hides drag handles when filter is active", async () => {
+		const wrapper = mount(HistoryManager, {
+			global: {
+				stubs: {
+					draggable: DraggableStub,
+					HistoryItem: {
+						props: ["entry", "draggable"],
+						template: `<li><span v-if="draggable" class="drag-handle" /><span class="title">{{ entry.title }}</span></li>`,
+					},
+				},
+			},
+		});
+
+		await wrapper.get('input[placeholder="フィルター"]').setValue("One");
+
+		expect(wrapper.find(".draggable-stub").exists()).toBe(false);
+		expect(wrapper.find(".drag-handle").exists()).toBe(false);
+		expect(wrapper.findAll("li")).toHaveLength(2);
+	});
+
+	it("sets filter when filter-by-title event is received", async () => {
+		const wrapper = mount(HistoryManager, {
+			global: {
+				stubs: {
+					draggable: DraggableStub,
+					HistoryItem: {
+						props: ["entry", "draggable"],
+						emits: ["filter-by-title"],
+						template: `<li @click="$emit('filter-by-title', entry.title)">{{ entry.title }}</li>`,
+					},
+				},
+			},
+		});
+
+		const filterInput = wrapper.get<HTMLInputElement>(
+			'input[placeholder="フィルター"]',
+		);
+		expect(filterInput.element.value).toBe("");
+
+		await wrapper.findAll("li")[0].trigger("click");
+		await flushPromises();
+
+		expect(filterInput.element.value).toBe("One Piece");
 	});
 
 	it("submits the selected title from suggestions", async () => {
