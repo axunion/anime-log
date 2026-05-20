@@ -24,7 +24,8 @@ Two-page Vue 3 MPA (viewer + admin) served by a Cloudflare Worker. The Worker ha
 
 - Node.js 18+
 - [pnpm](https://pnpm.io) (`npm install -g pnpm`)
-- [Wrangler CLI](https://developers.cloudflare.com/workers/wrangler/) (`pnpm add -g wrangler`)
+
+Wrangler is included in `devDependencies` — no global install needed. All `wrangler` commands work via pnpm scripts or `pnpm exec wrangler <cmd>`.
 
 ### 1. Install dependencies
 
@@ -151,39 +152,27 @@ pnpm db:reset    # Wipe local D1 state and re-apply all migrations (fresh local 
 
 ## Deployment
 
-### Cloudflare prerequisites
+Production deploys are managed automatically via GitHub Actions. Every push to `main` triggers a deploy pipeline: lint → test → D1 migrations → build → deploy. You can also trigger a deploy manually from the Actions tab.
 
-1. **Cloudflare account** — [sign up](https://dash.cloudflare.com/sign-up) if you don't have one (free tier is sufficient)
-2. **Log in with Wrangler:**
-   ```bash
-   wrangler login
-   ```
-3. **Workers & D1** must be enabled on your account (available on the free tier)
+### First-time setup
 
-### Deployment steps
+These steps are required once when setting up a new environment.
 
-**1. Create the D1 database:**
+**1. Cloudflare prerequisites:**
+
+- [Sign up](https://dash.cloudflare.com/sign-up) for a Cloudflare account (free tier is sufficient)
+- Log in with Wrangler: `wrangler login`
+- Ensure Workers & D1 are enabled on your account
+
+**2. Create the D1 database:**
 
 ```bash
 wrangler d1 create anime-db
 ```
 
-Copy the `database_id` from the output and paste it into `wrangler.toml`:
+Note the `database_id` from the output — you'll need it in step 4.
 
-```toml
-[[d1_databases]]
-binding = "DB"
-database_name = "anime-db"
-database_id = "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"   # ← paste here
-```
-
-**2. Apply migrations to the remote database:**
-
-```bash
-pnpm db:migrate:remote
-```
-
-**3. Set the admin API token:**
+**3. Set the admin API token (Cloudflare secret):**
 
 ```bash
 wrangler secret put API_TOKEN
@@ -191,15 +180,29 @@ wrangler secret put API_TOKEN
 
 Enter any secure random string when prompted. This is the token you will use in the Admin UI.
 
-**4. Deploy:**
+**4. Register GitHub Secrets:**
+
+Go to your repository → Settings → Secrets and variables → Actions, and add:
+
+| Secret name | Value |
+|---|---|
+| `CLOUDFLARE_API_TOKEN` | A Cloudflare API token with `Workers Scripts:Edit` and `D1:Edit` permissions (create at Cloudflare dashboard → My Profile → API Tokens) |
+| `CLOUDFLARE_ACCOUNT_ID` | Your Cloudflare account ID (shown in the dashboard sidebar or via `wrangler whoami`) |
+| `CLOUDFLARE_D1_DATABASE_ID` | The `database_id` from step 2 |
+
+**5. Generate your local `wrangler.toml`:**
+
+`wrangler.toml` is gitignored. Generate it once with:
 
 ```bash
-pnpm deploy
+CLOUDFLARE_D1_DATABASE_ID=<your-database-id> node scripts/render-wrangler-toml.mjs
 ```
 
-This builds the client and Worker, then uploads both to Cloudflare. The Worker URL is shown in the output (e.g. `https://anime-log.<your-subdomain>.workers.dev`).
+**6. Trigger the first deploy:**
 
-**5. Seed initial data (optional):**
+Push to `main` or trigger manually from the GitHub Actions tab. The deploy pipeline applies D1 migrations automatically before deploying. The Worker URL is shown in the deploy step output (e.g. `https://anime-log.<your-subdomain>.workers.dev`).
+
+**7. Seed initial data (optional):**
 
 Add `PROD_API_TOKEN=<your-api-token>` to `.dev.vars`, then:
 
@@ -210,3 +213,20 @@ pnpm restore \
   --history data/history.json \
   --yes-replace-all
 ```
+
+### Day-to-day workflow
+
+1. Create a branch and make changes
+2. Open a PR — CI runs lint, typecheck, and tests automatically
+3. Merge to `main` — deploy pipeline runs automatically
+
+### Emergency local deploy
+
+If GitHub Actions is unavailable, build and deploy directly with Wrangler:
+
+```bash
+pnpm build
+wrangler deploy
+```
+
+Requires `wrangler.toml` with a valid `database_id` (generate with `CLOUDFLARE_D1_DATABASE_ID=<id> node scripts/render-wrangler-toml.mjs`) and Cloudflare credentials available locally (`wrangler login`).

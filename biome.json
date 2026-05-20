@@ -21,6 +21,11 @@
 	},
 	"overrides": [
 		{
+			"includes": ["docs/**"],
+			"linter": { "enabled": false },
+			"formatter": { "enabled": false }
+		},
+		{
 			"includes": ["**/*.vue"],
 			"linter": {
 				"rules": {

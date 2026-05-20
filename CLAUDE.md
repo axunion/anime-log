@@ -11,8 +11,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ```bash
 pnpm dev              # Start dev server with Cloudflare Worker + Vite HMR (http://localhost:5173)
-pnpm build            # Build client (dist/client/) and worker (dist/anime_log/)
-pnpm deploy           # Build then deploy to Cloudflare (requires valid database_id in wrangler.toml)
+pnpm build            # Build client (dist/client/) and worker (dist/anime_log/) — normal deploys go via GitHub Actions; emergency: pnpm build && wrangler deploy
 pnpm typecheck        # TypeScript type check (vue-tsc --noEmit)
 pnpm fix              # Biome lint + auto-fix (all files, respects .gitignore)
 
@@ -156,10 +155,48 @@ Without `--yes-replace-all`, prints a dry-run summary and exits without writing.
 
 Both import endpoints (`POST /api/import/data`, `POST /api/import/history`) require `?confirm=replace-all` and a Bearer token. They perform a full destructive replace (all existing titles/cast/history are deleted first).
 
-## Deployment checklist
+## Deployment
 
-1. `wrangler d1 create anime-db` → paste the `database_id` into `wrangler.toml`
-2. `pnpm db:migrate:remote`
-3. `wrangler secret put API_TOKEN`
-4. `pnpm deploy`
-5. Add `PROD_API_TOKEN=<prod-token>` to `.dev.vars`, then: `pnpm restore --url https://<deployed-url> --data data/data.json --history data/history.json --yes-replace-all`
+### ⚠️ GitHub Actions CI/CD is not yet active
+
+Workflow files are saved as drafts in `docs/workflows-draft/` and have not been deployed to `.github/workflows/`. No CI or auto-deploy will run on GitHub until they are moved into place.
+
+**To activate CI/CD**, complete the setup checklist below, then:
+
+```bash
+mkdir -p .github/workflows
+cp docs/workflows-draft/ci.yml .github/workflows/
+cp docs/workflows-draft/deploy.yml .github/workflows/
+```
+
+Then restore the `workflow_run` trigger in `deploy.yml` (currently `workflow_dispatch` only):
+
+```yaml
+on:
+  workflow_run:
+    workflows: [CI]
+    types: [completed]
+    branches: [main]
+  workflow_dispatch:
+```
+
+### Setup checklist (complete before activating CI/CD)
+
+1. `wrangler d1 create anime-db` → note the `database_id`
+2. `wrangler secret put API_TOKEN` (Cloudflare secret for the Worker)
+3. Register three GitHub Secrets: `CLOUDFLARE_API_TOKEN`, `CLOUDFLARE_ACCOUNT_ID`, `CLOUDFLARE_D1_DATABASE_ID`
+4. Generate local `wrangler.toml`: `CLOUDFLARE_D1_DATABASE_ID=<id> node scripts/render-wrangler-toml.mjs`
+5. Move workflow files into `.github/workflows/` (see above)
+6. Test a manual deploy via `workflow_dispatch` from the Actions tab
+7. Restore the `workflow_run` trigger in `deploy.yml`
+
+### Day-to-day (once CI/CD is active)
+
+- Push to `main` → CI passes → deploy runs automatically
+- Emergency local deploy only: `pnpm build && wrangler deploy`
+
+### wrangler.toml
+
+`wrangler.toml` is gitignored. The template is `wrangler.example.toml`. Generated automatically:
+- **CI**: `render-wrangler-toml.mjs` runs in each workflow with `CLOUDFLARE_D1_DATABASE_ID` secret
+- **Local**: `postinstall` hook runs the script; skips if `wrangler.toml` already exists

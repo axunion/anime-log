@@ -1,0 +1,1068 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>anime-log デプロイガイド</title>
+  <style>
+    :root {
+      --bg: #0f1117;
+      --surface: #1a1d27;
+      --surface2: #22263a;
+      --border: #2e3350;
+      --accent: #f6821f;
+      --accent2: #faad3f;
+      --blue: #4d9cf8;
+      --green: #3ecf8e;
+      --red: #f87171;
+      --purple: #a78bfa;
+      --text: #e2e8f0;
+      --muted: #7b8299;
+      --code-bg: #111827;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      font-size: 15px;
+      line-height: 1.7;
+    }
+
+    /* Layout */
+    .page-wrapper { display: flex; min-height: 100vh; }
+
+    nav {
+      width: 240px;
+      min-width: 240px;
+      background: var(--surface);
+      border-right: 1px solid var(--border);
+      padding: 24px 0;
+      position: sticky;
+      top: 0;
+      height: 100vh;
+      overflow-y: auto;
+    }
+
+    nav .logo {
+      padding: 0 20px 20px;
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 16px;
+    }
+    nav .logo h2 { font-size: 14px; color: var(--accent); letter-spacing: .05em; text-transform: uppercase; }
+    nav .logo p { font-size: 12px; color: var(--muted); margin-top: 2px; }
+
+    nav a {
+      display: block;
+      padding: 7px 20px;
+      color: var(--muted);
+      text-decoration: none;
+      font-size: 13px;
+      transition: color .15s, background .15s;
+      border-left: 2px solid transparent;
+    }
+    nav a:hover { color: var(--text); background: var(--surface2); }
+    nav a.active { color: var(--accent); border-left-color: var(--accent); }
+    nav .nav-group { font-size: 11px; color: var(--muted); padding: 14px 20px 4px; text-transform: uppercase; letter-spacing: .08em; }
+
+    main {
+      flex: 1;
+      padding: 48px 56px;
+      max-width: 960px;
+    }
+
+    /* Typography */
+    h1 { font-size: 28px; font-weight: 700; margin-bottom: 8px; }
+    h1 span { color: var(--accent); }
+    .subtitle { color: var(--muted); margin-bottom: 40px; font-size: 15px; }
+
+    h2 {
+      font-size: 20px;
+      font-weight: 600;
+      margin: 48px 0 16px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid var(--border);
+      scroll-margin-top: 24px;
+    }
+    h3 { font-size: 16px; font-weight: 600; margin: 28px 0 12px; color: var(--accent2); }
+    h4 { font-size: 14px; font-weight: 600; margin: 20px 0 8px; color: var(--text); }
+
+    p { margin-bottom: 12px; }
+    ul, ol { padding-left: 20px; margin-bottom: 12px; }
+    li { margin-bottom: 4px; }
+
+    a { color: var(--blue); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    code {
+      background: var(--code-bg);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 1px 6px;
+      font-family: 'SF Mono', 'Cascadia Code', Consolas, monospace;
+      font-size: 13px;
+      color: var(--accent2);
+    }
+
+    pre {
+      background: var(--code-bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 16px 20px;
+      overflow-x: auto;
+      margin: 12px 0 20px;
+      font-family: 'SF Mono', 'Cascadia Code', Consolas, monospace;
+      font-size: 13px;
+      line-height: 1.6;
+    }
+    pre code { background: none; border: none; padding: 0; color: var(--text); font-size: inherit; }
+    .comment { color: #6b7280; }
+    .kw { color: #c084fc; }
+    .str { color: #86efac; }
+    .val { color: #93c5fd; }
+    .key { color: var(--accent2); }
+
+    /* Cards */
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 20px 24px;
+      margin-bottom: 16px;
+    }
+    .card-title { font-size: 13px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; margin-bottom: 10px; }
+
+    /* Callouts */
+    .callout {
+      border-radius: 8px;
+      padding: 14px 18px;
+      margin: 16px 0;
+      display: flex;
+      gap: 12px;
+      font-size: 14px;
+    }
+    .callout-icon { font-size: 18px; flex-shrink: 0; line-height: 1.5; }
+    .callout.info { background: rgba(77,156,248,.1); border: 1px solid rgba(77,156,248,.3); }
+    .callout.warn { background: rgba(250,173,63,.1); border: 1px solid rgba(250,173,63,.3); }
+    .callout.tip  { background: rgba(62,207,142,.1); border: 1px solid rgba(62,207,142,.3); }
+
+    /* Tables */
+    table { width: 100%; border-collapse: collapse; margin: 16px 0 24px; font-size: 14px; }
+    th {
+      background: var(--surface2);
+      text-align: left;
+      padding: 10px 14px;
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: .06em;
+      color: var(--muted);
+      border-bottom: 1px solid var(--border);
+    }
+    td {
+      padding: 10px 14px;
+      border-bottom: 1px solid var(--border);
+      vertical-align: top;
+    }
+    tr:last-child td { border-bottom: none; }
+    tr:hover td { background: rgba(255,255,255,.02); }
+
+    /* Badges */
+    .badge {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 20px;
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: .04em;
+    }
+    .badge-orange { background: rgba(246,130,31,.2); color: var(--accent); }
+    .badge-blue   { background: rgba(77,156,248,.2); color: var(--blue); }
+    .badge-green  { background: rgba(62,207,142,.2); color: var(--green); }
+    .badge-purple { background: rgba(167,139,250,.2); color: var(--purple); }
+    .badge-red    { background: rgba(248,113,113,.2); color: var(--red); }
+
+    /* Step list */
+    .steps { counter-reset: step; list-style: none; padding-left: 0; }
+    .steps li {
+      counter-increment: step;
+      display: flex;
+      gap: 16px;
+      margin-bottom: 20px;
+      align-items: flex-start;
+    }
+    .steps li::before {
+      content: counter(step);
+      background: var(--accent);
+      color: #fff;
+      font-weight: 700;
+      font-size: 13px;
+      width: 26px;
+      height: 26px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      margin-top: 2px;
+    }
+    .steps li .step-body { flex: 1; }
+    .steps li .step-body strong { display: block; margin-bottom: 4px; }
+
+    /* ─── Diagrams ─── */
+    .diagram-wrap {
+      background: var(--code-bg);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 28px;
+      margin: 20px 0 28px;
+      overflow-x: auto;
+    }
+
+    /* Flow: horizontal boxes */
+    .flow {
+      display: flex;
+      align-items: center;
+      gap: 0;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+    .flow-box {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 10px 18px;
+      text-align: center;
+      min-width: 110px;
+      font-size: 13px;
+      font-weight: 500;
+    }
+    .flow-box small { display: block; font-size: 11px; color: var(--muted); margin-top: 2px; font-weight: 400; }
+    .flow-box.orange { border-color: var(--accent); color: var(--accent); }
+    .flow-box.blue   { border-color: var(--blue);   color: var(--blue); }
+    .flow-box.green  { border-color: var(--green);  color: var(--green); }
+    .flow-box.purple { border-color: var(--purple); color: var(--purple); }
+    .flow-box.red    { border-color: var(--red);    color: var(--red); }
+    .flow-arrow {
+      color: var(--muted);
+      font-size: 20px;
+      padding: 0 6px;
+      line-height: 1;
+    }
+
+    /* Vertical flow */
+    .vflow { display: flex; flex-direction: column; align-items: flex-start; gap: 0; }
+    .vflow-step {
+      display: flex;
+      align-items: flex-start;
+      gap: 14px;
+      width: 100%;
+    }
+    .vflow-line { display: flex; flex-direction: column; align-items: center; width: 32px; flex-shrink: 0; }
+    .vflow-dot {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 13px;
+      font-weight: 700;
+      flex-shrink: 0;
+    }
+    .vflow-connector { width: 2px; height: 24px; background: var(--border); margin: 2px 0; }
+    .vflow-body { padding: 4px 0 24px; flex: 1; }
+    .vflow-body strong { display: block; font-size: 14px; margin-bottom: 3px; }
+    .vflow-body span { font-size: 13px; color: var(--muted); }
+    .dot-orange { background: rgba(246,130,31,.15); border: 2px solid var(--accent); color: var(--accent); }
+    .dot-blue   { background: rgba(77,156,248,.15); border: 2px solid var(--blue);   color: var(--blue); }
+    .dot-green  { background: rgba(62,207,142,.15); border: 2px solid var(--green);  color: var(--green); }
+    .dot-purple { background: rgba(167,139,250,.15); border: 2px solid var(--purple); color: var(--purple); }
+    .dot-gray   { background: rgba(123,130,153,.15); border: 2px solid var(--muted); color: var(--muted); }
+
+    /* Architecture diagram */
+    .arch { display: grid; grid-template-columns: 1fr 40px 1fr 40px 1fr; align-items: center; gap: 8px; }
+    .arch-box {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 16px;
+      text-align: center;
+    }
+    .arch-box .icon { font-size: 28px; margin-bottom: 6px; }
+    .arch-box .label { font-size: 13px; font-weight: 600; }
+    .arch-box .sub { font-size: 11px; color: var(--muted); margin-top: 4px; }
+    .arch-arrow { text-align: center; color: var(--muted); font-size: 22px; }
+
+    /* File tree */
+    .tree { font-family: 'SF Mono', Consolas, monospace; font-size: 13px; line-height: 1.8; }
+    .tree .dir { color: var(--blue); font-weight: 600; }
+    .tree .file { color: var(--text); }
+    .tree .new { color: var(--green); }
+    .tree .ignored { color: var(--muted); text-decoration: line-through; }
+    .tree .note { color: var(--muted); font-style: italic; margin-left: 8px; }
+
+    /* Two-col */
+    .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin: 16px 0; }
+    @media (max-width: 720px) { .two-col { grid-template-columns: 1fr; } }
+
+    /* Secret comparison */
+    .secret-row { display: grid; grid-template-columns: 160px 1fr; gap: 12px; align-items: start; margin-bottom: 12px; }
+    .secret-label { font-size: 12px; text-align: right; color: var(--muted); padding-top: 2px; }
+
+    /* Divider */
+    hr { border: none; border-top: 1px solid var(--border); margin: 32px 0; }
+
+    /* Scroll */
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+  </style>
+</head>
+<body>
+
+<div class="page-wrapper">
+
+  <!-- Sidebar nav -->
+  <nav>
+    <div class="logo">
+      <h2>anime-log</h2>
+      <p>デプロイガイド</p>
+    </div>
+    <span class="nav-group">概要</span>
+    <a href="#overview">アーキテクチャ概要</a>
+    <a href="#files">関連ファイル一覧</a>
+
+    <span class="nav-group">仕組み</span>
+    <a href="#pipeline">デプロイパイプライン</a>
+    <a href="#wrangler-toml">wrangler.toml の管理</a>
+    <a href="#secrets">シークレット管理</a>
+
+    <span class="nav-group">操作</span>
+    <a href="#first-setup">初回セットアップ</a>
+    <a href="#daily">日常の開発フロー</a>
+    <a href="#emergency">緊急デプロイ</a>
+
+    <span class="nav-group">参考</span>
+    <a href="#envdiff">ローカル vs 本番の違い</a>
+    <a href="#troubleshoot">トラブルシューティング</a>
+  </nav>
+
+  <!-- Main content -->
+  <main>
+
+    <h1><span>Cloudflare</span> デプロイガイド</h1>
+    <p class="subtitle">anime-log のデプロイ構成・仕組み・操作手順をまとめたリファレンスです。</p>
+
+    <!-- ─────────────────────────────────────── -->
+    <h2 id="overview">アーキテクチャ概要</h2>
+
+    <p>anime-log は <strong>Cloudflare Workers</strong> 上で動作します。Workers はサーバーレス関数で、世界中の Cloudflare エッジ（CDN ノード）で実行されます。データベースは同じく Cloudflare が提供する <strong>D1</strong>（SQLite ベース）を使用します。</p>
+
+    <div class="diagram-wrap">
+      <div style="text-align:center; margin-bottom:24px; font-size:13px; color:var(--muted);">本番環境の構成</div>
+      <div class="arch">
+        <div class="arch-box">
+          <div class="icon">🌐</div>
+          <div class="label">ブラウザ</div>
+          <div class="sub">ユーザー</div>
+        </div>
+        <div class="arch-arrow">→</div>
+        <div class="arch-box" style="border-color:var(--accent)">
+          <div class="icon">⚡</div>
+          <div class="label" style="color:var(--accent)">Cloudflare Worker</div>
+          <div class="sub">anime-log (Hono API)<br>+ 静的アセット配信</div>
+        </div>
+        <div class="arch-arrow">⇄</div>
+        <div class="arch-box" style="border-color:var(--blue)">
+          <div class="icon">🗄️</div>
+          <div class="label" style="color:var(--blue)">Cloudflare D1</div>
+          <div class="sub">SQLite データベース<br>(titles / cast / history)</div>
+        </div>
+      </div>
+
+      <div style="margin-top:32px; margin-bottom:12px; font-size:13px; color:var(--muted); text-align:center;">ローカル開発環境の構成</div>
+      <div class="arch">
+        <div class="arch-box">
+          <div class="icon">🌐</div>
+          <div class="label">ブラウザ</div>
+          <div class="sub">localhost:5173</div>
+        </div>
+        <div class="arch-arrow">→</div>
+        <div class="arch-box" style="border-color:var(--purple)">
+          <div class="icon">🔧</div>
+          <div class="label" style="color:var(--purple)">Vite dev server</div>
+          <div class="sub">@cloudflare/vite-plugin<br>Worker をローカルで模倣</div>
+        </div>
+        <div class="arch-arrow">⇄</div>
+        <div class="arch-box" style="border-color:var(--green)">
+          <div class="icon">💾</div>
+          <div class="label" style="color:var(--green)">ローカル D1</div>
+          <div class="sub">miniflare (SQLite)<br>.wrangler/state/</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="callout info">
+      <span class="callout-icon">ℹ️</span>
+      <div>
+        <strong>Cloudflare Workers とは？</strong><br>
+        AWS Lambda や Vercel Functions と同様のサーバーレス関数です。Node.js ではなく V8 エンジン上で動作し、コールドスタートがほぼなく応答が速いのが特徴です。<code>wrangler deploy</code> で関数コードとアセットを Cloudflare のネットワークにアップロードします。
+      </div>
+    </div>
+
+    <!-- ─────────────────────────────────────── -->
+    <h2 id="files">関連ファイル一覧</h2>
+
+    <div class="diagram-wrap">
+      <div class="tree">
+        <div><span class="dir">anime-log/</span></div>
+        <div>&nbsp;&nbsp;├── <span class="new">📄 wrangler.example.toml</span><span class="note">← テンプレ（コミット済み・変数なし）</span></div>
+        <div>&nbsp;&nbsp;├── <span class="ignored">📄 wrangler.toml</span><span class="note">← gitignore 済・各自が生成（database_id 入り）</span></div>
+        <div>&nbsp;&nbsp;├── <span class="ignored">📄 .dev.vars</span><span class="note">← gitignore 済・ローカル秘密情報</span></div>
+        <div>&nbsp;&nbsp;├── 📄 .dev.vars.example<span class="note">← .dev.vars の形式サンプル（コミット済み）</span></div>
+        <div>&nbsp;&nbsp;├── <span class="dir">.github/workflows/</span></div>
+        <div>&nbsp;&nbsp;│&nbsp;&nbsp; ├── <span class="new">📄 ci.yml</span><span class="note">← PR/push の lint + test</span></div>
+        <div>&nbsp;&nbsp;│&nbsp;&nbsp; └── <span class="new">📄 deploy.yml</span><span class="note">← main push の本番デプロイ</span></div>
+        <div>&nbsp;&nbsp;├── <span class="dir">scripts/</span></div>
+        <div>&nbsp;&nbsp;│&nbsp;&nbsp; ├── <span class="new">📄 render-wrangler-toml.mjs</span><span class="note">← wrangler.toml を生成するスクリプト</span></div>
+        <div>&nbsp;&nbsp;│&nbsp;&nbsp; ├── 📄 restore.ts<span class="note">← 本番データ復元 CLI</span></div>
+        <div>&nbsp;&nbsp;│&nbsp;&nbsp; └── 📄 seed-local.ts<span class="note">← ローカル DB 初期データ投入</span></div>
+        <div>&nbsp;&nbsp;├── <span class="dir">migrations/</span><span class="note">← SQL マイグレーションファイル（コミット済み）</span></div>
+        <div>&nbsp;&nbsp;└── <span class="dir">src/</span></div>
+        <div>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ├── <span class="dir">server/</span><span class="note">← Hono API（Worker として動く）</span></div>
+        <div>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; └── <span class="dir">client/</span><span class="note">← Vue 3 フロントエンド（静的アセット）</span></div>
+      </div>
+    </div>
+
+    <table>
+      <thead>
+        <tr>
+          <th>ファイル</th>
+          <th>役割</th>
+          <th>Git 管理</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><code>wrangler.example.toml</code></td>
+          <td>wrangler.toml のテンプレ。<code>__DATABASE_ID__</code> がプレースホルダ</td>
+          <td><span class="badge badge-green">コミット済み</span></td>
+        </tr>
+        <tr>
+          <td><code>wrangler.toml</code></td>
+          <td>Wrangler が読む設定ファイル本体。実際の database_id が入る</td>
+          <td><span class="badge badge-red">gitignore</span></td>
+        </tr>
+        <tr>
+          <td><code>.dev.vars</code></td>
+          <td>ローカル開発用のシークレット（<code>API_TOKEN</code>、<code>PROD_API_TOKEN</code>）</td>
+          <td><span class="badge badge-red">gitignore</span></td>
+        </tr>
+        <tr>
+          <td><code>.dev.vars.example</code></td>
+          <td>.dev.vars の形式サンプル。キー名だけ記載</td>
+          <td><span class="badge badge-green">コミット済み</span></td>
+        </tr>
+        <tr>
+          <td><code>.github/workflows/ci.yml</code></td>
+          <td>PR・push 時に lint / typecheck / test を自動実行</td>
+          <td><span class="badge badge-green">コミット済み</span></td>
+        </tr>
+        <tr>
+          <td><code>.github/workflows/deploy.yml</code></td>
+          <td>main push 時に D1 migration → build → deploy を自動実行</td>
+          <td><span class="badge badge-green">コミット済み</span></td>
+        </tr>
+        <tr>
+          <td><code>scripts/render-wrangler-toml.mjs</code></td>
+          <td>wrangler.example.toml から wrangler.toml を生成。CI と postinstall で使用</td>
+          <td><span class="badge badge-green">コミット済み</span></td>
+        </tr>
+        <tr>
+          <td><code>migrations/*.sql</code></td>
+          <td>Drizzle ORM が生成した DB スキーマ変更の SQL ファイル</td>
+          <td><span class="badge badge-green">コミット済み</span></td>
+        </tr>
+      </tbody>
+    </table>
+
+    <!-- ─────────────────────────────────────── -->
+    <h2 id="pipeline">デプロイパイプライン</h2>
+
+    <p>main ブランチへの push（または PR マージ）をトリガーに、<strong>CI</strong> と <strong>Deploy</strong> の 2 本のワークフローが自動実行されます。</p>
+
+    <h3>ワークフロー全体像</h3>
+
+    <div class="diagram-wrap">
+      <div style="text-align:center; margin-bottom:20px; font-size:13px; color:var(--muted);">PR を作成してから本番に反映されるまでの流れ</div>
+
+      <div class="flow" style="justify-content:flex-start; gap:0;">
+        <div class="flow-box">
+          💻 ローカルで<br>コード変更
+        </div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-box blue">
+          🔀 PR を作成
+          <small>GitHub</small>
+        </div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-box purple">
+          ✅ CI が実行
+          <small>ci.yml</small>
+        </div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-box orange">
+          🔀 main にマージ
+          <small>GitHub</small>
+        </div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-box green">
+          🚀 Deploy が実行
+          <small>deploy.yml</small>
+        </div>
+      </div>
+
+      <hr style="border-color:var(--border); margin:28px 0;">
+
+      <div class="two-col">
+        <!-- CI -->
+        <div>
+          <div style="font-size:13px; font-weight:600; color:var(--purple); margin-bottom:14px;">📋 ci.yml（PR / main push）</div>
+          <div class="vflow">
+            <div class="vflow-step">
+              <div class="vflow-line"><div class="vflow-dot dot-gray">1</div><div class="vflow-connector"></div></div>
+              <div class="vflow-body"><strong>checkout + pnpm install</strong><span>依存パッケージをインストール</span></div>
+            </div>
+            <div class="vflow-step">
+              <div class="vflow-line"><div class="vflow-dot dot-gray">2</div><div class="vflow-connector"></div></div>
+              <div class="vflow-body"><strong>wrangler.toml を生成</strong><span>テンプレから生成。DB IDはダミー値でOK（テストはminiflare使用）</span></div>
+            </div>
+            <div class="vflow-step">
+              <div class="vflow-line"><div class="vflow-dot dot-gray">3</div><div class="vflow-connector"></div></div>
+              <div class="vflow-body"><strong>pnpm check</strong><span>Biome lint + vue-tsc 型チェック</span></div>
+            </div>
+            <div class="vflow-step">
+              <div class="vflow-line"><div class="vflow-dot dot-purple">4</div></div>
+              <div class="vflow-body"><strong>pnpm test</strong><span>client（happy-dom）+ server（miniflare）テスト</span></div>
+            </div>
+          </div>
+        </div>
+        <!-- Deploy -->
+        <div>
+          <div style="font-size:13px; font-weight:600; color:var(--green); margin-bottom:14px;">🚀 deploy.yml（main push / 手動）</div>
+          <div class="vflow">
+            <div class="vflow-step">
+              <div class="vflow-line"><div class="vflow-dot dot-gray">1</div><div class="vflow-connector"></div></div>
+              <div class="vflow-body"><strong>checkout + pnpm install</strong><span>同上</span></div>
+            </div>
+            <div class="vflow-step">
+              <div class="vflow-line"><div class="vflow-dot dot-gray">2</div><div class="vflow-connector"></div></div>
+              <div class="vflow-body"><strong>wrangler.toml を生成</strong><span>本物の CLOUDFLARE_D1_DATABASE_ID を使用</span></div>
+            </div>
+            <div class="vflow-step">
+              <div class="vflow-line"><div class="vflow-dot dot-gray">3</div><div class="vflow-connector"></div></div>
+              <div class="vflow-body"><strong>pnpm check + pnpm test</strong><span>安全網として再実行</span></div>
+            </div>
+            <div class="vflow-step">
+              <div class="vflow-line"><div class="vflow-dot dot-orange">4</div><div class="vflow-connector"></div></div>
+              <div class="vflow-body"><strong>D1 migrations apply</strong><span>未適用の SQL を本番 D1 に適用</span></div>
+            </div>
+            <div class="vflow-step">
+              <div class="vflow-line"><div class="vflow-dot dot-green">5</div></div>
+              <div class="vflow-body"><strong>pnpm build + wrangler deploy</strong><span>Worker + 静的アセットを Cloudflare にアップロード</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="callout warn">
+      <span class="callout-icon">⚠️</span>
+      <div>
+        <strong>マイグレーションが先な理由</strong><br>
+        deploy.yml では必ず <code>D1 migrations apply</code> → <code>wrangler deploy</code> の順に実行します。逆にすると、新しいコードが古いスキーマの DB にアクセスしてエラーになる可能性があります。マイグレーションは追加方向のみ（カラム追加・テーブル追加）なので、古いコードが新スキーマの DB を読んでも問題ありません。
+      </div>
+    </div>
+
+    <h3>ビルド成果物</h3>
+    <p><code>pnpm build</code>（= <code>vite build</code>）を実行すると以下が生成されます：</p>
+
+    <table>
+      <thead><tr><th>出力先</th><th>内容</th><th>用途</th></tr></thead>
+      <tbody>
+        <tr>
+          <td><code>dist/client/</code></td>
+          <td>HTML・JS・CSS などの静的アセット</td>
+          <td>Worker がユーザーに配信するファイル群</td>
+        </tr>
+        <tr>
+          <td><code>dist/anime_log/</code></td>
+          <td>バンドルされた Worker スクリプト (<code>index.js</code>) + <code>wrangler.json</code></td>
+          <td><code>wrangler deploy</code> がこれを読んで Cloudflare にアップロード</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <!-- ─────────────────────────────────────── -->
+    <h2 id="wrangler-toml">wrangler.toml の管理</h2>
+
+    <p><code>wrangler.toml</code> は Wrangler コマンドが参照するプロジェクト設定ファイルです。ローカル開発・テスト・デプロイのすべてで使われます。</p>
+
+    <h3>なぜ gitignore するのか？</h3>
+
+    <p><code>wrangler.toml</code> には <strong>D1 の <code>database_id</code></strong> が含まれます。これは技術的には秘密情報ではありませんが、リポジトリに直接コミットすると将来の運用変更時（DB を作り直すなど）に混乱しやすくなります。また、ローカルの設定と CI の設定を分けて管理する方が安全です。</p>
+
+    <div class="diagram-wrap">
+      <div style="text-align:center; margin-bottom:20px; font-size:13px; color:var(--muted);">wrangler.toml の生成フロー</div>
+
+      <div class="two-col">
+        <div class="card">
+          <div class="card-title">💻 ローカル（初回 clone 後）</div>
+          <div class="flow" style="flex-direction:column; align-items:flex-start; gap:8px;">
+            <div style="font-size:13px;">1. <code>pnpm install</code> 実行</div>
+            <div style="font-size:13px; color:var(--muted); margin-left:20px;">↓ postinstall フックが発火</div>
+            <div style="font-size:13px; margin-left:20px;">2. <code>render-wrangler-toml.mjs</code> が実行</div>
+            <div style="font-size:13px; color:var(--muted); margin-left:40px;">・wrangler.toml が既存 → スキップ</div>
+            <div style="font-size:13px; color:var(--muted); margin-left:40px;">・env 未設定 → ヒント表示</div>
+            <div style="font-size:13px; margin-left:20px;">3. 手動生成（初回のみ）:</div>
+          </div>
+          <pre style="margin-top:8px"><code>CLOUDFLARE_D1_DATABASE_ID=&lt;id&gt; \
+  node scripts/render-wrangler-toml.mjs</code></pre>
+        </div>
+        <div class="card">
+          <div class="card-title">🤖 CI / GitHub Actions</div>
+          <div class="flow" style="flex-direction:column; align-items:flex-start; gap:8px;">
+            <div style="font-size:13px;">1. <code>pnpm install --frozen-lockfile</code></div>
+            <div style="font-size:13px; color:var(--muted); margin-left:20px;">↓ postinstall: env 未設定でスキップ</div>
+            <div style="font-size:13px; margin-left:20px;">2. 明示的に生成ステップを実行</div>
+          </div>
+          <pre style="margin-top:8px"><code><span class="comment"># deploy.yml 内のステップ</span>
+<span class="key">- name:</span> <span class="str">Generate wrangler.toml</span>
+  <span class="key">run:</span> <span class="str">node scripts/render-wrangler-toml.mjs</span>
+  <span class="key">env:</span>
+    <span class="key">CLOUDFLARE_D1_DATABASE_ID:</span>
+      <span class="val">${{ secrets.CLOUDFLARE_D1_DATABASE_ID }}</span></code></pre>
+        </div>
+      </div>
+
+      <div style="margin-top:20px;">
+        <div style="font-size:13px; color:var(--muted); margin-bottom:10px;">生成前後のファイルの変化：</div>
+        <div class="two-col">
+          <div>
+            <div style="font-size:12px; color:var(--muted); margin-bottom:6px;">wrangler.example.toml（テンプレ・コミット済み）</div>
+            <pre><code>[[d1_databases]]
+binding = "DB"
+database_name = "anime-db"
+<span style="color:var(--red)">database_id = "__DATABASE_ID__"</span></code></pre>
+          </div>
+          <div>
+            <div style="font-size:12px; color:var(--muted); margin-bottom:6px;">wrangler.toml（生成後・gitignore）</div>
+            <pre><code>[[d1_databases]]
+binding = "DB"
+database_name = "anime-db"
+<span style="color:var(--green)">database_id = "abc123-実際のID"</span></code></pre>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ─────────────────────────────────────── -->
+    <h2 id="secrets">シークレット管理</h2>
+
+    <p>このプロジェクトでは 2 種類のシークレット管理が共存しています。混乱しやすいので整理します。</p>
+
+    <div class="diagram-wrap">
+      <div style="text-align:center; margin-bottom:20px; font-size:13px; color:var(--muted);">シークレットの種類と保存場所</div>
+
+      <div class="two-col">
+        <!-- GitHub Secrets -->
+        <div class="card" style="border-color: var(--purple);">
+          <div class="card-title" style="color:var(--purple);">🔐 GitHub Secrets（CI 用）</div>
+          <p style="font-size:13px; margin-bottom:14px; color:var(--muted);">GitHub Actions のワークフロー内でのみ参照できます。ローカルからは見えません。</p>
+          <table style="font-size:13px;">
+            <thead><tr><th>キー名</th><th>用途</th></tr></thead>
+            <tbody>
+              <tr><td><code>CLOUDFLARE_API_TOKEN</code></td><td>wrangler-action が Cloudflare API を呼ぶための認証トークン</td></tr>
+              <tr><td><code>CLOUDFLARE_ACCOUNT_ID</code></td><td>Cloudflare のアカウント識別子</td></tr>
+              <tr><td><code>CLOUDFLARE_D1_DATABASE_ID</code></td><td>D1 データベースの ID（wrangler.toml 生成に使用）</td></tr>
+            </tbody>
+          </table>
+          <div style="font-size:12px; color:var(--muted); margin-top:10px;">登録場所: repo → Settings → Secrets and variables → Actions</div>
+        </div>
+
+        <!-- Cloudflare Secrets -->
+        <div class="card" style="border-color: var(--accent);">
+          <div class="card-title" style="color:var(--accent);">🔒 Cloudflare Secrets（Worker 用）</div>
+          <p style="font-size:13px; margin-bottom:14px; color:var(--muted);">Worker の実行時に <code>c.env.XXX</code> として参照されます。<code>wrangler secret put</code> で登録し、Cloudflare のサーバーに保存されます。</p>
+          <table style="font-size:13px;">
+            <thead><tr><th>キー名</th><th>用途</th></tr></thead>
+            <tbody>
+              <tr><td><code>API_TOKEN</code></td><td>Admin UI からの API 操作を認証するトークン。<code>src/server/middleware/auth.ts</code> で検証</td></tr>
+            </tbody>
+          </table>
+          <div style="font-size:12px; color:var(--muted); margin-top:10px;">登録方法: <code>wrangler secret put API_TOKEN</code>（初回手動・以降は変更時のみ）</div>
+        </div>
+      </div>
+
+      <!-- .dev.vars -->
+      <div class="card" style="margin-top:0; border-color: var(--green);">
+        <div class="card-title" style="color:var(--green);">💻 .dev.vars（ローカル開発専用）</div>
+        <div class="two-col">
+          <div>
+            <p style="font-size:13px; color:var(--muted); margin-bottom:10px;"><code>.dev.vars</code> はローカルの <code>pnpm dev</code> 実行時に Wrangler が読むファイルです。gitignore されています。</p>
+            <table style="font-size:13px;">
+              <thead><tr><th>キー名</th><th>用途</th></tr></thead>
+              <tbody>
+                <tr><td><code>API_TOKEN</code></td><td>ローカル Worker 用トークン。dev では何でも通るので任意の値でOK</td></tr>
+                <tr><td><code>PROD_API_TOKEN</code></td><td><code>pnpm restore</code> CLI が本番 API を叩くときに使うトークン</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <div>
+            <div style="font-size:12px; color:var(--muted); margin-bottom:8px;">.dev.vars の中身（例）：</div>
+            <pre><code>API_TOKEN=<span class="str">any-local-token</span>
+PROD_API_TOKEN=<span class="str">本番のAPIトークン</span></code></pre>
+            <div style="font-size:12px; color:var(--muted); margin-top:8px;">※ <code>.dev.vars.example</code> にキー名のサンプルあり</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="callout tip">
+      <span class="callout-icon">💡</span>
+      <div>
+        <strong>GitHub Secrets と Cloudflare Secrets は別物です</strong><br>
+        <code>API_TOKEN</code>（Worker が使う）は Cloudflare に保存され、GitHub Actions からは操作しません。<code>CLOUDFLARE_API_TOKEN</code>（GitHub Actions が使う）は Wrangler の認証用で、Worker のコードからは見えません。
+      </div>
+    </div>
+
+    <!-- ─────────────────────────────────────── -->
+    <h2 id="first-setup">初回セットアップ</h2>
+
+    <div class="callout info">
+      <span class="callout-icon">ℹ️</span>
+      <div>以下の手順は <strong>新しい環境に最初にデプロイするときだけ</strong>実行します。2 回目以降は PR を出して main にマージするだけで自動デプロイされます。</div>
+    </div>
+
+    <ol class="steps">
+      <li>
+        <div class="step-body">
+          <strong>Cloudflare アカウントにログイン</strong>
+          <pre><code>pnpm exec wrangler login</code></pre>
+          ブラウザが開いて認証画面が表示されます。承認すると CLI がアカウントと紐付きます。
+        </div>
+      </li>
+      <li>
+        <div class="step-body">
+          <strong>D1 データベースを作成</strong>
+          <pre><code>pnpm exec wrangler d1 create anime-db</code></pre>
+          出力の中に <code>database_id = "xxxx-xxxx-xxxx"</code> が表示されます。この ID を後で使います。
+        </div>
+      </li>
+      <li>
+        <div class="step-body">
+          <strong>Worker の API トークンを設定（Cloudflare Secret）</strong>
+          <pre><code>pnpm exec wrangler secret put API_TOKEN</code></pre>
+          プロンプトが出るので、Admin UI で使うランダムな文字列を入力します（例: <code>openssl rand -hex 32</code> で生成）。
+        </div>
+      </li>
+      <li>
+        <div class="step-body">
+          <strong>Cloudflare API Token を発行</strong>
+          <p>Cloudflare dashboard → My Profile → API Tokens → <em>Create Token</em> を開きます。</p>
+          <table style="font-size:13px;">
+            <thead><tr><th>設定項目</th><th>値</th></tr></thead>
+            <tbody>
+              <tr><td>テンプレート</td><td>「Edit Cloudflare Workers」をベースに使用</td></tr>
+              <tr><td>Account scope</td><td><code>Workers Scripts:Edit</code>、<code>D1:Edit</code></td></tr>
+              <tr><td>Zone scope</td><td>不要（このプロジェクトは workers.dev サブドメインを使用）</td></tr>
+            </tbody>
+          </table>
+          作成後にトークンが表示されます（この画面でしか見られないのでコピーしておくこと）。
+        </div>
+      </li>
+      <li>
+        <div class="step-body">
+          <strong>GitHub Secrets に 3 つ登録</strong>
+          <p>GitHub repo → Settings → Secrets and variables → Actions → <em>New repository secret</em></p>
+          <table style="font-size:13px;">
+            <thead><tr><th>Secret 名</th><th>値</th></tr></thead>
+            <tbody>
+              <tr><td><code>CLOUDFLARE_API_TOKEN</code></td><td>手順 4 で発行したトークン</td></tr>
+              <tr><td><code>CLOUDFLARE_ACCOUNT_ID</code></td><td><code>pnpm exec wrangler whoami</code> で確認、または dashboard 右下</td></tr>
+              <tr><td><code>CLOUDFLARE_D1_DATABASE_ID</code></td><td>手順 2 で表示された database_id</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </li>
+      <li>
+        <div class="step-body">
+          <strong>ローカルの wrangler.toml を生成</strong>
+          <pre><code>CLOUDFLARE_D1_DATABASE_ID=&lt;手順2のdatabase_id&gt; \
+  node scripts/render-wrangler-toml.mjs</code></pre>
+          <code>wrangler.toml</code> が生成されます（gitignore されているのでコミットしません）。
+        </div>
+      </li>
+      <li>
+        <div class="step-body">
+          <strong>main に push → 初回デプロイを確認</strong>
+          <p>main ブランチに push（または PR をマージ）すると <code>deploy.yml</code> が自動実行されます。Actions タブで進捗を確認してください。</p>
+          <p>deploy.yml が以下の順で自動実行されます：</p>
+          <div class="flow" style="justify-content:flex-start; margin:8px 0;">
+            <div class="flow-box" style="font-size:12px; min-width:90px;">check + test</div>
+            <div class="flow-arrow">→</div>
+            <div class="flow-box orange" style="font-size:12px; min-width:90px;">D1 migration</div>
+            <div class="flow-arrow">→</div>
+            <div class="flow-box green" style="font-size:12px; min-width:90px;">build + deploy</div>
+          </div>
+          <p>デプロイ完了後、Worker の URL（例: <code>https://anime-log.&lt;your-subdomain&gt;.workers.dev</code>）が表示されます。</p>
+        </div>
+      </li>
+      <li>
+        <div class="step-body">
+          <strong>初期データを投入（任意）</strong>
+          <p><code>.dev.vars</code> に <code>PROD_API_TOKEN</code> を設定してから：</p>
+          <pre><code>pnpm restore \
+  --url https://anime-log.&lt;your-subdomain&gt;.workers.dev \
+  --data data/data.json \
+  --history data/history.json \
+  --yes-replace-all</code></pre>
+        </div>
+      </li>
+    </ol>
+
+    <!-- ─────────────────────────────────────── -->
+    <h2 id="daily">日常の開発フロー</h2>
+
+    <div class="diagram-wrap">
+      <div style="text-align:center; margin-bottom:20px; font-size:13px; color:var(--muted);">普段の作業手順</div>
+      <div class="vflow">
+        <div class="vflow-step">
+          <div class="vflow-line"><div class="vflow-dot dot-blue">1</div><div class="vflow-connector"></div></div>
+          <div class="vflow-body">
+            <strong>ブランチを切ってコードを変更</strong>
+            <span><code>git checkout -b feature/xxx</code> — ローカルで <code>pnpm dev</code> しながら開発</span>
+          </div>
+        </div>
+        <div class="vflow-step">
+          <div class="vflow-line"><div class="vflow-dot dot-blue">2</div><div class="vflow-connector"></div></div>
+          <div class="vflow-body">
+            <strong>（DB 変更がある場合）マイグレーション生成</strong>
+            <span><code>src/server/db/schema.ts</code> を編集 → <code>pnpm db:generate</code> → <code>pnpm db:migrate</code></span>
+          </div>
+        </div>
+        <div class="vflow-step">
+          <div class="vflow-line"><div class="vflow-dot dot-blue">3</div><div class="vflow-connector"></div></div>
+          <div class="vflow-body">
+            <strong>コミット &amp; PR を作成</strong>
+            <span>push すると ci.yml が自動実行（lint + test）</span>
+          </div>
+        </div>
+        <div class="vflow-step">
+          <div class="vflow-line"><div class="vflow-dot dot-orange">4</div><div class="vflow-connector"></div></div>
+          <div class="vflow-body">
+            <strong>CI が緑になったら main にマージ</strong>
+            <span>マージ直後に deploy.yml が自動実行。数分で本番に反映される</span>
+          </div>
+        </div>
+        <div class="vflow-step">
+          <div class="vflow-line"><div class="vflow-dot dot-green">5</div></div>
+          <div class="vflow-body">
+            <strong>Actions タブでデプロイ完了を確認</strong>
+            <span>GitHub repo → Actions → Deploy ワークフロー</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="callout tip">
+      <span class="callout-icon">💡</span>
+      <div>
+        <strong>手動でデプロイしたいとき</strong><br>
+        GitHub repo → Actions → Deploy → <em>Run workflow</em> ボタンから手動トリガーできます（<code>workflow_dispatch</code>）。急いで反映したい場合などに使えます。
+      </div>
+    </div>
+
+    <!-- ─────────────────────────────────────── -->
+    <h2 id="emergency">緊急デプロイ</h2>
+
+    <p>GitHub Actions が使えない場合（障害・メンテナンス等）は、ローカルから直接デプロイできます。</p>
+
+    <div class="callout warn">
+      <span class="callout-icon">⚠️</span>
+      <div>これはあくまで <strong>緊急手段</strong> です。通常は PR → CI → main マージのフローを使ってください。</div>
+    </div>
+
+    <h3>前提条件の確認</h3>
+
+    <ol class="steps">
+      <li>
+        <div class="step-body">
+          <strong>wrangler.toml が存在するか確認</strong>
+          <pre><code>cat wrangler.toml</code></pre>
+          なければ生成: <code>CLOUDFLARE_D1_DATABASE_ID=&lt;id&gt; node scripts/render-wrangler-toml.mjs</code>
+        </div>
+      </li>
+      <li>
+        <div class="step-body">
+          <strong>Cloudflare に認証済みか確認</strong>
+          <pre><code>pnpm exec wrangler whoami</code></pre>
+          未ログインなら <code>pnpm exec wrangler login</code> で認証
+        </div>
+      </li>
+      <li>
+        <div class="step-body">
+          <strong>デプロイ実行</strong>
+          <pre><code>pnpm build
+pnpm exec wrangler deploy</code></pre>
+        </div>
+      </li>
+    </ol>
+
+    <h3>ロールバック手順</h3>
+
+    <p>デプロイ後に問題が発覚した場合は、Cloudflare dashboard から 1 クリックでロールバックできます。</p>
+
+    <div class="card">
+      <div class="card-title">Cloudflare dashboard でのロールバック手順</div>
+      <div class="flow" style="justify-content:flex-start; gap:8px;">
+        <div class="flow-box" style="font-size:12px; min-width:auto;">Cloudflare dashboard</div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-box blue" style="font-size:12px; min-width:auto;">Workers &amp; Pages</div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-box blue" style="font-size:12px; min-width:auto;">anime-log</div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-box blue" style="font-size:12px; min-width:auto;">Deployments タブ</div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-box orange" style="font-size:12px; min-width:auto;">前バージョンを Rollback</div>
+      </div>
+    </div>
+
+    <!-- ─────────────────────────────────────── -->
+    <h2 id="envdiff">ローカル vs 本番の違い</h2>
+
+    <table>
+      <thead>
+        <tr>
+          <th>項目</th>
+          <th>ローカル (<code>pnpm dev</code>)</th>
+          <th>本番 (Cloudflare)</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>実行環境</td>
+          <td>miniflare（ローカル V8 エミュレーター）</td>
+          <td>Cloudflare エッジ（本物の V8）</td>
+        </tr>
+        <tr>
+          <td>データベース</td>
+          <td>ローカル SQLite（<code>.wrangler/state/v3/d1/</code>）</td>
+          <td>Cloudflare D1（クラウド SQLite）</td>
+        </tr>
+        <tr>
+          <td>API_TOKEN</td>
+          <td><code>.dev.vars</code> から読む（何でも通る）</td>
+          <td>Cloudflare Secret から読む（<code>wrangler secret put</code> で登録）</td>
+        </tr>
+        <tr>
+          <td>wrangler.toml</td>
+          <td>手動生成またはpostinstall自動生成</td>
+          <td>CI が <code>render-wrangler-toml.mjs</code> で生成</td>
+        </tr>
+        <tr>
+          <td>静的アセット</td>
+          <td>Vite HMR で直接配信</td>
+          <td><code>dist/client/</code> を Worker の <code>assets</code> binding で配信</td>
+        </tr>
+        <tr>
+          <td>マイグレーション</td>
+          <td><code>pnpm db:migrate</code>（ローカルに適用）</td>
+          <td>deploy.yml が <code>pnpm db:migrate:remote</code> を自動実行</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <!-- ─────────────────────────────────────── -->
+    <h2 id="troubleshoot">トラブルシューティング</h2>
+
+    <h3>deploy.yml が失敗する</h3>
+
+    <div class="card">
+      <table style="font-size:13px;">
+        <thead><tr><th>症状</th><th>原因</th><th>対処</th></tr></thead>
+        <tbody>
+          <tr>
+            <td><code>Error: CLOUDFLARE_D1_DATABASE_ID is required</code></td>
+            <td>GitHub Secret が未登録</td>
+            <td>repo → Settings → Secrets に <code>CLOUDFLARE_D1_DATABASE_ID</code> を追加</td>
+          </tr>
+          <tr>
+            <td><code>Authentication error</code> / <code>10000</code></td>
+            <td><code>CLOUDFLARE_API_TOKEN</code> が無効・期限切れ</td>
+            <td>Cloudflare dashboard で新しいトークンを発行し GitHub Secret を更新</td>
+          </tr>
+          <tr>
+            <td><code>D1 database not found</code></td>
+            <td><code>database_id</code> が間違っている</td>
+            <td><code>pnpm exec wrangler d1 list</code> で正しい ID を確認</td>
+          </tr>
+          <tr>
+            <td><code>pnpm check</code> で lint エラー</td>
+            <td>Biome / vue-tsc のエラー</td>
+            <td>ローカルで <code>pnpm fix</code> と <code>pnpm typecheck</code> を実行して修正</td>
+          </tr>
+          <tr>
+            <td>テストが落ちる</td>
+            <td>コードのバグ</td>
+            <td>ローカルで <code>pnpm test</code> を実行してデバッグ</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3>wrangler.toml がエディターで gitignore されていないように見える</h3>
+    <p><code>.gitignore</code> への追加と <code>git rm --cached wrangler.toml</code> の両方が <strong>コミットされるまで</strong>、エディターは引き続きファイルを追跡中として表示します。これは正常な動作です。変更をコミットすれば解消されます。</p>
+
+    <h3>ローカル開発で wrangler.toml が見つからない</h3>
+    <pre><code><span class="comment"># database_id が手元にある場合</span>
+CLOUDFLARE_D1_DATABASE_ID=&lt;your-id&gt; node scripts/render-wrangler-toml.mjs
+
+<span class="comment"># database_id を確認する方法</span>
+pnpm exec wrangler d1 list</code></pre>
+
+    <h3>D1 のデータが消えた / 初期化したい</h3>
+    <pre><code><span class="comment"># ローカルのみリセット（本番は触れない）</span>
+pnpm db:reset    <span class="comment"># ローカル D1 を消して再作成</span>
+pnpm dev         <span class="comment"># dev サーバー起動（別ターミナル）</span>
+pnpm seed:local  <span class="comment"># data/data.json から再投入</span></code></pre>
+
+    <hr>
+    <p style="font-size:13px; color:var(--muted); text-align:center; padding-bottom:40px;">
+      このドキュメントは <code>docs/deployment.html</code> にあります。最新の設定は <code>README.md</code> と <code>CLAUDE.md</code> も参照してください。
+    </p>
+
+  </main>
+</div>
+
+<script>
+  // Highlight active nav link based on scroll
+  const sections = document.querySelectorAll('h2[id]');
+  const navLinks = document.querySelectorAll('nav a');
+
+  const observer = new IntersectionObserver(entries => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        navLinks.forEach(link => link.classList.remove('active'));
+        const active = document.querySelector(`nav a[href="#${entry.target.id}"]`);
+        if (active) active.classList.add('active');
+      }
+    });
+  }, { rootMargin: '-20% 0px -70% 0px' });
+
+  sections.forEach(s => observer.observe(s));
+</script>
+</body>
+</html>

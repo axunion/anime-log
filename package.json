@@ -6,7 +6,7 @@
 	"scripts": {
 		"dev": "vite",
 		"build": "vite build",
-		"deploy": "vite build && wrangler deploy",
+		"postinstall": "node scripts/render-wrangler-toml.mjs",
 		"typecheck": "vue-tsc --noEmit",
 		"check": "biome check . && vue-tsc --noEmit",
 		"fix": "biome check --write .",
