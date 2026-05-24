@@ -45,4 +45,4 @@ beforeEach(async () => {
 | `lib/api.ts` | Auth header presence/absence for each method |
 | Server routes | Full CRUD via `callApp` + Miniflare D1 |
 | Vue components | Skip (logic lives in composables) |
-| `scripts/seed-local.ts`, `scripts/restore.ts` | Skip (one-off dev scripts) |
+| `scripts/seed-local.ts` | Skip (one-off dev script) |

@@ -6,7 +6,6 @@
 	"scripts": {
 		"dev": "vite",
 		"build": "vite build",
-		"postinstall": "node scripts/render-wrangler-toml.mjs",
 		"typecheck": "vue-tsc --noEmit",
 		"check": "biome check . && vue-tsc --noEmit",
 		"fix": "biome check --write .",
@@ -15,10 +14,8 @@
 		"db:drop": "drizzle-kit drop",
 		"db:studio": "drizzle-kit studio",
 		"db:migrate": "wrangler d1 migrations apply anime-db --local",
-		"db:migrate:remote": "wrangler d1 migrations apply anime-db --remote",
 		"db:reset": "rm -rf .wrangler/state/v3/d1 && pnpm db:migrate",
 		"seed:local": "pnpm exec tsx scripts/seed-local.ts",
-		"restore": "pnpm exec tsx scripts/restore.ts",
 		"test": "pnpm run test:client && pnpm run test:server",
 		"test:client": "vitest run --config vitest.config.ts",
 		"test:server": "vitest run --config vitest.workers.config.ts",

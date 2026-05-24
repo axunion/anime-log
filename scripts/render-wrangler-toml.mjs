@@ -1,27 +1,13 @@
-import { existsSync, readFileSync, writeFileSync } from "node:fs";
+import { readFileSync, writeFileSync } from "node:fs";
+
+// Replaces __DATABASE_ID__ in wrangler.toml with the real Cloudflare D1 database ID.
+// Run by the GitHub Actions deploy workflow before deploying to production.
+// Local development uses wrangler.toml as-is (placeholder ID is fine for local D1).
 
 const OUT = "wrangler.toml";
-const TEMPLATE = "wrangler.example.toml";
 const PLACEHOLDER = "__DATABASE_ID__";
 
-const isPostinstall = process.env.npm_lifecycle_event === "postinstall";
-
-// During postinstall, skip if wrangler.toml already exists (local dev machines).
-if (isPostinstall && existsSync(OUT)) {
-	process.exit(0);
-}
-
 const databaseId = process.env.CLOUDFLARE_D1_DATABASE_ID;
-
-if (!databaseId && isPostinstall) {
-	console.log(
-		"[render-wrangler-toml] CLOUDFLARE_D1_DATABASE_ID not set — skipping.",
-	);
-	console.log(
-		"  To generate wrangler.toml manually: CLOUDFLARE_D1_DATABASE_ID=<id> node scripts/render-wrangler-toml.mjs",
-	);
-	process.exit(0);
-}
 
 if (!databaseId) {
 	console.error(
@@ -30,7 +16,7 @@ if (!databaseId) {
 	process.exit(1);
 }
 
-const template = readFileSync(TEMPLATE, "utf8");
-const output = template.replace(PLACEHOLDER, databaseId);
+const content = readFileSync(OUT, "utf8");
+const output = content.replace(PLACEHOLDER, databaseId);
 writeFileSync(OUT, output);
-console.log(`[render-wrangler-toml] Generated ${OUT}`);
+console.log(`[render-wrangler-toml] Injected database ID into ${OUT}`);

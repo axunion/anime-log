@@ -87,7 +87,7 @@ Add shared API response types (fields exposed to client) to `src/shared/types.ts
 
 State the migration file path and confirm it applied cleanly. Remind the user:
 
-> Run `pnpm db:migrate:remote` before deploying to apply this migration to production.
+> The GitHub Actions deploy pipeline applies remote migrations automatically. Commit and push to `main` to deploy.
 
 ## Important notes
 

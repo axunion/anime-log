@@ -7,11 +7,25 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - Commit messages, code comments, and README files must be written in **English**.
 - Communication with the user is in Japanese.
 
+## Production safety — NEVER touch production from local
+
+**All production changes must go through GitHub Actions. Never run any command that writes to or deploys production from a local environment.**
+
+This is a hard rule with no exceptions, including "emergencies":
+
+- ❌ `wrangler deploy` — forbidden locally; deploys go through CI/CD only
+- ❌ `wrangler d1 migrations apply --remote` — forbidden; CI/CD applies remote migrations
+- ❌ Any script or command targeting a production URL or remote D1
+
+If asked to run any such command, refuse and explain this policy.
+
+**Permitted local operations:** `pnpm dev`, `pnpm build` (local build only), `pnpm db:migrate` (local D1 only), `pnpm seed:local` (localhost only), and all read-only wrangler commands with `--local`.
+
 ## Commands
 
 ```bash
 pnpm dev              # Start dev server with Cloudflare Worker + Vite HMR (http://localhost:5173)
-pnpm build            # Build client (dist/client/) and worker (dist/anime_log/) — normal deploys go via GitHub Actions; emergency: pnpm build && wrangler deploy
+pnpm build            # Build client and worker locally (dist/client/, dist/anime_log/) — do NOT run wrangler deploy
 pnpm typecheck        # TypeScript type check (vue-tsc --noEmit)
 pnpm fix              # Biome lint + auto-fix (all files, respects .gitignore)
 
@@ -19,11 +33,9 @@ pnpm db:generate      # Generate migration SQL from schema changes (drizzle-kit)
 pnpm db:check         # Verify migration journal/snapshot integrity (drizzle-kit)
 pnpm db:drop          # Interactively drop the latest generated migration (pre-release iteration)
 pnpm db:studio        # Open Drizzle Studio against local D1 (requires db:migrate run first)
-pnpm db:migrate       # Apply migrations to local D1
-pnpm db:migrate:remote # Apply migrations to remote D1
+pnpm db:migrate       # Apply migrations to local D1 only
 pnpm db:reset         # Wipe local D1 state and re-apply all migrations (fresh local DB)
 pnpm seed:local       # Seed local DB from data/data.{json,js} (prefers .json; requires pnpm dev running)
-pnpm restore          # Restore data to any URL from data files (--url, --data, --history, --yes-replace-all; accepts .json or .js)
 
 pnpm test             # Run all tests (client + server)
 pnpm test:client      # Client composable/API tests (Vitest + happy-dom)
@@ -149,7 +161,7 @@ To add columns or tables: edit `schema.ts` → `pnpm db:generate` → `pnpm db:m
 
 ### Data management
 
-Three workflows for moving data in and out:
+Two workflows for moving data in and out:
 
 **Local DB initialization** — seed from `data/data.{json,js}` + `data/history.{json,js}` (gitignored):
 ```bash
@@ -161,17 +173,6 @@ pnpm seed:local       # auto-detects .json (preferred) or legacy .js (PAGE.data 
 **Backup and restore via Admin UI** — the recommended round-trip for everyday use:
 - Export: Admin UI → Export button → saves `data.json` + `history.json` locally
 - Import: Admin UI → Import button → select both files → confirm
-
-**CLI restore to any URL** — use after initial deployment or to restore from a backup file:
-```bash
-pnpm restore \
-  --url https://<deployed-url> \
-  --data data/data.json \
-  --history data/history.json \
-  --yes-replace-all
-```
-Token is resolved in order: `--token` flag → `API_TOKEN` env var → `PROD_API_TOKEN` in `.dev.vars`.
-Without `--yes-replace-all`, prints a dry-run summary and exits without writing.
 
 Both import endpoints (`POST /api/import/data`, `POST /api/import/history`) require `?confirm=replace-all` and a Bearer token. They perform a full destructive replace (all existing titles/cast/history are deleted first).
 
@@ -205,18 +206,14 @@ on:
 1. `wrangler d1 create anime-db` → note the `database_id`
 2. `wrangler secret put API_TOKEN` (Cloudflare secret for the Worker)
 3. Register three GitHub Secrets: `CLOUDFLARE_API_TOKEN`, `CLOUDFLARE_ACCOUNT_ID`, `CLOUDFLARE_D1_DATABASE_ID`
-4. Generate local `wrangler.toml`: `CLOUDFLARE_D1_DATABASE_ID=<id> node scripts/render-wrangler-toml.mjs`
-5. Move workflow files into `.github/workflows/` (see above)
-6. Test a manual deploy via `workflow_dispatch` from the Actions tab
-7. Restore the `workflow_run` trigger in `deploy.yml`
+4. Move workflow files into `.github/workflows/` (see above)
+5. Test a manual deploy via `workflow_dispatch` from the Actions tab
+6. Restore the `workflow_run` trigger in `deploy.yml`
 
 ### Day-to-day (once CI/CD is active)
 
 - Push to `main` → CI passes → deploy runs automatically
-- Emergency local deploy only: `pnpm build && wrangler deploy`
 
 ### wrangler.toml
 
-`wrangler.toml` is gitignored. The template is `wrangler.example.toml`. Generated automatically:
-- **CI**: `render-wrangler-toml.mjs` runs in each workflow with `CLOUDFLARE_D1_DATABASE_ID` secret
-- **Local**: `postinstall` hook runs the script; skips if `wrangler.toml` already exists
+`wrangler.toml` is committed with a `__DATABASE_ID__` placeholder. It works as-is for local development — local D1 uses the filesystem and ignores the `database_id` value. Before deploying, the GitHub Actions workflow runs `scripts/render-wrangler-toml.mjs` to replace the placeholder with the real ID from the `CLOUDFLARE_D1_DATABASE_ID` secret.

@@ -66,4 +66,4 @@ Before marking the feature complete:
 - [ ] Composable and component created and wired into `App.vue`
 - [ ] `pnpm typecheck` passes
 - [ ] `pnpm dev` runs without errors, feature works end-to-end
-- [ ] If deploying: run `pnpm db:migrate:remote` before deploy
+- [ ] Merge to `main` → GitHub Actions applies remote migrations and deploys automatically

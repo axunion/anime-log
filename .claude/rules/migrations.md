@@ -18,10 +18,9 @@ pnpm db:migrate         # wrangler d1 migrations apply anime-db --local
 
 # 4. Verify
 pnpm exec wrangler d1 execute anime-db --local --command "PRAGMA table_info(my_table)"
-
-# 5. Before deploying
-pnpm db:migrate:remote
 ```
+
+Remote migrations are applied automatically by the GitHub Actions deploy pipeline — never run `wrangler d1 migrations apply --remote` locally.
 
 Never write migration SQL by hand — always let `drizzle-kit generate` produce the diff.
 

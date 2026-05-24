@@ -33,7 +33,17 @@ Wrangler is included in `devDependencies` — no global install needed. All `wra
 pnpm install
 ```
 
-### 2. Set up the local database
+### 2. Create `.dev.vars`
+
+Create a `.dev.vars` file in the project root. This file is gitignored and holds local secrets for the Cloudflare Worker dev server:
+
+```
+API_TOKEN=any-string-you-choose
+```
+
+`API_TOKEN` is used to authenticate admin API requests locally. Choose any string; you will enter this in the Admin UI login form.
+
+### 3. Set up the local database
 
 The dev server uses a local D1 (SQLite) database stored under `.wrangler/state/`.
 
@@ -45,7 +55,7 @@ pnpm db:migrate
 
 This creates `titles`, `cast_members`, and `history` tables. The app works but shows no data yet.
 
-### 3. Start the dev server
+### 4. Start the dev server
 
 ```bash
 pnpm dev
@@ -58,11 +68,11 @@ Opens at **http://localhost:5173**. The dev server runs both Vite (HMR) and the 
 | Viewer (read-only) | http://localhost:5173/ |
 | Admin UI | http://localhost:5173/admin.html |
 
-The admin UI requires an API token. In dev mode any non-empty string works — enter it in the Admin UI token field (stored in `localStorage`).
+The Admin UI shows a login form on first visit. Enter the `API_TOKEN` value from your `.dev.vars` file. The token is stored in `localStorage` so you only need to enter it once.
 
-### 4. Load initial data
+### 5. Load initial data
 
-There are three ways to move data in and out.
+There are two ways to move data in and out.
 
 #### Seed local DB from JSON files (CLI)
 
@@ -84,23 +94,6 @@ The recommended round-trip for everyday backups:
 
 - **Export:** Admin UI → Export button → saves `data.json` + `history.json` locally.
 - **Import:** Admin UI → Import button → select both files → confirm.
-
-#### Restore to any URL (CLI)
-
-Use this after an initial deployment or to restore from a backup file.
-
-Add `PROD_API_TOKEN=<your-production-token>` to `.dev.vars` once, then:
-
-```bash
-pnpm restore \
-  --url https://anime-log.<your-subdomain>.workers.dev \
-  --data data/data.json \
-  --history data/history.json \
-  --yes-replace-all
-```
-
-The token is resolved in order: `--token` flag → `API_TOKEN` env var → `PROD_API_TOKEN` in `.dev.vars`.
-Without `--yes-replace-all`, the command prints a dry-run summary and exits without making changes.
 
 ---
 
@@ -144,7 +137,7 @@ The export/import JSON format is the same for both the Admin UI and the CLI scri
 pnpm typecheck   # TypeScript type check (vue-tsc --noEmit)
 pnpm fix         # Biome lint + auto-fix (all files, respects .gitignore)
 pnpm test        # Run all tests (client composables + server routes)
-pnpm build       # Production build → dist/client/ and dist/anime_log/
+pnpm build       # Build locally for verification — deploy goes through GitHub Actions
 pnpm db:reset    # Wipe local D1 state and re-apply all migrations (fresh local DB)
 ```
 
@@ -152,7 +145,9 @@ pnpm db:reset    # Wipe local D1 state and re-apply all migrations (fresh local 
 
 ## Deployment
 
-Production deploys are managed automatically via GitHub Actions. Every push to `main` triggers a deploy pipeline: lint → test → D1 migrations → build → deploy. You can also trigger a deploy manually from the Actions tab.
+**All production changes go through GitHub Actions — never deploy or write to production from a local machine.**
+
+Every push to `main` triggers a deploy pipeline: lint → test → D1 migrations → build → deploy. You can also trigger a deploy manually from the Actions tab.
 
 ### First-time setup
 
@@ -190,43 +185,16 @@ Go to your repository → Settings → Secrets and variables → Actions, and ad
 | `CLOUDFLARE_ACCOUNT_ID` | Your Cloudflare account ID (shown in the dashboard sidebar or via `wrangler whoami`) |
 | `CLOUDFLARE_D1_DATABASE_ID` | The `database_id` from step 2 |
 
-**5. Generate your local `wrangler.toml`:**
+**5. Trigger the first deploy:**
 
-`wrangler.toml` is gitignored. Generate it once with:
+Push to `main` or trigger manually from the GitHub Actions tab. The deploy pipeline injects the real database ID, applies D1 migrations, builds, and deploys automatically. The Worker URL is shown in the deploy step output (e.g. `https://anime-log.<your-subdomain>.workers.dev`).
 
-```bash
-CLOUDFLARE_D1_DATABASE_ID=<your-database-id> node scripts/render-wrangler-toml.mjs
-```
+**6. Seed initial data (optional):**
 
-**6. Trigger the first deploy:**
-
-Push to `main` or trigger manually from the GitHub Actions tab. The deploy pipeline applies D1 migrations automatically before deploying. The Worker URL is shown in the deploy step output (e.g. `https://anime-log.<your-subdomain>.workers.dev`).
-
-**7. Seed initial data (optional):**
-
-Add `PROD_API_TOKEN=<your-api-token>` to `.dev.vars`, then:
-
-```bash
-pnpm restore \
-  --url https://anime-log.<your-subdomain>.workers.dev \
-  --data data/data.json \
-  --history data/history.json \
-  --yes-replace-all
-```
+Open the deployed Admin UI, log in with the `API_TOKEN` you set in step 3, then use **Import** to upload `data.json` and `history.json`.
 
 ### Day-to-day workflow
 
 1. Create a branch and make changes
 2. Open a PR — CI runs lint, typecheck, and tests automatically
 3. Merge to `main` — deploy pipeline runs automatically
-
-### Emergency local deploy
-
-If GitHub Actions is unavailable, build and deploy directly with Wrangler:
-
-```bash
-pnpm build
-wrangler deploy
-```
-
-Requires `wrangler.toml` with a valid `database_id` (generate with `CLOUDFLARE_D1_DATABASE_ID=<id> node scripts/render-wrangler-toml.mjs`) and Cloudflare credentials available locally (`wrangler login`).
