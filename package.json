@@ -2,13 +2,24 @@
 	"name": "anime-log",
 	"private": true,
 	"type": "module",
-	"packageManager": "pnpm@10.26.2",
+	"devEngines": {
+		"runtime": {
+			"name": "node",
+			"version": "24.16.0",
+			"onFail": "warn"
+		},
+		"packageManager": {
+			"name": "pnpm",
+			"version": "11.2.2",
+			"onFail": "warn"
+		}
+	},
 	"scripts": {
 		"dev": "vite",
 		"build": "vite build",
 		"typecheck": "vue-tsc --noEmit",
-		"check": "biome check . && vue-tsc --noEmit",
 		"fix": "biome check --write .",
+		"prepare": "lefthook install",
 		"db:generate": "drizzle-kit generate",
 		"db:check": "drizzle-kit check",
 		"db:drop": "drizzle-kit drop",
@@ -30,15 +41,8 @@
 		"vuedraggable": "^4.1.0",
 		"zod": "^4.4.3"
 	},
-	"pnpm": {
-		"onlyBuiltDependencies": [
-			"esbuild",
-			"workerd",
-			"sharp"
-		]
-	},
 	"devDependencies": {
-		"@biomejs/biome": "^2.4.10",
+		"@biomejs/biome": "^2.4.15",
 		"@cloudflare/vite-plugin": "^1.36.3",
 		"@cloudflare/vitest-pool-workers": "^0.14.7",
 		"@cloudflare/workers-types": "^4.20260510.1",
@@ -47,6 +51,7 @@
 		"@vue/test-utils": "^2.4.10",
 		"drizzle-kit": "^0.31.10",
 		"happy-dom": "^20.9.0",
+		"lefthook": "^2.1.8",
 		"tsx": "^4.19.3",
 		"typescript": "^5.8.3",
 		"vite": "^8.0.11",

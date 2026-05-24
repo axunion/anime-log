@@ -22,7 +22,7 @@ Two-page Vue 3 MPA (viewer + admin) served by a Cloudflare Worker. The Worker ha
 
 ### Prerequisites
 
-- Node.js 18+
+- Node.js 24+
 - [pnpm](https://pnpm.io) (`npm install -g pnpm`)
 
 Wrangler is included in `devDependencies` — no global install needed. All `wrangler` commands work via pnpm scripts or `pnpm exec wrangler <cmd>`.
@@ -140,6 +140,8 @@ pnpm test        # Run all tests (client composables + server routes)
 pnpm build       # Build locally for verification — deploy goes through GitHub Actions
 pnpm db:reset    # Wipe local D1 state and re-apply all migrations (fresh local DB)
 ```
+
+Git hooks are managed by [lefthook](https://lefthook.dev) and installed automatically via `pnpm install`. On every `git commit`, Biome runs on staged files (with auto-fix) and `vue-tsc` runs in parallel.
 
 ---
 
