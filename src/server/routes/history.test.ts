@@ -81,7 +81,7 @@ describe("PUT /api/history/reorder", () => {
 	});
 });
 
-describe("PUT /api/history/:id", () => {
+describe("PATCH /api/history/:id", () => {
 	beforeEach(() => applySchema(typedEnv.DB));
 
 	it("updates display_name and year", async () => {
@@ -92,7 +92,7 @@ describe("PUT /api/history/:id", () => {
 		).first<{ id: number }>();
 
 		await callApp(typedEnv, {
-			method: "PUT",
+			method: "PATCH",
 			path: `/history/${row!.id}`,
 			auth: true,
 			body: { display_name: "劇場版", year: 2021 },
@@ -115,7 +115,7 @@ describe("PUT /api/history/:id", () => {
 		).first<{ id: number }>();
 
 		await callApp(typedEnv, {
-			method: "PUT",
+			method: "PATCH",
 			path: `/history/${row!.id}`,
 			auth: true,
 			body: { display_name: "劇場版" },

@@ -11,7 +11,10 @@
 		"isolatedModules": true,
 		"moduleDetection": "force",
 		"allowImportingTsExtensions": true,
-		"skipLibCheck": true
+		"skipLibCheck": true,
+		"paths": {
+			"@shared/*": ["./src/shared/*"]
+		}
 	},
-	"include": ["src/server/**/*"]
+	"include": ["src/server/**/*", "src/shared/**/*"]
 }

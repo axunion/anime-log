@@ -1,6 +1,6 @@
 <script setup lang="ts">
+import type { Tab } from "@shared/constants";
 import { CalendarArrowDown, Clock, Search } from "lucide-vue-next";
-import type { Tab } from "../../lib/types";
 
 defineProps<{ activeTab: Tab; query: string }>();
 defineEmits<{ "update:activeTab": [tab: Tab]; "update:query": [q: string] }>();

@@ -12,7 +12,10 @@
 		"allowImportingTsExtensions": true,
 		"skipLibCheck": true,
 		"jsx": "preserve",
-		"jsxImportSource": "vue"
+		"jsxImportSource": "vue",
+		"paths": {
+			"@shared/*": ["./src/shared/*"]
+		}
 	},
-	"include": ["src/client/**/*", "src/client/**/*.vue"]
+	"include": ["src/client/**/*", "src/client/**/*.vue", "src/shared/**/*"]
 }

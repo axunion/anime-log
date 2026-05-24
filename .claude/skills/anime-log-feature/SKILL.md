@@ -33,12 +33,12 @@ The migration file goes in `migrations/` as `NNNN_<name>.sql`. After applying lo
 
 ---
 
-## Step 2 — Server: `server-feature` skill
+## Step 2 — Shared types + Server: `server-feature` skill
 
 Invoke the **`server-feature`** skill to add the Hono route and TypeScript types.
 
 This creates `src/server/routes/<name>.ts`, mounts it in `src/server/index.ts`, and adds
-the corresponding type to `src/client/lib/types.ts`.
+shared API response types to `src/shared/types.ts` (not to `src/client/lib/types.ts`).
 
 ---
 
@@ -46,8 +46,9 @@ the corresponding type to `src/client/lib/types.ts`.
 
 Invoke the **`client-feature`** skill to add the Vue composable and component.
 
-This creates `src/client/composables/use<Name>.ts` and the component in either
-`viewer/components/` or `admin/components/`, then wires it into the relevant `App.vue`.
+This creates `src/client/composables/use<Name>.ts` (importing types from `@shared/types`) and
+the component in either `viewer/components/` or `admin/components/`, then wires it into the
+relevant `App.vue`.
 
 ---
 
@@ -58,7 +59,11 @@ Before marking the feature complete:
 - [ ] Migration applied (`pnpm db:migrate` succeeded)
 - [ ] Route mounted in `src/server/index.ts`
 - [ ] Write endpoints all use `authMiddleware`
-- [ ] Types added to `src/client/lib/types.ts`
+- [ ] Path params parsed with `idParam.parse()` (not `Number()`)
+- [ ] PATCH/DELETE handlers check existence → 404
+- [ ] Shared types added to `src/shared/types.ts`
+- [ ] Composable exposes `error` and `loading` refs
 - [ ] Composable and component created and wired into `App.vue`
+- [ ] `pnpm typecheck` passes
 - [ ] `pnpm dev` runs without errors, feature works end-to-end
-- [ ] If deploying: run `pnpm db:migrate:remote` before `pnpm deploy`
+- [ ] If deploying: run `pnpm db:migrate:remote` before deploy

@@ -20,19 +20,34 @@ Create `src/client/composables/useMyFeature.ts`.
 
 ```typescript
 import { ref } from "vue";
-import { del, get, post, put } from "../lib/api";
-import type { MyItem } from "../lib/types";
+import { del, get, patch, post } from "../lib/api";
+import type { MyItem } from "@shared/types";
 
-// Module-level ref — shared across all component instances without prop drilling
+// Module-level refs — shared across all component instances
 const items = ref<MyItem[]>([]);
+const error = ref<Error | null>(null);
+const loading = ref(false);
 
 export function useMyFeature() {
   async function fetchItems() {
-    items.value = await get<MyItem[]>("/my");
+    loading.value = true;
+    error.value = null;
+    try {
+      items.value = await get<MyItem[]>("/my");
+    } catch (err) {
+      error.value = err instanceof Error ? err : new Error(String(err));
+    } finally {
+      loading.value = false;
+    }
   }
 
   async function addItem(payload: { some_text: string }) {
     await post("/my", payload);
+    await fetchItems();  // re-fetch, never mutate the array directly
+  }
+
+  async function updateItem(id: number, payload: { some_text?: string }) {
+    await patch(`/my/${id}`, payload);  // PATCH for partial updates
     await fetchItems();
   }
 
@@ -41,13 +56,43 @@ export function useMyFeature() {
     await fetchItems();
   }
 
-  return { items, fetchItems, addItem, deleteItem };
+  return { items, error, loading, fetchItems, addItem, updateItem, deleteItem };
 }
 ```
 
 **API helpers (`src/client/lib/api.ts`):**
 - `get<T>(path)` — unauthenticated
-- `post(path, body)` / `put(path, body)` / `del(path)` — attach Bearer token from `localStorage`
+- `post(path, body)` / `patch(path, body)` / `del(path)` — attach Bearer token from `useAuth`
+- Use `patch` for partial updates (PATCH), not `put`. Use `put` only for full-replacement operations (reorder).
+
+**Types:**
+- Always import from `@shared/types` — never from `../lib/types` (that file no longer exists)
+
+### Viewer vs admin split (for complex features)
+
+If the feature needs different behavior in viewer (read-only) and admin (CRUD), split into two composables:
+
+- `useMyFeatureView.ts` — module-level singleton state + load functions + race guard (viewer)
+- `useMyFeatureEdit.ts` — write operations only, no module-level state (admin)
+
+**Race guard** (for loads that can be superseded):
+```typescript
+import { createRaceToken } from "../lib/raceToken";
+
+const race = createRaceToken();
+
+async function load(id: number) {
+  const token = race.next();
+  const data = await get<Foo>(`/my/${id}`);
+  if (token !== race.current()) return;
+  state.value = data;
+}
+
+function clear() {
+  race.invalidate();
+  state.value = null;
+}
+```
 
 ---
 
@@ -75,19 +120,23 @@ onMounted(fetchItems);
 ```
 
 **Admin component** (`src/client/admin/components/MyManager.vue`):
-- Include add/delete controls
-- Call `addItem` / `deleteItem` from the composable
-- Show the token prompt via `AdminHeader` if needed
+- Include add/update/delete controls
+- Call composable functions for all mutations
+- Use `useConfirm()` for destructive actions (never `window.confirm`)
+- Authentication is handled by the admin `App.vue` gate — no per-component auth check needed
 
 **Wiring up:** Import and register the component in the relevant `App.vue`.
-- Viewer `App.vue` composes `useTitles`, `useCast`, `useHistory` — add your composable here
-- Admin `App.vue` follows the same pattern
+- Viewer `App.vue` composes `useTitles`, `useCastView`, `useHistory` — add your composable here
+- Admin `App.vue` follows the same pattern; `isAuthenticated` guard is already in place
 
 ---
 
 ## Checklist
 
 - [ ] Composable created in `src/client/composables/`
+- [ ] Types imported from `@shared/types` (not `../lib/types`)
+- [ ] `error` and `loading` refs exposed in composable return
+- [ ] Write operations use `patch` for partial updates
 - [ ] Component created in the correct app directory (`viewer/` or `admin/`)
 - [ ] Component imported and used in the relevant `App.vue`
 - [ ] `onMounted` calls fetch in viewer components

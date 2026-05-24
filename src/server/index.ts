@@ -16,7 +16,7 @@ app.use("*", async (c, next) => {
 });
 
 app.route("/api/titles", titlesRoutes);
-app.route("/api", castRoutes);
+app.route("/api/cast", castRoutes);
 app.route("/api/history", historyRoutes);
 app.route("/api/export", exportRoutes);
 app.route("/api/import", importRoutes);
@@ -24,6 +24,12 @@ app.route("/api/import", importRoutes);
 app.onError((err, c) => {
 	if (err instanceof ZodError) {
 		return c.json({ error: "Bad Request", issues: err.issues }, 400);
+	}
+	if (
+		err instanceof Error &&
+		err.message.includes("UNIQUE constraint failed")
+	) {
+		return c.json({ error: "Already exists" }, 409);
 	}
 	console.error(err);
 	return c.json({ error: "Internal Server Error" }, 500);

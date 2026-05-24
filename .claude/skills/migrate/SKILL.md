@@ -19,7 +19,9 @@ Future `pnpm db:generate` will produce `0001_xxx.sql` and beyond.
 
 ### 1. Edit `src/server/db/schema.ts`
 
-Add the new table or column following conventions in `.claude/rules/migrations.md`:
+Add the new table or column following conventions in `.claude/rules/migrations.md`.
+
+**Recommended timestamp pattern** — both `created_at` and `updated_at` must be `notNull()` with a default:
 
 ```ts
 export const my_table = sqliteTable("my_table", {
@@ -34,6 +36,8 @@ export const my_table = sqliteTable("my_table", {
 ])
 ```
 
+Both columns must be `notNull().default(sql\`(datetime('now'))\`)`. Never declare `updated_at` as nullable — it causes consistency issues with backfill logic in future migrations.
+
 ### 2. Generate the migration SQL
 
 ```bash
@@ -42,6 +46,15 @@ pnpm db:generate
 
 This runs `drizzle-kit generate`, reads the diff vs the latest snapshot in `migrations/meta/`,
 and writes a new `migrations/NNNN_xxx.sql` file.
+
+**Always inspect the generated SQL** before applying. If the migration rebuilds a table (common when changing NOT NULL or adding columns), check that the data copy step uses `COALESCE` for any previously-nullable columns that are now NOT NULL:
+
+```sql
+-- Example backfill for updated_at that was previously nullable
+INSERT INTO new_my_table SELECT id, name, sort_order, created_at, COALESCE(updated_at, created_at) FROM my_table;
+```
+
+If the generated SQL is missing this, edit the file manually before applying.
 
 ### 3. Apply locally
 
@@ -59,7 +72,7 @@ Confirm the new table or column appears.
 
 ### 5. Update types.ts
 
-Export the new row type from `src/server/types.ts`:
+Export the new row type from `src/server/types.ts` (server-internal types only):
 
 ```ts
 import type { InferSelectModel } from "drizzle-orm"
@@ -67,6 +80,8 @@ import type { my_table } from "./db/schema"
 
 export type MyRow = InferSelectModel<typeof my_table>
 ```
+
+Add shared API response types (fields exposed to client) to `src/shared/types.ts` instead.
 
 ### 6. Report
 

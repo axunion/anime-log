@@ -1,7 +1,7 @@
 <script setup lang="ts">
+import type { HistoryEntry, Title } from "@shared/types";
 import { ref, toRef, watch } from "vue";
 import { useFilter } from "../../composables/useFilter";
-import type { HistoryEntry, Title } from "../../lib/types";
 import TitleListItem from "./TitleListItem.vue";
 
 const props = defineProps<{

@@ -1,3 +1,4 @@
+import { idParam } from "@shared/schemas/common";
 import { eq, sql } from "drizzle-orm";
 import type { BatchItem } from "drizzle-orm/batch";
 import { createInsertSchema } from "drizzle-zod";
@@ -61,8 +62,16 @@ historyRoutes.post("/", authMiddleware, async (c) => {
 });
 
 historyRoutes.delete("/:id", authMiddleware, async (c) => {
-	const id = Number(c.req.param("id"));
+	const id = idParam.parse(c.req.param("id"));
 	const db = getDb(c.env.DB);
+
+	const existing = await db
+		.select({ id: history.id })
+		.from(history)
+		.where(eq(history.id, id))
+		.get();
+	if (!existing) return c.json({ error: "Not found" }, 404);
+
 	await db.delete(history).where(eq(history.id, id));
 	return c.json({ ok: true });
 });
@@ -81,9 +90,18 @@ historyRoutes.put("/reorder", authMiddleware, async (c) => {
 	return c.json({ ok: true });
 });
 
-historyRoutes.put("/:id", authMiddleware, async (c) => {
-	const id = Number(c.req.param("id"));
+historyRoutes.patch("/:id", authMiddleware, async (c) => {
+	const id = idParam.parse(c.req.param("id"));
 	const body = updateHistory.parse(await c.req.json());
+	const db = getDb(c.env.DB);
+
+	const existing = await db
+		.select({ id: history.id })
+		.from(history)
+		.where(eq(history.id, id))
+		.get();
+	if (!existing) return c.json({ error: "Not found" }, 404);
+
 	// display_name supports explicit null clearing; COALESCE used for year
 	await c.env.DB.prepare(
 		"UPDATE history SET display_name = ?, year = COALESCE(?, year), updated_at = datetime('now') WHERE id = ?",

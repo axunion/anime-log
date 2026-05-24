@@ -1,6 +1,6 @@
 <script setup lang="ts">
+import type { TitleDetail } from "@shared/types";
 import { ref, watch } from "vue";
-import type { TitleDetail } from "../../lib/types";
 import CastRow from "./CastRow.vue";
 import ExternalLinks from "./ExternalLinks.vue";
 

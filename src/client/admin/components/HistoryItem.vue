@@ -1,7 +1,7 @@
 <script setup lang="ts">
+import type { HistoryEntry } from "@shared/types";
 import { GripVertical, ListFilter, Trash2 } from "lucide-vue-next";
 import { ref, watch } from "vue";
-import type { HistoryEntry } from "../../lib/types";
 
 const props = withDefaults(
 	defineProps<{

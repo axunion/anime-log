@@ -1,12 +1,23 @@
+import type { HistoryEntry } from "@shared/types";
 import { ref } from "vue";
-import { del, get, post, put } from "../lib/api";
-import type { HistoryEntry } from "../lib/types";
+import { del, get, patch, post, put } from "../lib/api";
 
 const history = ref<HistoryEntry[]>([]);
+const error = ref<string | null>(null);
+const loading = ref(false);
 
 export function useHistory() {
 	async function fetchHistory() {
-		history.value = await get<HistoryEntry[]>("/history");
+		loading.value = true;
+		error.value = null;
+		try {
+			history.value = await get<HistoryEntry[]>("/history");
+		} catch (err) {
+			error.value =
+				err instanceof Error ? err.message : "Failed to fetch history";
+		} finally {
+			loading.value = false;
+		}
 	}
 
 	async function addHistory(payload: {
@@ -22,7 +33,7 @@ export function useHistory() {
 		id: number,
 		payload: { display_name: string | null; year: number },
 	) {
-		await put(`/history/${id}`, payload);
+		await patch(`/history/${id}`, payload);
 		await fetchHistory();
 	}
 
@@ -39,6 +50,8 @@ export function useHistory() {
 
 	return {
 		history,
+		error,
+		loading,
 		fetchHistory,
 		addHistory,
 		updateHistory,

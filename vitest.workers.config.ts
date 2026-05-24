@@ -1,7 +1,16 @@
+import { resolve } from "node:path";
+import { fileURLToPath } from "node:url";
 import { cloudflareTest } from "@cloudflare/vitest-pool-workers";
 import { defineConfig } from "vitest/config";
 
+const __dirname = fileURLToPath(new URL(".", import.meta.url));
+
 export default defineConfig({
+	resolve: {
+		alias: {
+			"@shared": resolve(__dirname, "src/shared"),
+		},
+	},
 	plugins: [
 		cloudflareTest({
 			wrangler: { configPath: "./wrangler.toml" },

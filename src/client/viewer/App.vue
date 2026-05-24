@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { onMounted, ref } from "vue";
-import { useCast } from "../composables/useCast";
+import { useCastView } from "../composables/useCastView";
 import { useHistory } from "../composables/useHistory";
 import { useTitles } from "../composables/useTitles";
 import ViewerLayout from "./components/ViewerLayout.vue";
@@ -15,7 +15,7 @@ const {
 	loadVoice,
 	clearCast,
 	clearVoice,
-} = useCast();
+} = useCastView();
 
 const clearTrigger = ref(0);
 

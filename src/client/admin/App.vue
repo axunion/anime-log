@@ -1,14 +1,17 @@
 <script setup lang="ts">
+import type { AdminTab } from "@shared/constants";
 import { onMounted, ref } from "vue";
 import ConfirmDialog from "../components/ConfirmDialog.vue";
+import { useAuth } from "../composables/useAuth";
 import { useHistory } from "../composables/useHistory";
 import { useTitles } from "../composables/useTitles";
-import type { AdminTab } from "../lib/types";
 import AdminTabs from "./components/AdminTabs.vue";
 import CastEditor from "./components/CastEditor.vue";
 import HistoryManager from "./components/HistoryManager.vue";
+import Login from "./components/Login.vue";
 import TitleManager from "./components/TitleManager.vue";
 
+const { isAuthenticated } = useAuth();
 const { fetchTitles } = useTitles();
 const { fetchHistory } = useHistory();
 
@@ -21,14 +24,16 @@ function onSelectTitle(id: number | null, name: string) {
 	selectedTitleName.value = name;
 }
 
-onMounted(() => {
-	fetchTitles();
-	fetchHistory();
+onMounted(async () => {
+	if (isAuthenticated.value) {
+		await Promise.all([fetchTitles(), fetchHistory()]);
+	}
 });
 </script>
 
 <template>
-	<div class="admin-root">
+	<Login v-if="!isAuthenticated" />
+	<div v-else class="admin-root">
 		<AdminTabs v-model="activeTab" />
 		<main class="admin-main" :class="{ 'admin-main--single': activeTab === 'history' }">
 			<div v-show="activeTab === 'data'" style="display: contents">

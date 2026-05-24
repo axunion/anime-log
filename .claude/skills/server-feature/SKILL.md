@@ -22,6 +22,7 @@ import { eq } from "drizzle-orm";
 import { createInsertSchema } from "drizzle-zod";
 import { Hono } from "hono";
 import { z } from "zod";
+import { idParam } from "@shared/schemas/common";
 import { getDb } from "../db/client";
 import { my_table } from "../db/schema";
 import { authMiddleware } from "../middleware/auth";
@@ -56,10 +57,13 @@ myRoutes.post("/", authMiddleware, async (c) => {
   return c.json(result, 201);
 });
 
-myRoutes.put("/:id", authMiddleware, async (c) => {
-  const id = Number(c.req.param("id"));
+myRoutes.patch("/:id", authMiddleware, async (c) => {
+  const id = idParam.parse(c.req.param("id"));
   const body = updateMyItem.parse(await c.req.json());
-  // COALESCE pattern keeps sql-level semantics; updated_at uses SQLite datetime()
+  const db = getDb(c.env.DB);
+  const existing = await db.select({ id: my_table.id }).from(my_table).where(eq(my_table.id, id)).get();
+  if (!existing) return c.json({ error: "Not found" }, 404);
+  // COALESCE keeps NOT NULL fields unchanged when omitted
   await c.env.DB.prepare(
     "UPDATE my_table SET some_text = COALESCE(?, some_text), updated_at = datetime('now') WHERE id = ?"
   ).bind(body.some_text ?? null, id).run();
@@ -67,8 +71,10 @@ myRoutes.put("/:id", authMiddleware, async (c) => {
 });
 
 myRoutes.delete("/:id", authMiddleware, async (c) => {
-  const id = Number(c.req.param("id"));
+  const id = idParam.parse(c.req.param("id"));
   const db = getDb(c.env.DB);
+  const existing = await db.select({ id: my_table.id }).from(my_table).where(eq(my_table.id, id)).get();
+  if (!existing) return c.json({ error: "Not found" }, 404);
   await db.delete(my_table).where(eq(my_table.id, id));
   return c.json({ ok: true });
 });
@@ -85,9 +91,20 @@ app.route("/api/my", myRoutes);
 
 ## Layer 3: TypeScript Types
 
-### Server-side (row types)
+### Shared response types (client + server)
 
-Add to `src/server/types.ts` via `InferSelectModel`:
+Add to `src/shared/types.ts`. Keep them minimal — only include fields the client actually uses:
+
+```typescript
+export type MyItem = {
+  id: number;
+  some_text: string;
+};
+```
+
+### Server-internal types
+
+Add to `src/server/types.ts` only if needed for server-only join results or Hono Bindings:
 
 ```typescript
 import type { InferSelectModel } from "drizzle-orm";
@@ -96,19 +113,7 @@ import type { my_table } from "./db/schema";
 export type MyRow = InferSelectModel<typeof my_table>;
 ```
 
-### Client-side (API response types)
-
-Add to `src/client/lib/types.ts`:
-
-```typescript
-export type MyItem = {
-  id: number;
-  some_text: string;
-  sort_order: number;
-};
-```
-
-Keep client types minimal — only include fields the client actually uses.
+Do **not** add types to `src/client/lib/types.ts` — that file no longer exists. All API response types go in `src/shared/types.ts`.
 
 ---
 
@@ -117,8 +122,10 @@ Keep client types minimal — only include fields the client actually uses.
 - [ ] Route file created in `src/server/routes/`
 - [ ] Route mounted in `src/server/index.ts`
 - [ ] Write endpoints all use `authMiddleware`
-- [ ] Server row type added to `src/server/types.ts`
-- [ ] Client type added to `src/client/lib/types.ts`
+- [ ] Path params parsed with `idParam.parse()` (not `Number()`)
+- [ ] PATCH and DELETE handlers check existence → 404 before acting
+- [ ] Shared response types added to `src/shared/types.ts`
+- [ ] Server-only types added to `src/server/types.ts` (if needed)
 - [ ] Test with `pnpm dev` (check worker logs in the terminal)
 - [ ] For bulk INSERT: chunk at `floor(100 / bound_columns)` rows (D1 parameter limit — see `rules/server.md`)
 

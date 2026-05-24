@@ -122,7 +122,7 @@ describe("PUT /api/titles/:id/cast (replace all)", () => {
 	});
 });
 
-describe("PUT /api/cast/:id", () => {
+describe("PATCH /api/cast/:id", () => {
 	beforeEach(() => applySchema(typedEnv.DB));
 
 	it("updates individual cast member fields via COALESCE", async () => {
@@ -137,7 +137,7 @@ describe("PUT /api/cast/:id", () => {
 			.first<{ id: number }>();
 
 		await callApp(typedEnv, {
-			method: "PUT",
+			method: "PATCH",
 			path: `/cast/${castRow!.id}`,
 			auth: true,
 			body: { actor_name: "Updated Actor" },

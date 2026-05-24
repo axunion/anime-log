@@ -6,6 +6,7 @@ const mockPut = vi.hoisted(() => vi.fn().mockResolvedValue({}));
 vi.mock("../lib/api.ts", () => ({
 	get: vi.fn().mockResolvedValue([]),
 	post: vi.fn().mockResolvedValue({}),
+	patch: vi.fn().mockResolvedValue({}),
 	put: mockPut,
 	del: vi.fn().mockResolvedValue({}),
 }));

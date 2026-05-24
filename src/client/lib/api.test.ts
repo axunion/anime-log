@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { del, get, post, put } from "./api.ts";
+import { del, get, patch, post, put } from "./api.ts";
 
 const mockFetch = vi.fn();
 
@@ -63,6 +63,23 @@ describe("post", () => {
 		await post("/titles", payload);
 		const [, options] = mockFetch.mock.calls[0] as [string, RequestInit];
 		expect(options?.body).toBe(JSON.stringify(payload));
+	});
+});
+
+describe("patch", () => {
+	it("attaches Authorization Bearer token", async () => {
+		mockFetch.mockResolvedValue(makeResponse({}));
+		await patch("/titles/1", { title: "Updated" });
+		const [, options] = mockFetch.mock.calls[0] as [string, RequestInit];
+		const headers = new Headers(options?.headers);
+		expect(headers.get("authorization")).toBe("Bearer my-secret-token");
+	});
+
+	it("uses PATCH method", async () => {
+		mockFetch.mockResolvedValue(makeResponse({}));
+		await patch("/titles/1", {});
+		const [, options] = mockFetch.mock.calls[0] as [string, RequestInit];
+		expect(options?.method).toBe("PATCH");
 	});
 });
 

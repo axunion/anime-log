@@ -84,28 +84,46 @@ Browser → Vite dev server (port 5173)
 
 In production, the Worker serves everything: API routes via Hono, static assets from `dist/client/` via the `assets` binding.
 
+### Shared (`src/shared/`)
+
+Types, schemas, and constants shared between the server and client. Both sides import from the `@shared` alias (configured in `vite.config.ts` and the tsconfig files).
+
+- `types.ts` — Canonical API response types (`Title`, `CastMember`, `TitleDetail`, `HistoryEntry`, `VoiceResult`, `CastInput`). Import these on both server and client instead of duplicating type definitions.
+- `constants.ts` — `Tab`, `AdminTab` union types derived from `as const` arrays. No Cloudflare-specific types here.
+- `schemas/common.ts` — `idParam = z.coerce.number().int().positive()` for path parameter validation.
+- `schemas/cast.ts` — `castMemberInput` zod schema (shared validation for cast add/update).
+
+Never import Cloudflare Workers types (`D1Database`, etc.) into `src/shared/` — they are not available in the client build.
+
 ### Server (`src/server/`)
 
-- `index.ts` — Hono app entry. Defines `Bindings = { DB: D1Database; API_TOKEN: string }` and mounts three route modules.
+- `index.ts` — Hono app entry. Defines `Bindings = { DB: D1Database; API_TOKEN: string }` and mounts three route modules. Global `onError` handles ZodError → 400 and UNIQUE constraint → 409.
 - `middleware/auth.ts` — Bearer token middleware for write endpoints. Token stored as a Cloudflare secret (`wrangler secret put API_TOKEN`).
-- `routes/titles.ts` — CRUD for titles + cast batch insert on POST.
-- `routes/cast.ts` — Cross-title voice actor search (`GET /api/cast?actor=...`) and per-title cast CRUD.
+- `routes/titles.ts` — CRUD for titles + per-title cast routes (`GET/POST/PUT /:id/cast`).
+- `routes/cast.ts` — Cross-title voice actor search (`GET /api/cast?actor=...`) and individual cast PATCH/DELETE.
 - `routes/history.ts` — Watch history CRUD with `PUT /api/history/reorder` (accepts `{ ids: number[] }` for bulk sort_order update via D1 batch).
+- `lib/batch.ts` — `asBatch` and `batchAll` helpers for D1 batch operations.
+
+Partial updates use `PATCH` (not `PUT`). All `PATCH`/`DELETE` handlers check existence → 404. Path params are validated with `idParam.parse()` from `@shared/schemas/common`.
 
 ### Client (`src/client/`)
 
 Two independent Vue 3 apps (MPA). Each mounts via `createApp(App).mount("#app")`.
 
 - `index.html` + `viewer/` — Read-only anime viewer. 3-panel layout (titles / cast / voice actor search).
-- `admin.html` + `admin/` — CRUD admin UI. Token stored in `localStorage` as `api_token`.
+- `admin.html` + `admin/` — CRUD admin UI. Token stored in `localStorage` as `api_token` via `useAuth`.
 
 - `composables/` — shared Vue composables (module-level singleton pattern):
+  - `useAuth.ts` — token state, `isAuthenticated`, `setToken`, `clearToken`.
   - `useFilter.ts` — reactive text filter with multi-word regex.
-  - `useTitles.ts` — title list state.
-  - `useCast.ts` — selected title detail + voice actor search state.
-  - `useHistory.ts` — history list CRUD + reorder.
+  - `useTitles.ts` — title list state with `error`/`loading`.
+  - `useCastView.ts` — viewer: selected title detail + voice actor search, race guard.
+  - `useCastEdit.ts` — admin: cast write operations (add, update, delete, replace).
+  - `useHistory.ts` — history list CRUD + reorder with `error`/`loading`.
+  - `useDataPortability.ts` — import/export logic for admin toolbar.
 
-- `lib/api.ts` — Shared fetch wrapper. `get()` is unauthenticated; `post()`, `put()`, `del()` attach the stored token as `Authorization: Bearer`.
+- `lib/api.ts` — Fetch wrapper. `get()` is unauthenticated; `post()`, `patch()`, `put()`, `del()` attach Bearer token. Use `patch` for partial updates; `put` only for full-replacement (reorder).
+- `lib/raceToken.ts` — `createRaceToken()` for cancellable async loads.
 - `styles/base.css` — Global CSS custom properties and resets.
 
 ### Database schema
@@ -114,8 +132,10 @@ Schema source of truth: `src/server/db/schema.ts` (Drizzle ORM `sqliteTable` def
 
 Three tables in D1 (SQLite):
 - `titles` (id, title UNIQUE, year, timestamps)
-- `cast_members` (title_id FK→titles CASCADE, actor_name, character_name, sort_order, updated_at nullable)
-- `history` (title_id FK→titles CASCADE, display_name nullable, year, sort_order, updated_at nullable)
+- `cast_members` (title_id FK→titles CASCADE, actor_name, character_name, sort_order, updated_at NOT NULL with default)
+- `history` (title_id FK→titles CASCADE, display_name nullable, year, sort_order, updated_at NOT NULL with default)
+
+Indexes: `idx_cast_title_sort` on cast_members(title_id, sort_order); `idx_history_sort_order` on history(sort_order).
 
 To add columns or tables: edit `schema.ts` → `pnpm db:generate` → `pnpm db:migrate`.
 

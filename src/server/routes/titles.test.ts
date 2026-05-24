@@ -85,14 +85,14 @@ describe("POST /api/titles", () => {
 	});
 });
 
-describe("PUT /api/titles/:id", () => {
+describe("PATCH /api/titles/:id", () => {
 	beforeEach(() => applySchema(typedEnv.DB));
 
 	it("updates only the provided field, preserving others via COALESCE", async () => {
 		const id = await seedTitle(typedEnv.DB, { title: "Old Title", year: 1990 });
 
 		await callApp(typedEnv, {
-			method: "PUT",
+			method: "PATCH",
 			path: `/titles/${id}`,
 			auth: true,
 			body: { title: "New Title" },

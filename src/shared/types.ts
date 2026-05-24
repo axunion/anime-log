@@ -1,10 +1,13 @@
 export type Title = { id: number; title: string; year: number };
+
 export type CastMember = {
 	id: number;
 	actor_name: string;
 	character_name: string;
 };
+
 export type TitleDetail = Title & { cast: CastMember[] };
+
 export type HistoryEntry = {
 	id: number;
 	title_id: number;
@@ -13,7 +16,13 @@ export type HistoryEntry = {
 	year: number;
 	sort_order: number;
 };
-export type VoiceResult = { title: string; character_name: string };
+
+export type VoiceResult = {
+	id: number;
+	character_name: string;
+	title_id: number;
+	title: string;
+	year: number;
+};
+
 export type CastInput = { actor_name: string; character_name: string };
-export type Tab = "history" | "year";
-export type AdminTab = "data" | "history";

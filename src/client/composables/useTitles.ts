@@ -1,9 +1,11 @@
+import type { Title } from "@shared/types";
 import { computed, ref } from "vue";
-import { del, get, post, put } from "../lib/api";
-import type { Title } from "../lib/types";
+import { del, get, patch, post } from "../lib/api";
 import { useHistory } from "./useHistory";
 
 const titles = ref<Title[]>([]);
+const error = ref<string | null>(null);
+const loading = ref(false);
 
 export function useTitles() {
 	const { fetchHistory } = useHistory();
@@ -17,7 +19,16 @@ export function useTitles() {
 	);
 
 	async function fetchTitles() {
-		titles.value = await get<Title[]>("/titles");
+		loading.value = true;
+		error.value = null;
+		try {
+			titles.value = await get<Title[]>("/titles");
+		} catch (err) {
+			error.value =
+				err instanceof Error ? err.message : "Failed to fetch titles";
+		} finally {
+			loading.value = false;
+		}
 	}
 
 	async function addTitle(title: string, year: number) {
@@ -29,7 +40,7 @@ export function useTitles() {
 		id: number,
 		fields: { title?: string; year?: number },
 	) {
-		await put(`/titles/${id}`, fields);
+		await patch(`/titles/${id}`, fields);
 		await fetchTitles();
 	}
 
@@ -40,6 +51,8 @@ export function useTitles() {
 
 	return {
 		titles,
+		error,
+		loading,
 		sortedByName,
 		sortedByYear,
 		fetchTitles,

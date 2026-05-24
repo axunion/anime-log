@@ -35,8 +35,20 @@ Always in this order: `<script>` → `<template>` → `<style scoped>`
 ## Importing
 
 - Composables: `../../composables/useXxx` (never inline logic in components)
-- API calls: only via `../lib/api.ts` helpers (`get`, `post`, `put`, `del`) — never raw `fetch`
-- Types: from `../lib/types.ts`
+- API calls: only via `../lib/api.ts` helpers (`get`, `post`, `patch`, `del`) — never raw `fetch`
+- Types: from `@shared/types` — never from `../lib/types` (that file no longer exists)
+- Auth state: via `useAuth()` from `../../composables/useAuth` — never read `localStorage` directly in components
+
+## Authentication
+
+Use `useAuth()` to check authentication state or get the token. Never access `localStorage` directly in a component:
+
+```ts
+import { useAuth } from "../../composables/useAuth";
+const { isAuthenticated } = useAuth();
+```
+
+The admin root `App.vue` gates the entire UI behind `<Login v-if="!isAuthenticated" />`.
 
 ## Admin CRUD add forms
 

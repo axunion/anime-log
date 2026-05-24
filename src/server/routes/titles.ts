@@ -1,4 +1,6 @@
-import { eq } from "drizzle-orm";
+import { idParam } from "@shared/schemas/common";
+import { eq, sql } from "drizzle-orm";
+import type { BatchItem } from "drizzle-orm/batch";
 import { createInsertSchema } from "drizzle-zod";
 import { Hono } from "hono";
 import { z } from "zod";
@@ -22,6 +24,10 @@ const updateTitle = createInsertSchema(titles, {
 	.pick({ title: true, year: true })
 	.partial();
 
+const castListInput = z.object({
+	cast: z.array(castMemberInput),
+});
+
 export const titlesRoutes = new Hono<{ Bindings: Bindings }>();
 
 titlesRoutes.get("/", async (c) => {
@@ -34,7 +40,7 @@ titlesRoutes.get("/", async (c) => {
 });
 
 titlesRoutes.get("/:id", async (c) => {
-	const id = Number(c.req.param("id"));
+	const id = idParam.parse(c.req.param("id"));
 	const db = getDb(c.env.DB);
 
 	const title = await db
@@ -82,9 +88,18 @@ titlesRoutes.post("/", authMiddleware, async (c) => {
 	return c.json({ id: titleResult.id }, 201);
 });
 
-titlesRoutes.put("/:id", authMiddleware, async (c) => {
-	const id = Number(c.req.param("id"));
+titlesRoutes.patch("/:id", authMiddleware, async (c) => {
+	const id = idParam.parse(c.req.param("id"));
 	const body = updateTitle.parse(await c.req.json());
+	const db = getDb(c.env.DB);
+
+	const existing = await db
+		.select({ id: titles.id })
+		.from(titles)
+		.where(eq(titles.id, id))
+		.get();
+	if (!existing) return c.json({ error: "Not found" }, 404);
+
 	// COALESCE pattern keeps sql-level semantics; updated_at uses SQLite datetime()
 	await c.env.DB.prepare(
 		"UPDATE titles SET title = COALESCE(?, title), year = COALESCE(?, year), updated_at = datetime('now') WHERE id = ?",
@@ -95,8 +110,68 @@ titlesRoutes.put("/:id", authMiddleware, async (c) => {
 });
 
 titlesRoutes.delete("/:id", authMiddleware, async (c) => {
-	const id = Number(c.req.param("id"));
+	const id = idParam.parse(c.req.param("id"));
 	const db = getDb(c.env.DB);
+
+	const existing = await db
+		.select({ id: titles.id })
+		.from(titles)
+		.where(eq(titles.id, id))
+		.get();
+	if (!existing) return c.json({ error: "Not found" }, 404);
+
 	await db.delete(titles).where(eq(titles.id, id));
+	return c.json({ ok: true });
+});
+
+// --- Cast routes nested under /titles/:id/cast ---
+
+titlesRoutes.post("/:id/cast", authMiddleware, async (c) => {
+	const titleId = idParam.parse(c.req.param("id"));
+	const body = castMemberInput.parse(await c.req.json());
+	const db = getDb(c.env.DB);
+
+	const title = await db
+		.select({ id: titles.id })
+		.from(titles)
+		.where(eq(titles.id, titleId))
+		.get();
+	if (!title) return c.json({ error: "Not found" }, 404);
+
+	// sort_order via subquery avoids MAX+1 race condition
+	const [result] = await db
+		.insert(cast_members)
+		.values({
+			title_id: titleId,
+			actor_name: body.actor_name,
+			character_name: body.character_name,
+			sort_order: sql`COALESCE((SELECT MAX(sort_order)+1 FROM cast_members WHERE title_id = ${titleId}), 0)`,
+		})
+		.returning({ id: cast_members.id });
+
+	return c.json(result, 201);
+});
+
+titlesRoutes.put("/:id/cast", authMiddleware, async (c) => {
+	const titleId = idParam.parse(c.req.param("id"));
+	const body = castListInput.parse(await c.req.json());
+	const db = getDb(c.env.DB);
+
+	const title = await db
+		.select({ id: titles.id })
+		.from(titles)
+		.where(eq(titles.id, titleId))
+		.get();
+	if (!title) return c.json({ error: "Not found" }, 404);
+
+	const deleteStmt = db
+		.delete(cast_members)
+		.where(eq(cast_members.title_id, titleId));
+	const insertStmts = buildCastInsertStmts(db, titleId, body.cast);
+	const allStmts: BatchItem<"sqlite">[] = [
+		deleteStmt as BatchItem<"sqlite">,
+		...insertStmts,
+	];
+	await batchAll(db, allStmts);
 	return c.json({ ok: true });
 });

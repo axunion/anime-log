@@ -6,7 +6,7 @@ paths: ["src/server/**"]
 
 ## Auth middleware
 
-- `authMiddleware` is required on all `POST` / `PUT` / `DELETE` handlers
+- `authMiddleware` is required on all `POST` / `PATCH` / `DELETE` handlers
 - `GET` handlers must NOT use `authMiddleware`
 
 ```ts
@@ -16,15 +16,19 @@ titlesRoutes.get("/", async (c) => { ... })
 
 ## Path parameters
 
-Always parse with `Number()`:
+Always parse with `idParam` from `@shared/schemas/common` — never use bare `Number()`:
 
 ```ts
-const id = Number(c.req.param("id"))
+import { idParam } from "@shared/schemas/common"
+
+const id = idParam.parse(c.req.param("id"))
 ```
+
+`idParam` is `z.coerce.number().int().positive()`. It throws a `ZodError` (→ 400) on invalid input.
 
 ## Input validation
 
-All `POST` and `PUT` handlers must validate request bodies with zod. Derive schemas from `createInsertSchema` (drizzle-zod) to keep them in sync with the DB schema. Add `.min(1)` overrides for string fields, `.pick()` to restrict columns, and `.partial()` for update schemas.
+All `POST` and `PATCH` handlers must validate request bodies with zod. Derive schemas from `createInsertSchema` (drizzle-zod) to keep them in sync with the DB schema. Schemas shared between client and server live in `src/shared/schemas/`; server-only schemas stay in the route file.
 
 ```ts
 import { z } from "zod"
@@ -50,8 +54,34 @@ Do NOT use `c.req.json<T>()` with a TypeScript type alone — this provides no r
 ## Error handling
 
 - `ZodError` → 400 via global `app.onError` in `index.ts`
+- UNIQUE constraint violation → 409 via global `app.onError` (checks `err.message.includes("UNIQUE constraint failed")`)
 - All other errors → 500 with `{ error: "Internal Server Error" }` (no internal details exposed)
 - Do not add per-route try/catch for validation — let it bubble to `onError`
+
+## Resource existence checks
+
+Before PATCH or DELETE, verify the resource exists and return 404 if not:
+
+```ts
+const existing = await db.select({ id: titles.id }).from(titles).where(eq(titles.id, id)).get()
+if (!existing) return c.json({ error: "Not found" }, 404)
+```
+
+Before inserting a child row, verify the parent exists and return 404:
+
+```ts
+const parent = await db.select({ id: titles.id }).from(titles).where(eq(titles.id, id)).get()
+if (!parent) return c.json({ error: "Not found" }, 404)
+```
+
+## HTTP methods
+
+- `POST` — create
+- `PATCH` — partial update (omitted fields keep their current value)
+- `PUT` — full replacement (used only for reorder endpoints that replace the entire ordered set)
+- `DELETE` — delete
+
+Never use `PUT` for partial updates. Use `PATCH` with existence check + COALESCE pattern.
 
 ## Drizzle queries
 
@@ -69,8 +99,10 @@ const rows = await db.select({ id: titles.id, title: titles.title }).from(titles
 // INSERT with RETURNING
 const [result] = await db.insert(titles).values({ title: body.title, year: body.year }).returning({ id: titles.id })
 
-// UPDATE (simple)
-await db.update(titles).set({ title: body.title }).where(eq(titles.id, id))
+// PATCH (partial update) — raw SQL with COALESCE for NOT NULL fields
+await c.env.DB.prepare(
+  "UPDATE titles SET title = COALESCE(?, title), updated_at = datetime('now') WHERE id = ?"
+).bind(body.title ?? null, id).run()
 
 // DELETE
 await db.delete(titles).where(eq(titles.id, id))
@@ -78,10 +110,11 @@ await db.delete(titles).where(eq(titles.id, id))
 
 ### Batch operations
 
-Use `db.batch()` for multiple related statements. Wrap chunks with `asBatch()` from `lib/cast.ts` to satisfy the non-empty tuple type. Use `batchAll()` to handle the 100-statement-per-call limit automatically:
+Use `db.batch()` for multiple related statements. Wrap chunks with `asBatch()` from `lib/batch.ts` to satisfy the non-empty tuple type. Use `batchAll()` to handle the 100-statement-per-call limit automatically:
 
 ```ts
-import { asBatch, batchAll, buildCastInsertStmts } from "../lib/cast"
+import { asBatch, batchAll } from "../lib/batch"
+import { buildCastInsertStmts } from "../lib/cast"
 
 const stmts = buildCastInsertStmts(db, titleId, body.cast)
 await batchAll(db, stmts)
@@ -121,7 +154,7 @@ await db.insert(foos).values({
 }).returning({ id: foos.id })
 ```
 
-### Partial updates (PUT)
+### Partial updates (PATCH)
 
 For NOT NULL fields that may be omitted, use raw SQL with `COALESCE`. For nullable fields that must support explicit null clearing, bind the value directly:
 
@@ -135,31 +168,25 @@ await c.env.DB.prepare(
 await db.update(history).set({ display_name: body.display_name ?? null }).where(eq(history.id, id))
 ```
 
-## Resource existence checks
-
-Before inserting a child row, verify the parent exists and return 404:
-
-```ts
-const parent = await db.select({ id: titles.id }).from(titles).where(eq(titles.id, id)).get()
-if (!parent) return c.json({ error: "Not found" }, 404)
-```
-
 ## Row types
 
-Import canonical row types from `src/server/types.ts` rather than writing inline type annotations:
+- **API response types** (shared with client): import from `src/shared/types.ts`
+- **Server-internal types** (Hono Bindings, join results not exposed to client): import from `src/server/types.ts`
 
 ```ts
-import type { Title, CastMember, HistoryEntry } from "../types"
+import type { Title, CastMember, HistoryEntry } from "@shared/types"
+import type { Bindings } from "../types"
 ```
 
 ## Adding a new route module
 
 1. Add schema to `src/server/db/schema.ts`
-2. Export row types from `src/server/types.ts`
-3. Create route file importing `getDb`, schema tables, and `createInsertSchema`
-4. Mount in `src/server/index.ts`:
+2. Add shared response types to `src/shared/types.ts`
+3. Add server-internal types (Bindings, join results) to `src/server/types.ts` if needed
+4. Create route file importing `getDb`, schema tables, `createInsertSchema`, and `idParam`
+5. Mount in `src/server/index.ts`:
 
 ```ts
-import { myRoutes } from "./routes/my"
-app.route("/api/my", myRoutes)
+import { myRoutes } from "./routes/my";
+app.route("/api/my", myRoutes);
 ```

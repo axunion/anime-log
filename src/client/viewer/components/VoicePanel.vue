@@ -1,6 +1,6 @@
 <script setup lang="ts">
+import type { VoiceResult } from "@shared/types";
 import { ref, watch } from "vue";
-import type { VoiceResult } from "../../lib/types";
 import ExternalLinks from "./ExternalLinks.vue";
 import VoiceItem from "./VoiceItem.vue";
 

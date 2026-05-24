@@ -1,5 +1,5 @@
+import type { TitleDetail, VoiceResult } from "@shared/types.ts";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import type { TitleDetail, VoiceResult } from "../lib/types.ts";
 
 const mockGet = vi.hoisted(() => vi.fn());
 const mockPost = vi.hoisted(() => vi.fn());

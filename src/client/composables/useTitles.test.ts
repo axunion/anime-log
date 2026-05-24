@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const mockGet = vi.hoisted(() => vi.fn());
 const mockPost = vi.hoisted(() => vi.fn());
+const mockPatch = vi.hoisted(() => vi.fn());
 const mockPut = vi.hoisted(() => vi.fn());
 const mockDel = vi.hoisted(() => vi.fn());
 const fetchHistoryMock = vi.hoisted(() => vi.fn());
@@ -9,6 +10,7 @@ const fetchHistoryMock = vi.hoisted(() => vi.fn());
 vi.mock("../lib/api.ts", () => ({
 	get: mockGet,
 	post: mockPost,
+	patch: mockPatch,
 	put: mockPut,
 	del: mockDel,
 }));
@@ -27,6 +29,7 @@ describe("useTitles", () => {
 		titles.value = [];
 		mockGet.mockReset();
 		mockPost.mockReset();
+		mockPatch.mockReset();
 		mockPut.mockReset();
 		mockDel.mockReset();
 		fetchHistoryMock.mockReset();

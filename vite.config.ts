@@ -6,8 +6,15 @@ import { defineConfig } from "vite";
 
 const __dirname = fileURLToPath(new URL(".", import.meta.url));
 
+const shared = resolve(__dirname, "src/shared");
+
 export default defineConfig({
 	root: "src/client",
+	resolve: {
+		alias: {
+			"@shared": shared,
+		},
+	},
 	plugins: [
 		vue(),
 		cloudflare({

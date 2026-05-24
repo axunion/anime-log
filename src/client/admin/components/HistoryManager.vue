@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import type { Title } from "@shared/types";
 import { History as HistoryIcon, Plus, X } from "lucide-vue-next";
 import { ref } from "vue";
 import draggable from "vuedraggable";
@@ -6,7 +7,6 @@ import { useConfirm } from "../../composables/useConfirm";
 import { useFilter } from "../../composables/useFilter";
 import { useHistory } from "../../composables/useHistory";
 import { useTitles } from "../../composables/useTitles";
-import type { Title } from "../../lib/types";
 import HistoryItem from "./HistoryItem.vue";
 
 const { confirm } = useConfirm();

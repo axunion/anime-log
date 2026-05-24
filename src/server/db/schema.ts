@@ -20,11 +20,12 @@ export const cast_members = sqliteTable(
 		character_name: text("character_name").notNull(),
 		sort_order: integer("sort_order").notNull().default(0),
 		created_at: text("created_at").notNull().default(sql`(datetime('now'))`),
-		updated_at: text("updated_at"),
+		updated_at: text("updated_at").notNull().default(sql`(datetime('now'))`),
 	},
 	(t) => [
 		index("idx_cast_title_id").on(t.title_id),
 		index("idx_cast_actor_name").on(t.actor_name),
+		index("idx_cast_title_sort").on(t.title_id, t.sort_order),
 	],
 );
 
@@ -39,7 +40,10 @@ export const history = sqliteTable(
 		year: integer("year").notNull(),
 		sort_order: integer("sort_order").notNull().default(0),
 		created_at: text("created_at").notNull().default(sql`(datetime('now'))`),
-		updated_at: text("updated_at"),
+		updated_at: text("updated_at").notNull().default(sql`(datetime('now'))`),
 	},
-	(t) => [index("idx_history_title_id").on(t.title_id)],
+	(t) => [
+		index("idx_history_title_id").on(t.title_id),
+		index("idx_history_sort_order").on(t.sort_order),
+	],
 );

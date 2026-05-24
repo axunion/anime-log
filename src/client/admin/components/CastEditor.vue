@@ -2,7 +2,8 @@
 import { ClipboardList, Mic2, RotateCcw, Save, Trash2 } from "lucide-vue-next";
 import { computed, ref, watch } from "vue";
 import Modal from "../../components/Modal.vue";
-import { useCast } from "../../composables/useCast";
+import { useCastEdit } from "../../composables/useCastEdit";
+import { useCastView } from "../../composables/useCastView";
 import CastEditorRow from "./CastEditorRow.vue";
 
 const props = defineProps<{
@@ -10,7 +11,8 @@ const props = defineProps<{
 	selectedTitleName: string;
 }>();
 
-const { selectedDetail, loadCast, replaceCast } = useCast();
+const { selectedDetail, loadCast } = useCastView();
+const { replaceCast } = useCastEdit();
 
 type CastRow = { key: number; actor_name: string; character_name: string };
 let nextKey = 0;
@@ -310,5 +312,4 @@ async function onSave() {
 	justify-content: flex-end;
 	margin-top: 0.75em;
 }
-
 </style>

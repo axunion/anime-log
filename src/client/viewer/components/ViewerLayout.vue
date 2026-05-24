@@ -1,12 +1,12 @@
 <script setup lang="ts">
-import { nextTick, onUnmounted, ref, watch } from "vue";
+import type { Tab } from "@shared/constants";
 import type {
 	HistoryEntry,
-	Tab,
 	Title,
 	TitleDetail,
 	VoiceResult,
-} from "../../lib/types";
+} from "@shared/types";
+import { nextTick, onUnmounted, ref, watch } from "vue";
 import CastPanel from "./CastPanel.vue";
 import TitleListBlock from "./TitleListBlock.vue";
 import TitleNav from "./TitleNav.vue";

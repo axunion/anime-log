@@ -1,24 +1,21 @@
-import { eq, sql } from "drizzle-orm";
-import type { BatchItem } from "drizzle-orm/batch";
+import { idParam } from "@shared/schemas/common";
+import { eq } from "drizzle-orm";
 import { Hono } from "hono";
-import { z } from "zod";
 import { getDb } from "../db/client";
 import { cast_members, titles } from "../db/schema";
-import { batchAll, buildCastInsertStmts, castMemberInput } from "../lib/cast";
+import { castMemberInput } from "../lib/cast";
 import { authMiddleware } from "../middleware/auth";
 import type { Bindings } from "../types";
-
-const castListInput = z.object({
-	cast: z.array(castMemberInput),
-});
 
 const updateCastInput = castMemberInput.partial();
 
 export const castRoutes = new Hono<{ Bindings: Bindings }>();
 
-castRoutes.get("/cast", async (c) => {
+castRoutes.get("/", async (c) => {
 	const actor = c.req.query("actor");
-	if (!actor) return c.json({ error: "actor query param required" }, 400);
+	if (!actor || actor.trim() === "") {
+		return c.json({ error: "actor query param required" }, 400);
+	}
 
 	const db = getDb(c.env.DB);
 	const rows = await db
@@ -36,59 +33,18 @@ castRoutes.get("/cast", async (c) => {
 	return c.json(rows);
 });
 
-castRoutes.post("/titles/:id/cast", authMiddleware, async (c) => {
-	const titleId = Number(c.req.param("id"));
-	const body = castMemberInput.parse(await c.req.json());
-	const db = getDb(c.env.DB);
-
-	const title = await db
-		.select({ id: titles.id })
-		.from(titles)
-		.where(eq(titles.id, titleId))
-		.get();
-	if (!title) return c.json({ error: "Not found" }, 404);
-
-	// sort_order via subquery avoids MAX+1 race condition
-	const [result] = await db
-		.insert(cast_members)
-		.values({
-			title_id: titleId,
-			actor_name: body.actor_name,
-			character_name: body.character_name,
-			sort_order: sql`COALESCE((SELECT MAX(sort_order)+1 FROM cast_members WHERE title_id = ${titleId}), 0)`,
-		})
-		.returning({ id: cast_members.id });
-
-	return c.json(result, 201);
-});
-
-castRoutes.put("/titles/:id/cast", authMiddleware, async (c) => {
-	const titleId = Number(c.req.param("id"));
-	const body = castListInput.parse(await c.req.json());
-	const db = getDb(c.env.DB);
-
-	const title = await db
-		.select({ id: titles.id })
-		.from(titles)
-		.where(eq(titles.id, titleId))
-		.get();
-	if (!title) return c.json({ error: "Not found" }, 404);
-
-	const deleteStmt = db
-		.delete(cast_members)
-		.where(eq(cast_members.title_id, titleId));
-	const insertStmts = buildCastInsertStmts(db, titleId, body.cast);
-	const allStmts: BatchItem<"sqlite">[] = [
-		deleteStmt as BatchItem<"sqlite">,
-		...insertStmts,
-	];
-	await batchAll(db, allStmts);
-	return c.json({ ok: true });
-});
-
-castRoutes.put("/cast/:id", authMiddleware, async (c) => {
-	const id = Number(c.req.param("id"));
+castRoutes.patch("/:id", authMiddleware, async (c) => {
+	const id = idParam.parse(c.req.param("id"));
 	const body = updateCastInput.parse(await c.req.json());
+	const db = getDb(c.env.DB);
+
+	const existing = await db
+		.select({ id: cast_members.id })
+		.from(cast_members)
+		.where(eq(cast_members.id, id))
+		.get();
+	if (!existing) return c.json({ error: "Not found" }, 404);
+
 	// COALESCE pattern keeps sql-level semantics; updated_at uses SQLite datetime()
 	await c.env.DB.prepare(
 		"UPDATE cast_members SET actor_name = COALESCE(?, actor_name), character_name = COALESCE(?, character_name), updated_at = datetime('now') WHERE id = ?",
@@ -98,9 +54,17 @@ castRoutes.put("/cast/:id", authMiddleware, async (c) => {
 	return c.json({ ok: true });
 });
 
-castRoutes.delete("/cast/:id", authMiddleware, async (c) => {
-	const id = Number(c.req.param("id"));
+castRoutes.delete("/:id", authMiddleware, async (c) => {
+	const id = idParam.parse(c.req.param("id"));
 	const db = getDb(c.env.DB);
+
+	const existing = await db
+		.select({ id: cast_members.id })
+		.from(cast_members)
+		.where(eq(cast_members.id, id))
+		.get();
+	if (!existing) return c.json({ error: "Not found" }, 404);
+
 	await db.delete(cast_members).where(eq(cast_members.id, id));
 	return c.json({ ok: true });
 });
