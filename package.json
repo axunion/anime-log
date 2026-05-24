@@ -17,7 +17,7 @@
 	"scripts": {
 		"dev": "vite",
 		"build": "vite build",
-		"typecheck": "vue-tsc --noEmit",
+		"typecheck": "vue-tsc --noEmit -p tsconfig.app.json && tsc --noEmit -p tsconfig.worker.json",
 		"fix": "biome check --write .",
 		"prepare": "lefthook install",
 		"db:generate": "drizzle-kit generate",

@@ -26,12 +26,12 @@ If asked to run any such command, refuse and explain this policy.
 ```bash
 pnpm dev              # Start dev server with Cloudflare Worker + Vite HMR (http://localhost:5173)
 pnpm build            # Build client and worker locally (dist/client/, dist/anime_log/) — do NOT run wrangler deploy
-pnpm typecheck        # TypeScript type check (vue-tsc --noEmit)
+pnpm typecheck        # TypeScript type check (vue-tsc -p tsconfig.app.json + tsc -p tsconfig.worker.json)
 pnpm fix              # Biome lint + auto-fix (all files, respects .gitignore)
 pnpm check            # Biome lint + typecheck (no auto-fix; used in CI)
 
 # Git hooks (lefthook — runs automatically on git commit)
-# pre-commit (parallel): biome check --write on staged files + vue-tsc --noEmit
+# pre-commit (parallel): biome check --write on staged files + pnpm typecheck
 
 pnpm db:generate      # Generate migration SQL from schema changes (drizzle-kit)
 pnpm db:check         # Verify migration journal/snapshot integrity (drizzle-kit)

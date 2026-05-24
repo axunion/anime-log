@@ -92,7 +92,9 @@ historyRoutes.put("/reorder", authMiddleware, async (c) => {
 
 historyRoutes.patch("/:id", authMiddleware, async (c) => {
 	const id = idParam.parse(c.req.param("id"));
-	const body = updateHistory.parse(await c.req.json());
+	// Parse raw body first to distinguish "key absent" (keep) from "key: null" (clear).
+	const rawBody = await c.req.json<Record<string, unknown>>();
+	const body = updateHistory.parse(rawBody);
 	const db = getDb(c.env.DB);
 
 	const existing = await db
@@ -102,11 +104,20 @@ historyRoutes.patch("/:id", authMiddleware, async (c) => {
 		.get();
 	if (!existing) return c.json({ error: "Not found" }, 404);
 
-	// display_name supports explicit null clearing; COALESCE used for year
-	await c.env.DB.prepare(
-		"UPDATE history SET display_name = ?, year = COALESCE(?, year), updated_at = datetime('now') WHERE id = ?",
-	)
-		.bind(body.display_name ?? null, body.year ?? null, id)
-		.run();
+	// display_name: key present → set or clear (null); key absent → keep existing value.
+	// year: COALESCE keeps existing value when omitted.
+	if ("display_name" in rawBody) {
+		await c.env.DB.prepare(
+			"UPDATE history SET display_name = ?, year = COALESCE(?, year), updated_at = datetime('now') WHERE id = ?",
+		)
+			.bind(body.display_name ?? null, body.year ?? null, id)
+			.run();
+	} else {
+		await c.env.DB.prepare(
+			"UPDATE history SET year = COALESCE(?, year), updated_at = datetime('now') WHERE id = ?",
+		)
+			.bind(body.year ?? null, id)
+			.run();
+	}
 	return c.json({ ok: true });
 });

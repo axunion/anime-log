@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import type { AdminTab } from "@shared/constants";
-import { onMounted, ref } from "vue";
+import { ref, watch } from "vue";
 import ConfirmDialog from "../components/ConfirmDialog.vue";
 import { useAuth } from "../composables/useAuth";
 import { useHistory } from "../composables/useHistory";
@@ -24,11 +24,17 @@ function onSelectTitle(id: number | null, name: string) {
 	selectedTitleName.value = name;
 }
 
-onMounted(async () => {
-	if (isAuthenticated.value) {
-		await Promise.all([fetchTitles(), fetchHistory()]);
-	}
-});
+// Fetch data whenever authentication state becomes true.
+// immediate: true handles both "already logged in on load" and "just logged in via form".
+watch(
+	isAuthenticated,
+	async (authenticated) => {
+		if (authenticated) {
+			await Promise.all([fetchTitles(), fetchHistory()]);
+		}
+	},
+	{ immediate: true },
+);
 </script>
 
 <template>

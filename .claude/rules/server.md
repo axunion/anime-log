@@ -156,7 +156,7 @@ await db.insert(foos).values({
 
 ### Partial updates (PATCH)
 
-For NOT NULL fields that may be omitted, use raw SQL with `COALESCE`. For nullable fields that must support explicit null clearing, bind the value directly:
+For NOT NULL fields that may be omitted, use raw SQL with `COALESCE`. For nullable fields, distinguish "key absent" (keep) from "key: null" (clear) by inspecting the raw body before zod parsing:
 
 ```ts
 // NOT NULL partial update — keep COALESCE in raw SQL
@@ -164,8 +164,20 @@ await c.env.DB.prepare(
   "UPDATE titles SET title = COALESCE(?, title), updated_at = datetime('now') WHERE id = ?"
 ).bind(body.title ?? null, id).run()
 
-// Nullable field: omit or null → clear; string → set (Drizzle .set() handles this)
-await db.update(history).set({ display_name: body.display_name ?? null }).where(eq(history.id, id))
+// Nullable field: key present → set/clear; key absent → keep existing.
+// Parse raw JSON first to detect key presence, then validate with zod.
+const rawBody = await c.req.json<Record<string, unknown>>();
+const body = myUpdateSchema.parse(rawBody);
+
+if ("display_name" in rawBody) {
+  await c.env.DB.prepare(
+    "UPDATE history SET display_name = ?, year = COALESCE(?, year), updated_at = datetime('now') WHERE id = ?"
+  ).bind(body.display_name ?? null, body.year ?? null, id).run()
+} else {
+  await c.env.DB.prepare(
+    "UPDATE history SET year = COALESCE(?, year), updated_at = datetime('now') WHERE id = ?"
+  ).bind(body.year ?? null, id).run()
+}
 ```
 
 ## Row types

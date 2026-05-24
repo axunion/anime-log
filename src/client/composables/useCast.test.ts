@@ -79,8 +79,12 @@ describe("useCast", () => {
 			.mockImplementationOnce(() => first.promise)
 			.mockImplementationOnce(() => second.promise);
 
-		const resultsA: VoiceResult[] = [{ title: "A", character_name: "Hero" }];
-		const resultsB: VoiceResult[] = [{ title: "B", character_name: "Rival" }];
+		const resultsA: VoiceResult[] = [
+			{ id: 1, title: "A", character_name: "Hero", title_id: 1, year: 2001 },
+		];
+		const resultsB: VoiceResult[] = [
+			{ id: 2, title: "B", character_name: "Rival", title_id: 2, year: 2002 },
+		];
 		const { loadVoice, voiceResults, selectedActorName } = useCast();
 
 		const p1 = loadVoice("Actor A");
@@ -102,7 +106,9 @@ describe("useCast", () => {
 		const pending = deferred<VoiceResult[]>();
 		mockGet.mockImplementationOnce(() => pending.promise);
 
-		const results: VoiceResult[] = [{ title: "A", character_name: "Hero" }];
+		const results: VoiceResult[] = [
+			{ id: 1, title: "A", character_name: "Hero", title_id: 1, year: 2001 },
+		];
 		const { loadVoice, clearVoice, voiceResults, selectedActorName } =
 			useCast();
 
