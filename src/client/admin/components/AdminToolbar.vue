@@ -1,8 +1,10 @@
 <script setup lang="ts">
-import { Download, Upload } from "lucide-vue-next";
+import { Download, LogOut, Upload } from "lucide-vue-next";
 import Modal from "../../components/Modal.vue";
+import { useAuth } from "../../composables/useAuth";
 import { useDataPortability } from "../../composables/useDataPortability";
 
+const { clearToken } = useAuth();
 const {
 	importModalOpen,
 	dataFile,
@@ -26,6 +28,9 @@ const {
 		<button type="button" class="action-btn" @click="exportData">
 			<Download :size="15" :stroke-width="1.75" />
 			Export
+		</button>
+		<button type="button" class="action-btn action-btn--muted" @click="clearToken" title="ログアウト">
+			<LogOut :size="15" :stroke-width="1.75" />
 		</button>
 	</div>
 
@@ -81,6 +86,16 @@ const {
 .action-btn:hover:not(:disabled) {
 	background: var(--hover-overlay);
 	color: var(--contrast-color);
+}
+
+.action-btn--muted {
+	color: var(--text-muted);
+	opacity: 0.6;
+}
+
+.action-btn--muted:hover {
+	color: var(--danger-color, #e53e3e);
+	opacity: 1;
 }
 
 .import-form {

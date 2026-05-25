@@ -4,7 +4,7 @@ import { del, get, patch, post } from "../lib/api";
 import { useHistory } from "./useHistory";
 
 const titles = ref<Title[]>([]);
-const error = ref<string | null>(null);
+const error = ref<Error | null>(null);
 const loading = ref(false);
 
 export function useTitles() {
@@ -24,8 +24,7 @@ export function useTitles() {
 		try {
 			titles.value = await get<Title[]>("/titles");
 		} catch (err) {
-			error.value =
-				err instanceof Error ? err.message : "Failed to fetch titles";
+			error.value = err instanceof Error ? err : new Error(String(err));
 		} finally {
 			loading.value = false;
 		}

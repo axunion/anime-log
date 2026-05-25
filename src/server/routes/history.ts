@@ -17,7 +17,7 @@ const createHistory = createInsertSchema(history).pick({
 });
 
 const reorderHistory = z.object({
-	ids: z.array(z.number().int()),
+	ids: z.array(z.number().int().positive()),
 });
 
 const updateHistory = createInsertSchema(history)

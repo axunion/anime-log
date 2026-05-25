@@ -12,8 +12,8 @@ const updateCastInput = castMemberInput.partial();
 export const castRoutes = new Hono<{ Bindings: Bindings }>();
 
 castRoutes.get("/", async (c) => {
-	const actor = c.req.query("actor");
-	if (!actor || actor.trim() === "") {
+	const actor = (c.req.query("actor") ?? "").trim();
+	if (!actor) {
 		return c.json({ error: "actor query param required" }, 400);
 	}
 

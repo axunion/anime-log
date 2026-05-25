@@ -3,7 +3,7 @@ import { ref } from "vue";
 import { del, get, patch, post, put } from "../lib/api";
 
 const history = ref<HistoryEntry[]>([]);
-const error = ref<string | null>(null);
+const error = ref<Error | null>(null);
 const loading = ref(false);
 
 export function useHistory() {
@@ -13,8 +13,7 @@ export function useHistory() {
 		try {
 			history.value = await get<HistoryEntry[]>("/history");
 		} catch (err) {
-			error.value =
-				err instanceof Error ? err.message : "Failed to fetch history";
+			error.value = err instanceof Error ? err : new Error(String(err));
 		} finally {
 			loading.value = false;
 		}

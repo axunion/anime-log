@@ -107,7 +107,6 @@ Types, schemas, and constants shared between the server and client. Both sides i
 - `types.ts` — Canonical API response types (`Title`, `CastMember`, `TitleDetail`, `HistoryEntry`, `VoiceResult`, `CastInput`). Import these on both server and client instead of duplicating type definitions.
 - `constants.ts` — `Tab`, `AdminTab` union types derived from `as const` arrays. No Cloudflare-specific types here.
 - `schemas/common.ts` — `idParam = z.coerce.number().int().positive()` for path parameter validation.
-- `schemas/cast.ts` — `castMemberInput` zod schema (shared validation for cast add/update).
 
 Never import Cloudflare Workers types (`D1Database`, etc.) into `src/shared/` — they are not available in the client build.
 

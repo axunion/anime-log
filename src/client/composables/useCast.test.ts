@@ -90,14 +90,18 @@ describe("useCast", () => {
 		const p1 = loadVoice("Actor A");
 		const p2 = loadVoice("Actor B");
 
-		expect(selectedActorName.value).toBe("Actor B");
+		// selectedActorName is updated atomically with voiceResults after the fetch
+		// resolves, not optimistically. Both fetches are pending so it stays null.
+		expect(selectedActorName.value).toBeNull();
 
 		second.resolve(resultsB);
 		await p2;
 		expect(voiceResults.value).toEqual(resultsB);
+		expect(selectedActorName.value).toBe("Actor B");
 
 		first.resolve(resultsA);
 		await p1;
+		// Stale response is discarded — name and results both stay at "B".
 		expect(voiceResults.value).toEqual(resultsB);
 		expect(selectedActorName.value).toBe("Actor B");
 	});

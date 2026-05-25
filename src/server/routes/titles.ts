@@ -79,8 +79,16 @@ titlesRoutes.post("/", authMiddleware, async (c) => {
 		try {
 			await batchAll(db, castStmts);
 		} catch (err) {
-			// Compensate: delete the orphan title row if cast batch fails
-			await db.delete(titles).where(eq(titles.id, titleResult.id));
+			// Compensate: delete the orphan title row if cast batch fails.
+			// Suppress and log compensation errors so the original error is always re-thrown.
+			try {
+				await db.delete(titles).where(eq(titles.id, titleResult.id));
+			} catch (cleanupErr) {
+				console.error(
+					"[POST /api/titles] Compensation delete failed:",
+					cleanupErr,
+				);
+			}
 			throw err;
 		}
 	}

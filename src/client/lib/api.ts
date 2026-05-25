@@ -1,3 +1,5 @@
+import { useAuth } from "../composables/useAuth";
+
 const BASE = "/api";
 
 async function request<T>(path: string, options?: RequestInit): Promise<T> {
@@ -16,7 +18,7 @@ export function get<T>(path: string): Promise<T> {
 }
 
 function getToken(): string {
-	return localStorage.getItem("api_token") ?? "";
+	return useAuth().getToken();
 }
 
 function authHeaders(): HeadersInit {

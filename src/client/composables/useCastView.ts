@@ -21,12 +21,19 @@ export function useCastView() {
 
 	async function loadVoice(actorName: string) {
 		const token = voiceToken.next();
-		selectedActorName.value = actorName;
-		const results = await get<VoiceResult[]>(
-			`/cast?actor=${encodeURIComponent(actorName)}`,
-		);
-		if (token === voiceToken.current()) {
-			voiceResults.value = results;
+		try {
+			const results = await get<VoiceResult[]>(
+				`/cast?actor=${encodeURIComponent(actorName)}`,
+			);
+			// Update name and results atomically inside the race guard.
+			// This prevents a stale heading when the fetch fails or is superseded.
+			if (token === voiceToken.current()) {
+				selectedActorName.value = actorName;
+				voiceResults.value = results;
+			}
+		} catch {
+			// Discard silently — if this token is still current the panel stays blank,
+			// which is preferable to showing a mismatched heading with stale results.
 		}
 	}
 

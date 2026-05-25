@@ -4,16 +4,17 @@ import { useConfirm } from "./useConfirm";
 import { useHistory } from "./useHistory";
 import { useTitles } from "./useTitles";
 
+// Module-level singleton state — all callers share the same modal and import flow.
+const importModalOpen = ref(false);
+const dataFile = ref<File | null>(null);
+const historyFile = ref<File | null>(null);
+const importError = ref("");
+const importing = ref(false);
+
 export function useDataPortability() {
 	const { confirm } = useConfirm();
 	const { fetchTitles } = useTitles();
 	const { fetchHistory } = useHistory();
-
-	const importModalOpen = ref(false);
-	const dataFile = ref<File | null>(null);
-	const historyFile = ref<File | null>(null);
-	const importError = ref("");
-	const importing = ref(false);
 
 	function downloadBlob(data: unknown, filename: string) {
 		const blob = new Blob([JSON.stringify(data, null, 2)], {
@@ -88,8 +89,22 @@ export function useDataPortability() {
 				readJson(dataFile.value),
 				readJson(historyFile.value),
 			]);
-			await post("/import/data?confirm=replace-all", dataPayload);
-			await post("/import/history?confirm=replace-all", historyPayload);
+			// NOTE: These are two separate destructive operations. If the second fails,
+			// titles/cast will already be replaced. Re-import both files to recover.
+			try {
+				await post("/import/data?confirm=replace-all", dataPayload);
+			} catch (err) {
+				throw new Error(
+					`タイトル・キャストのインポートに失敗しました: ${err instanceof Error ? err.message : "不明なエラー"}`,
+				);
+			}
+			try {
+				await post("/import/history?confirm=replace-all", historyPayload);
+			} catch (err) {
+				throw new Error(
+					`タイトルはインポート済みですが履歴のインポートに失敗しました。再度両ファイルをインポートしてください: ${err instanceof Error ? err.message : "不明なエラー"}`,
+				);
+			}
 			importModalOpen.value = false;
 			await Promise.all([fetchTitles(), fetchHistory()]);
 		} catch (err) {

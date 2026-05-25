@@ -1,18 +1,19 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { useAuth } from "../composables/useAuth.ts";
 import { del, get, patch, post, put } from "./api.ts";
 
 const mockFetch = vi.fn();
+const { setToken, clearToken } = useAuth();
 
 beforeEach(() => {
 	mockFetch.mockClear();
 	vi.stubGlobal("fetch", mockFetch);
-	vi.stubGlobal("localStorage", {
-		getItem: vi.fn().mockReturnValue("my-secret-token"),
-	});
+	setToken("my-secret-token");
 });
 
 afterEach(() => {
 	vi.unstubAllGlobals();
+	clearToken();
 });
 
 function makeResponse(body: unknown, ok = true, status = 200) {
