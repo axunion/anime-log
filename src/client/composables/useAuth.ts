@@ -1,5 +1,7 @@
 import { computed, ref } from "vue";
 
+// Token is persisted to localStorage by admin/main.ts on the first visit via the
+// secret URL (/<API_TOKEN>). Subsequent reloads read it back from storage here.
 const token = ref(localStorage.getItem("api_token") ?? "");
 
 export function useAuth() {

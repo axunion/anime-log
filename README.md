@@ -41,7 +41,7 @@ Create a `.dev.vars` file in the project root. This file is gitignored and holds
 API_TOKEN=any-string-you-choose
 ```
 
-`API_TOKEN` is used to authenticate admin API requests locally. Choose any string; you will enter this in the Admin UI login form.
+Choose any string — this becomes the local admin access token.
 
 ### 3. Set up the local database
 
@@ -65,10 +65,12 @@ Opens at **http://localhost:5173**. The dev server runs both Vite (HMR) and the 
 
 | Page | URL |
 |------|-----|
-| Viewer (read-only) | http://localhost:5173/ |
-| Admin UI | http://localhost:5173/admin.html |
+| Viewer (read-only) | `http://localhost:5173/` |
+| Admin UI | `http://localhost:5173/<API_TOKEN>` |
 
-The Admin UI shows a login form on first visit. Enter the `API_TOKEN` value from your `.dev.vars` file. The token is stored in `localStorage` so you only need to enter it once.
+Replace `<API_TOKEN>` with the value you set in `.dev.vars`. For example, if you used `API_TOKEN=mysecret`, open `http://localhost:5173/mysecret`.
+
+Bookmark this URL — it authenticates automatically on every visit and there is no separate login step.
 
 ### 5. Load initial data
 
@@ -158,24 +160,23 @@ These steps are required once when setting up a new environment.
 **1. Cloudflare prerequisites:**
 
 - [Sign up](https://dash.cloudflare.com/sign-up) for a Cloudflare account (free tier is sufficient)
-- Log in with Wrangler: `wrangler login`
 - Ensure Workers & D1 are enabled on your account
 
 **2. Create the D1 database:**
 
 ```bash
-wrangler d1 create anime-db
+pnpm exec wrangler d1 create anime-db
 ```
 
 Note the `database_id` from the output — you'll need it in step 4.
 
-**3. Set the admin API token (Cloudflare secret):**
+**3. Set the admin token (Cloudflare Dashboard):**
 
-```bash
-wrangler secret put API_TOKEN
-```
+Go to **Cloudflare Dashboard → Workers & Pages → `anime-log` → Settings → Variables and Secrets**, then add a secret named `API_TOKEN`.
 
-Enter any secure random string when prompted. This is the token you will use in the Admin UI.
+Use a random string of 16–24 characters (e.g. generated with `openssl rand -hex 12`). Keep this value — it is the URL path used to access the Admin UI in production.
+
+> Do not use `wrangler secret put` from a local machine. All secrets for this project are managed through the Cloudflare Dashboard to keep local and production environments fully separated.
 
 **4. Register GitHub Secrets:**
 
@@ -184,16 +185,28 @@ Go to your repository → Settings → Secrets and variables → Actions, and ad
 | Secret name | Value |
 |---|---|
 | `CLOUDFLARE_API_TOKEN` | A Cloudflare API token with `Workers Scripts:Edit` and `D1:Edit` permissions (create at Cloudflare dashboard → My Profile → API Tokens) |
-| `CLOUDFLARE_ACCOUNT_ID` | Your Cloudflare account ID (shown in the dashboard sidebar or via `wrangler whoami`) |
+| `CLOUDFLARE_ACCOUNT_ID` | Your Cloudflare account ID (shown in the dashboard sidebar) |
 | `CLOUDFLARE_D1_DATABASE_ID` | The `database_id` from step 2 |
 
 **5. Trigger the first deploy:**
 
 Push to `main` or trigger manually from the GitHub Actions tab. The deploy pipeline injects the real database ID, applies D1 migrations, builds, and deploys automatically. The Worker URL is shown in the deploy step output (e.g. `https://anime-log.<your-subdomain>.workers.dev`).
 
-**6. Seed initial data (optional):**
+**6. Access the Admin UI in production:**
 
-Open the deployed Admin UI, log in with the `API_TOKEN` you set in step 3, then use **Import** to upload `data.json` and `history.json`.
+Open `https://<your-worker-url>/<API_TOKEN>` in your browser and bookmark it. The page authenticates automatically — no separate login step is needed on subsequent visits.
+
+**7. Seed initial data (optional):**
+
+Once logged in, use the Admin UI **Import** button to upload `data.json` and `history.json`.
+
+### Rotating the admin token
+
+If you need to change the `API_TOKEN`:
+
+1. Update the secret value in **Cloudflare Dashboard → Workers & Pages → `anime-log` → Settings → Variables and Secrets**
+2. Trigger a redeploy (push a commit or use `workflow_dispatch` from the Actions tab)
+3. Update your bookmark with the new URL
 
 ### Day-to-day workflow
 

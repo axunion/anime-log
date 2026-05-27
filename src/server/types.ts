@@ -4,6 +4,7 @@ import type { cast_members, history, titles } from "./db/schema";
 export type Bindings = {
 	DB: D1Database;
 	API_TOKEN: string;
+	ASSETS: Fetcher;
 };
 
 export type Title = InferSelectModel<typeof titles>;

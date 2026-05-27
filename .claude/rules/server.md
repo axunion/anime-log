@@ -4,6 +4,30 @@ paths: ["src/server/**"]
 
 # Server Conventions (Hono + Cloudflare D1 + Drizzle ORM)
 
+## Admin page routing
+
+`src/server/index.ts` contains two special routes for the admin page (not in any route module):
+
+- `GET /admin.html` → returns `new Response(null, { status: 404 })` directly (plain 404, bypasses ASSETS, hides existence)
+- `GET /:secret` → compares `:secret` against `c.env.API_TOKEN` with `timingSafeEqual`. On match: fetches `admin.html` from ASSETS, checks `resp.ok`, injects `<meta name="x-api-token" content="...">` (HTML-attribute-escaped via `escapeAttr`), propagates ASSETS response headers (including CSP from `public/_headers`), and returns the modified HTML. On no-match: proxies to ASSETS for the same path so single-segment static files (favicon.svg, index.html, etc.) are served normally. **Note:** inline-segment params (`/prefix-:secret`) do not work in `@cloudflare/vite-plugin` dev mode; always use full-segment params (`/:param`).
+
+Token injection uses `<meta>` (not `<script>`) to stay compatible with `Content-Security-Policy: default-src 'self'` set in `public/_headers`. The token is read from the meta tag in `src/client/admin/main.ts` (admin-only entry point) and persisted to localStorage via `useAuth().setToken()`.
+
+The ASSETS binding is required in `Bindings` (`src/server/types.ts`) and configured in `wrangler.toml`:
+```toml
+[assets]
+directory = "dist/client"
+binding = "ASSETS"
+run_worker_first = true
+```
+
+`run_worker_first = true` makes the Worker intercept all requests. The `app.notFound` handler proxies unmatched **non-`/api`** paths to `c.env.ASSETS.fetch()` to serve static files. Paths starting with `/api` always return a JSON 404 to preserve the API contract. In test environments where ASSETS is not bound, all paths fall back to JSON 404.
+
+The global security-header middleware clones `c.res` before setting headers (ASSETS responses have immutable headers):
+```ts
+c.res = new Response(c.res.body, { status: c.res.status, statusText: c.res.statusText, headers });
+```
+
 ## Auth middleware
 
 - `authMiddleware` is required on all `POST` / `PATCH` / `DELETE` handlers

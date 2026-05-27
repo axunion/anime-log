@@ -112,8 +112,8 @@ Never import Cloudflare Workers types (`D1Database`, etc.) into `src/shared/` �
 
 ### Server (`src/server/`)
 
-- `index.ts` — Hono app entry. Defines `Bindings = { DB: D1Database; API_TOKEN: string }` and mounts three route modules. Global `onError` handles ZodError → 400 and UNIQUE constraint → 409.
-- `middleware/auth.ts` — Bearer token middleware for write endpoints. Token stored as a Cloudflare secret (`wrangler secret put API_TOKEN`).
+- `index.ts` — Hono app entry. Defines `Bindings = { DB: D1Database; API_TOKEN: string; ASSETS: Fetcher }` and mounts three route modules. Global `onError` handles ZodError → 400 and UNIQUE constraint → 409. Admin page routing and ASSETS proxy are handled here (not in route modules).
+- `middleware/auth.ts` — Bearer token middleware for write endpoints. Token configured via Cloudflare Dashboard in production, `.dev.vars` in local development (see Deployment section).
 - `routes/titles.ts` — CRUD for titles + per-title cast routes (`GET/POST/PUT /:id/cast`).
 - `routes/cast.ts` — Cross-title voice actor search (`GET /api/cast?actor=...`) and individual cast PATCH/DELETE.
 - `routes/history.ts` — Watch history CRUD with `PUT /api/history/reorder` (accepts `{ ids: number[] }` for bulk sort_order update via D1 batch).
@@ -207,11 +207,31 @@ on:
 ### Setup checklist (complete before activating CI/CD)
 
 1. `wrangler d1 create anime-db` → note the `database_id`
-2. `wrangler secret put API_TOKEN` (Cloudflare secret for the Worker)
+2. Set `API_TOKEN` via **Cloudflare Dashboard** (not `wrangler secret put` — never run local commands that write to production):
+   - Workers & Pages → `anime-log` → Settings → Variables and Secrets → Add → `API_TOKEN`
+   - Use a random 16–24 character alphanumeric string (e.g., `openssl rand -hex 12`)
+   - This value serves as both the API write token and the admin URL path segment (see below)
 3. Register three GitHub Secrets: `CLOUDFLARE_API_TOKEN`, `CLOUDFLARE_ACCOUNT_ID`, `CLOUDFLARE_D1_DATABASE_ID`
 4. Move workflow files into `.github/workflows/` (see above)
 5. Test a manual deploy via `workflow_dispatch` from the Actions tab
 6. Restore the `workflow_run` trigger in `deploy.yml`
+
+### Admin page access
+
+The admin page is not served at `/admin.html`. Access it via the secret URL:
+
+```
+https://<your-worker>.workers.dev/<API_TOKEN>
+```
+
+- Bookmark this URL; subsequent visits auto-authenticate (token stored in `localStorage`)
+- Wrong token or any other path → serves static file or 404 (admin existence is not revealed)
+- To rotate the token: update `API_TOKEN` in Cloudflare Dashboard → re-bookmark the new URL
+
+For local development, use your `.dev.vars` value:
+```
+http://localhost:5173/<API_TOKEN from .dev.vars>
+```
 
 ### Day-to-day (once CI/CD is active)
 

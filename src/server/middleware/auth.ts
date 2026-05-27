@@ -3,7 +3,7 @@ import type { Bindings } from "../types";
 
 const enc = new TextEncoder();
 
-function timingSafeEqual(a: string, b: string): boolean {
+export function timingSafeEqual(a: string, b: string): boolean {
 	const ab = enc.encode(a);
 	const bb = enc.encode(b);
 	const len = Math.max(ab.byteLength, bb.byteLength);

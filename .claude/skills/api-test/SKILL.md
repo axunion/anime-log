@@ -40,9 +40,9 @@ curl -s http://localhost:5173/api/history
 
 ### Write endpoints (Bearer token required)
 
-Ask the user for their `API_TOKEN` if not already known in this session. The token is stored
-as a Cloudflare secret (`wrangler secret put API_TOKEN`). In dev, the user sets it in the
-Admin UI token field (any non-empty string works locally).
+Ask the user for their `API_TOKEN` if not already known in this session. In dev, the value is
+set in `.dev.vars` (`API_TOKEN=...`). In production, it is configured via the Cloudflare
+Dashboard (Workers & Pages → anime-log → Settings → Variables and Secrets).
 
 ```bash
 TOKEN="paste-token-here"
