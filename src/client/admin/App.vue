@@ -1,17 +1,14 @@
 <script setup lang="ts">
 import type { AdminTab } from "@shared/constants";
-import { ref, watch } from "vue";
+import { onMounted, ref } from "vue";
 import ConfirmDialog from "../components/ConfirmDialog.vue";
-import { useAuth } from "../composables/useAuth";
 import { useHistory } from "../composables/useHistory";
 import { useTitles } from "../composables/useTitles";
 import AdminTabs from "./components/AdminTabs.vue";
 import CastEditor from "./components/CastEditor.vue";
 import HistoryManager from "./components/HistoryManager.vue";
-import Login from "./components/Login.vue";
 import TitleManager from "./components/TitleManager.vue";
 
-const { isAuthenticated } = useAuth();
 const { fetchTitles } = useTitles();
 const { fetchHistory } = useHistory();
 
@@ -24,22 +21,13 @@ function onSelectTitle(id: number | null, name: string) {
 	selectedTitleName.value = name;
 }
 
-// Fetch data whenever authentication state becomes true.
-// immediate: true handles both "already logged in on load" and "just logged in via form".
-watch(
-	isAuthenticated,
-	async (authenticated) => {
-		if (authenticated) {
-			await Promise.all([fetchTitles(), fetchHistory()]);
-		}
-	},
-	{ immediate: true },
-);
+onMounted(async () => {
+	await Promise.all([fetchTitles(), fetchHistory()]);
+});
 </script>
 
 <template>
-	<Login v-if="!isAuthenticated" />
-	<div v-else class="admin-root">
+	<div class="admin-root">
 		<AdminTabs v-model="activeTab" />
 		<main class="admin-main" :class="{ 'admin-main--single': activeTab === 'history' }">
 			<div v-show="activeTab === 'data'" style="display: contents">

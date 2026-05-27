@@ -123,11 +123,11 @@ onMounted(fetchItems);
 - Include add/update/delete controls
 - Call composable functions for all mutations
 - Use `useConfirm()` for destructive actions (never `window.confirm`)
-- Authentication is handled by the admin `App.vue` gate — no per-component auth check needed
+- Authentication uses the secret URL (`/<API_TOKEN>`) — no per-component auth check needed; `App.vue` renders unconditionally
 
 **Wiring up:** Import and register the component in the relevant `App.vue`.
 - Viewer `App.vue` composes `useTitles`, `useCastView`, `useHistory` — add your composable here
-- Admin `App.vue` follows the same pattern; `isAuthenticated` guard is already in place
+- Admin `App.vue` follows the same pattern; mount your component inside the existing layout
 
 ---
 

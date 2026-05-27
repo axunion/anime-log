@@ -3,7 +3,7 @@ import { useAuth } from "../composables/useAuth.ts";
 import { del, get, patch, post, put } from "./api.ts";
 
 const mockFetch = vi.fn();
-const { setToken, clearToken } = useAuth();
+const { setToken } = useAuth();
 
 beforeEach(() => {
 	mockFetch.mockClear();
@@ -13,7 +13,7 @@ beforeEach(() => {
 
 afterEach(() => {
 	vi.unstubAllGlobals();
-	clearToken();
+	setToken("");
 });
 
 function makeResponse(body: unknown, ok = true, status = 200) {

@@ -41,14 +41,9 @@ Always in this order: `<script>` → `<template>` → `<style scoped>`
 
 ## Authentication
 
-Use `useAuth()` to check authentication state or get the token. Never access `localStorage` directly in a component:
+Admin authentication uses a secret URL (`/<API_TOKEN>`). The server injects the token via `<meta name="x-api-token">`, and `admin/main.ts` calls `setToken()` before mounting the Vue app. `App.vue` renders unconditionally — there is no login gate.
 
-```ts
-import { useAuth } from "../../composables/useAuth";
-const { isAuthenticated } = useAuth();
-```
-
-The admin root `App.vue` gates the entire UI behind `<Login v-if="!isAuthenticated" />`.
+Components that need the token (e.g. for display) can call `useAuth().getToken()`, but most write operations go through `lib/api.ts` which reads the token automatically. Never access `localStorage` directly in a component.
 
 ## Admin CRUD add forms
 

@@ -129,7 +129,7 @@ Two independent Vue 3 apps (MPA). Each mounts via `createApp(App).mount("#app")`
 - `admin.html` + `admin/` — CRUD admin UI. Token stored in `localStorage` as `api_token` via `useAuth`.
 
 - `composables/` — shared Vue composables (module-level singleton pattern):
-  - `useAuth.ts` — token state, `isAuthenticated`, `setToken`, `clearToken`.
+  - `useAuth.ts` — token state, `setToken`, `getToken`. Token is injected via `<meta name="x-api-token">` on secret URL access and persisted to `localStorage`.
   - `useFilter.ts` — reactive text filter with multi-word regex.
   - `useTitles.ts` — title list state with `error`/`loading`.
   - `useCastView.ts` — viewer: selected title detail + voice actor search, race guard.
