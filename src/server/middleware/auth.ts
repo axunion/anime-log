@@ -14,6 +14,10 @@ export function timingSafeEqual(a: string, b: string): boolean {
 
 export const authMiddleware = createMiddleware<{ Bindings: Bindings }>(
   async (c, next) => {
+    // Fail closed: an unset token must never match anything.
+    if (!c.env.API_TOKEN) {
+      return c.json({ error: "Server misconfigured" }, 500);
+    }
     const authHeader = c.req.header("Authorization");
     if (!authHeader?.startsWith("Bearer ")) {
       return c.json({ error: "Unauthorized" }, 401);

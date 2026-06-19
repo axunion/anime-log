@@ -6,7 +6,8 @@ import { Hono } from "hono";
 import { z } from "zod";
 import { getDb } from "../db/client";
 import { cast_members, titles } from "../db/schema";
-import { batchAll, buildCastInsertStmts, castMemberInput } from "../lib/cast";
+import { batchAll } from "../lib/batch";
+import { buildCastInsertStmts, castMemberInput } from "../lib/cast";
 import { authMiddleware } from "../middleware/auth";
 import type { Bindings } from "../types";
 

@@ -6,7 +6,7 @@ import { Hono } from "hono";
 import { z } from "zod";
 import { getDb } from "../db/client";
 import { history, titles } from "../db/schema";
-import { batchAll } from "../lib/cast";
+import { batchAll } from "../lib/batch";
 import { authMiddleware } from "../middleware/auth";
 import type { Bindings } from "../types";
 
@@ -79,6 +79,20 @@ historyRoutes.delete("/:id", authMiddleware, async (c) => {
 historyRoutes.put("/reorder", authMiddleware, async (c) => {
   const body = reorderHistory.parse(await c.req.json());
   const db = getDb(c.env.DB);
+
+  // Validate that ids exactly cover the current history set — no more, no fewer.
+  const existing = await db.select({ id: history.id }).from(history);
+  const existingIds = new Set(existing.map((h) => h.id));
+  const valid =
+    body.ids.length === existingIds.size &&
+    body.ids.every((id) => existingIds.has(id));
+  if (!valid) {
+    return c.json(
+      { error: "ids must exactly match the current history set" },
+      400,
+    );
+  }
+
   const stmts: BatchItem<"sqlite">[] = body.ids.map(
     (id, i) =>
       db

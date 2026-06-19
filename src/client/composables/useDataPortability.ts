@@ -9,7 +9,9 @@ const importModalOpen = ref(false);
 const dataFile = ref<File | null>(null);
 const historyFile = ref<File | null>(null);
 const importError = ref("");
+const exportError = ref("");
 const importing = ref(false);
+const exporting = ref(false);
 
 export function useDataPortability() {
   const { confirm } = useConfirm();
@@ -29,12 +31,21 @@ export function useDataPortability() {
   }
 
   async function exportData() {
-    const [data, historyData] = await Promise.all([
-      get("/export/data"),
-      get("/export/history"),
-    ]);
-    downloadBlob(data, "data.json");
-    downloadBlob(historyData, "history.json");
+    exportError.value = "";
+    exporting.value = true;
+    try {
+      const [data, historyData] = await Promise.all([
+        get("/export/data"),
+        get("/export/history"),
+      ]);
+      downloadBlob(data, "data.json");
+      downloadBlob(historyData, "history.json");
+    } catch (err) {
+      exportError.value =
+        err instanceof Error ? err.message : "エクスポートに失敗しました";
+    } finally {
+      exporting.value = false;
+    }
   }
 
   function openImportModal() {
@@ -46,7 +57,10 @@ export function useDataPortability() {
 
   function makeFileHandler(target: Ref<File | null>) {
     return (e: Event) => {
-      target.value = (e.target as HTMLInputElement).files?.[0] ?? null;
+      const input = e.target as HTMLInputElement;
+      target.value = input.files?.[0] ?? null;
+      // Reset so re-selecting the same file always fires a new change event.
+      input.value = "";
     };
   }
 
@@ -120,7 +134,9 @@ export function useDataPortability() {
     dataFile,
     historyFile,
     importError,
+    exportError,
     importing,
+    exporting,
     exportData,
     openImportModal,
     onDataFileChange,

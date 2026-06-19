@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onBeforeUnmount, watch } from "vue";
+import { nextTick, onBeforeUnmount, ref, watch } from "vue";
 
 const props = withDefaults(
   defineProps<{
@@ -17,6 +17,13 @@ const emit = defineEmits<{
   close: [];
 }>();
 
+const dialogRef = ref<HTMLElement | null>(null);
+let previouslyFocused: HTMLElement | null = null;
+let focusableEls: HTMLElement[] = [];
+
+const FOCUSABLE =
+  'button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])';
+
 function close() {
   emit("update:open", false);
   emit("close");
@@ -30,17 +37,41 @@ function onKeydown(e: KeyboardEvent) {
   if (props.closeOnEsc && e.key === "Escape") {
     e.preventDefault();
     close();
+    return;
+  }
+  if (e.key === "Tab" && focusableEls.length > 0) {
+    const first = focusableEls[0];
+    const last = focusableEls[focusableEls.length - 1];
+    if (e.shiftKey && document.activeElement === first) {
+      e.preventDefault();
+      last.focus();
+    } else if (!e.shiftKey && document.activeElement === last) {
+      e.preventDefault();
+      first.focus();
+    }
   }
 }
 
 watch(
   () => props.open,
-  (isOpen) => {
+  async (isOpen) => {
     document.body.style.overflow = isOpen ? "hidden" : "";
     if (isOpen) {
       document.addEventListener("keydown", onKeydown);
+      previouslyFocused = document.activeElement as HTMLElement;
+      // Wait for the dialog to mount before caching focusable elements and focusing.
+      await nextTick();
+      if (dialogRef.value) {
+        focusableEls = Array.from(
+          dialogRef.value.querySelectorAll<HTMLElement>(FOCUSABLE),
+        );
+      }
+      (focusableEls[0] ?? dialogRef.value)?.focus();
     } else {
       document.removeEventListener("keydown", onKeydown);
+      focusableEls = [];
+      previouslyFocused?.focus();
+      previouslyFocused = null;
     }
   },
 );
@@ -56,11 +87,13 @@ onBeforeUnmount(() => {
 		<Transition name="modal">
 			<div v-if="open" class="modal-overlay" @click.self="onOverlayClick">
 				<div
+					ref="dialogRef"
 					class="modal-dialog"
 					:class="`modal-dialog--${size}`"
 					role="dialog"
 					aria-modal="true"
 					:aria-labelledby="title ? 'modal-title' : undefined"
+					tabindex="-1"
 				>
 					<div class="modal-header">
 						<slot name="header">
@@ -106,6 +139,7 @@ onBeforeUnmount(() => {
 	display: flex;
 	flex-direction: column;
 	max-height: calc(100vh - 32px);
+	outline: none;
 	padding: 1.5em;
 	width: 100%;
 }

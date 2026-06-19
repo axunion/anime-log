@@ -102,6 +102,42 @@ describe("POST /api/import/data", () => {
     expect(history).toHaveLength(0);
   });
 
+  it("returns 400 for duplicate titles in payload", async () => {
+    const res = await callApp(typedEnv, {
+      method: "POST",
+      path: "/import/data?confirm=replace-all",
+      auth: true,
+      body: [
+        { title: "Same Anime", year: 2024, cast: [] },
+        { title: "Same Anime", year: 2025, cast: [] },
+      ],
+    });
+    expect(res.status).toBe(400);
+    const data = (await res.json()) as { error: string };
+    expect(data.error).toMatch(/Duplicate/);
+  });
+
+  it("preserves existing data when payload has duplicate titles", async () => {
+    await seedTitle(typedEnv.DB, { title: "Existing Anime", year: 2000 });
+
+    const res = await callApp(typedEnv, {
+      method: "POST",
+      path: "/import/data?confirm=replace-all",
+      auth: true,
+      body: [
+        { title: "Dup", year: 2024, cast: [] },
+        { title: "Dup", year: 2025, cast: [] },
+      ],
+    });
+    expect(res.status).toBe(400);
+
+    // Existing data must be untouched — the duplicate check fires before deletion.
+    const exported = await callApp(typedEnv, { path: "/export/data" });
+    const rows = (await exported.json()) as { title: string }[];
+    expect(rows).toHaveLength(1);
+    expect(rows[0].title).toBe("Existing Anime");
+  });
+
   it("returns 400 for invalid body (empty title)", async () => {
     const res = await callApp(typedEnv, {
       method: "POST",

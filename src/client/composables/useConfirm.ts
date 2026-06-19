@@ -13,6 +13,11 @@ let resolver: ((ok: boolean) => void) | null = null;
 
 export function useConfirm() {
   function confirm(opts: ConfirmOptions): Promise<boolean> {
+    // Dismiss any pending dialog before opening a new one so its Promise resolves.
+    if (resolver) {
+      resolver(false);
+      resolver = null;
+    }
     state.value = opts;
     return new Promise((resolve) => {
       resolver = resolve;

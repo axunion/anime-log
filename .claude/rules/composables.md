@@ -57,16 +57,48 @@ async function fetchItems() {
 
 ## Mutation → re-fetch pattern
 
-After any write, always re-fetch to keep module-level state in sync:
+After any write, always re-fetch to keep module-level state in sync. Extract a `mutate()` helper inside the composable to avoid repeating the error-normalisation and re-throw logic. `fetchXxx` itself catches and does not re-throw, so the catch only fires for the write.
 
 ```ts
+async function mutate(op: () => Promise<unknown>) {
+  try {
+    await op();
+  } catch (err) {
+    error.value = err instanceof Error ? err : new Error(String(err));
+    throw err;            // re-throw so components can react to failures
+  }
+}
+
 async function addItem(payload: { some_text: string }) {
-  await post("/my", payload);
-  await fetchItems();   // re-fetch, never mutate the array directly
+  await mutate(async () => {
+    await post("/my", payload);
+    await fetchItems();   // re-fetch, never mutate the array directly
+  });
 }
 ```
 
+Callers that perform cleanup on success (e.g. clearing a form) must wrap the call in try/catch and return early on failure:
+
+```ts
+async function onAdd() {
+  try {
+    await addItem(payload);
+  } catch {
+    return; // error shown via App.vue banner; don't clear the form
+  }
+  // clear form fields here
+}
+```
+
+Callers that only display errors via the App.vue banner (no cleanup) may omit the try/catch, but template-bound event handlers (`@click="someAction"`) that call re-throwing mutations must still wrap to prevent unhandled rejections.
+
 For partial updates, use `patch()` not `put()`. Use `put()` only for full-replacement operations (e.g. reorder endpoints that replace the entire ordered set).
+
+## Known intentional deviations
+
+**`useCastEdit` — caller-synced, no re-fetch**: `useCastEdit` write operations (add, update, delete, replace cast) do not call `loadCast` after each write. Instead the caller (`CastEditor.vue`) rebuilds `savedRows` locally from the PATCH/PUT response. This is a deliberate split to keep cast write operations side-effect-free. If you add a new caller, ensure it re-fetches via `useCastView.loadCast` after any mutation.
+
+**`useAuth` — non-reactive token**: `useAuth.token` is a plain `let` (not a `ref`). The token is injected via `<meta name="x-api-token">` and set via `setToken()` in `admin/main.ts` **before** the Vue app mounts. No component reads the token reactively, so a `ref` is unnecessary. If a future feature needs to display or react to the token, convert to `ref` at that point.
 
 ## Race condition guard
 

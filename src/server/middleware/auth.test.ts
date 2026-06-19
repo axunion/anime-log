@@ -27,6 +27,24 @@ describe("authMiddleware", () => {
     await applySchema(typedEnv.DB);
   });
 
+  it("returns 500 when API_TOKEN is not configured", async () => {
+    const envWithoutToken = { ...typedEnv, API_TOKEN: "" };
+    const res = await app.fetch(
+      new Request("http://localhost/api/titles", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: "Bearer ",
+        },
+        body: JSON.stringify({ title: "Test", year: 2020 }),
+      }),
+      envWithoutToken,
+    );
+    expect(res.status).toBe(500);
+    const data = (await res.json()) as { error: string };
+    expect(data.error).toMatch(/misconfigured/);
+  });
+
   it("returns 401 when Authorization header is missing", async () => {
     const res = await postTitles();
     expect(res.status).toBe(401);

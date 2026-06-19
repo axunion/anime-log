@@ -16,6 +16,10 @@ app.use("*", async (c, next) => {
   const headers = new Headers(c.res.headers);
   headers.set("X-Content-Type-Options", "nosniff");
   headers.set("X-Frame-Options", "DENY");
+  headers.set(
+    "Strict-Transport-Security",
+    "max-age=31536000; includeSubDomains",
+  );
   c.res = new Response(c.res.body, {
     status: c.res.status,
     statusText: c.res.statusText,
@@ -49,6 +53,11 @@ function escapeAttr(s: string): string {
 app.get("/:secret", async (c) => {
   // Guard: ASSETS is not available in test environments.
   if (!c.env.ASSETS) return c.json({ error: "Not Found" }, 404);
+  // Fail closed: if API_TOKEN is not configured, never grant admin access.
+  if (!c.env.API_TOKEN) {
+    const assetUrl = new URL(c.req.path, c.req.url);
+    return c.env.ASSETS.fetch(assetUrl.toString());
+  }
   const secret = c.req.param("secret") ?? "";
   if (timingSafeEqual(secret, c.env.API_TOKEN)) {
     const assetUrl = new URL("/admin.html", c.req.url);

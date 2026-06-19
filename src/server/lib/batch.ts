@@ -7,6 +7,11 @@ export function asBatch(
   return items as [BatchItem<"sqlite">, ...BatchItem<"sqlite">[]];
 }
 
+// Drizzle's delete statement type doesn't satisfy BatchItem<"sqlite"> directly.
+export function asDeleteBatch(stmt: unknown): BatchItem<"sqlite"> {
+  return stmt as BatchItem<"sqlite">;
+}
+
 export async function batchAll(
   db: DB,
   stmts: BatchItem<"sqlite">[],

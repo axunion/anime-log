@@ -34,7 +34,7 @@ watch(
 		<dl class="voice-list">
 			<VoiceItem
 				v-for="(item, i) in displayResults"
-				:key="i"
+				:key="`${item.title_id}-${i}`"
 				:title-name="item.title"
 				:character-name="item.character_name"
 			/>

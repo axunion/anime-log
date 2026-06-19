@@ -30,22 +30,37 @@ export function useTitles() {
     }
   }
 
+  async function mutate(op: () => Promise<unknown>) {
+    try {
+      await op();
+    } catch (err) {
+      error.value = err instanceof Error ? err : new Error(String(err));
+      throw err;
+    }
+  }
+
   async function addTitle(title: string, year: number) {
-    await post("/titles", { title, year });
-    await fetchTitles();
+    await mutate(async () => {
+      await post("/titles", { title, year });
+      await fetchTitles();
+    });
   }
 
   async function updateTitle(
     id: number,
     fields: { title?: string; year?: number },
   ) {
-    await patch(`/titles/${id}`, fields);
-    await fetchTitles();
+    await mutate(async () => {
+      await patch(`/titles/${id}`, fields);
+      await fetchTitles();
+    });
   }
 
   async function deleteTitle(id: number) {
-    await del(`/titles/${id}`);
-    await Promise.all([fetchTitles(), fetchHistory()]);
+    await mutate(async () => {
+      await del(`/titles/${id}`);
+      await Promise.all([fetchTitles(), fetchHistory()]);
+    });
   }
 
   return {

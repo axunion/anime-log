@@ -28,10 +28,15 @@ The global security-header middleware clones `c.res` before setting headers (ASS
 c.res = new Response(c.res.body, { status: c.res.status, statusText: c.res.statusText, headers });
 ```
 
+The middleware sets `Strict-Transport-Security` on all responses. CSP is not set by the middleware — static assets get CSP from `public/_headers` (production only; Vite dev server does not apply `_headers`).
+
+The `/:secret` handler fails closed when `API_TOKEN` is unset — it proxies to ASSETS without comparing, so an unconfigured deployment never accidentally grants admin access.
+
 ## Auth middleware
 
 - `authMiddleware` is required on all `POST` / `PATCH` / `DELETE` handlers
 - `GET` handlers must NOT use `authMiddleware`
+- `authMiddleware` returns 500 `"Server misconfigured"` if `API_TOKEN` is unset (fail closed)
 
 ```ts
 titlesRoutes.post("/", authMiddleware, async (c) => { ... })
@@ -137,11 +142,17 @@ await db.delete(titles).where(eq(titles.id, id))
 Use `db.batch()` for multiple related statements. Wrap chunks with `asBatch()` from `lib/batch.ts` to satisfy the non-empty tuple type. Use `batchAll()` to handle the 100-statement-per-call limit automatically:
 
 ```ts
-import { asBatch, batchAll } from "../lib/batch"
+import { asDeleteBatch, batchAll } from "../lib/batch"
 import { buildCastInsertStmts } from "../lib/cast"
 
 const stmts = buildCastInsertStmts(db, titleId, body.cast)
 await batchAll(db, stmts)
+```
+
+Drizzle's delete statement type does not satisfy `BatchItem<"sqlite">` directly. Use `asDeleteBatch()` instead of `as unknown as BatchItem<"sqlite">`:
+
+```ts
+await batchAll(db, [asDeleteBatch(db.delete(myTable)), ...insertStmts]);
 ```
 
 ### Bulk INSERT and the D1 parameter limit

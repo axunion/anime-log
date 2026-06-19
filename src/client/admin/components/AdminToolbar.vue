@@ -8,7 +8,9 @@ const {
   dataFile,
   historyFile,
   importError,
+  exportError,
   importing,
+  exporting,
   exportData,
   openImportModal,
   onDataFileChange,
@@ -23,11 +25,12 @@ const {
 			<Upload :size="15" :stroke-width="1.75" />
 			Import
 		</button>
-		<button type="button" class="action-btn" @click="exportData">
+		<button type="button" class="action-btn" :disabled="exporting" @click="exportData">
 			<Download :size="15" :stroke-width="1.75" />
-			Export
+			{{ exporting ? "..." : "Export" }}
 		</button>
 	</div>
+	<p v-if="exportError" class="export-error">{{ exportError }}</p>
 
 	<Modal v-model:open="importModalOpen" title="データをインポート" size="sm">
 		<div class="import-form">
@@ -112,6 +115,13 @@ const {
 	color: var(--danger-color, #e53e3e);
 	font-size: 13px;
 	margin: 0;
+}
+
+.export-error {
+	color: var(--danger-color, #e53e3e);
+	font-size: 12px;
+	margin: 0;
+	padding: 0 0.5em;
 }
 
 .btn-cancel,

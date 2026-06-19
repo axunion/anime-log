@@ -4,7 +4,8 @@ import { Hono } from "hono";
 import { z } from "zod";
 import { getDb } from "../db/client";
 import { history, titles } from "../db/schema";
-import { batchAll, buildCastInsertStmts } from "../lib/cast";
+import { asDeleteBatch, batchAll } from "../lib/batch";
+import { buildCastInsertStmts } from "../lib/cast";
 import { authMiddleware } from "../middleware/auth";
 import type { Bindings } from "../types";
 
@@ -12,7 +13,7 @@ export const importRoutes = new Hono<{ Bindings: Bindings }>();
 
 const importDataItem = createInsertSchema(titles, {
   title: z.string().min(1),
-  year: z.coerce.number().int(),
+  year: z.coerce.number().int().min(1900).max(2100),
 })
   .pick({ title: true, year: true })
   .extend({
@@ -21,7 +22,7 @@ const importDataItem = createInsertSchema(titles, {
 const importDataSchema = z.array(importDataItem);
 
 const importHistoryItem = createInsertSchema(history, {
-  year: z.coerce.number().int(),
+  year: z.coerce.number().int().min(1900).max(2100),
 })
   .pick({ year: true })
   .extend({
@@ -38,11 +39,14 @@ importRoutes.post("/data", authMiddleware, async (c) => {
     );
   }
   const body = importDataSchema.parse(await c.req.json());
+
+  // Detect duplicate titles before any destructive operation.
+  const titleSet = new Set(body.map((e) => e.title));
+  if (titleSet.size !== body.length) {
+    return c.json({ error: "Duplicate titles in payload" }, 400);
+  }
+
   const db = getDb(c.env.DB);
-
-  await db.delete(titles);
-
-  if (body.length === 0) return c.json({ imported: 0 });
 
   // D1 limits bound parameters to 100 per statement; titles has 2 columns → max 50 rows per chunk.
   const TITLE_CHUNK = 50;
@@ -50,21 +54,30 @@ importRoutes.post("/data", authMiddleware, async (c) => {
     { length: Math.ceil(body.length / TITLE_CHUNK) },
     (_, i) => body.slice(i * TITLE_CHUNK, (i + 1) * TITLE_CHUNK),
   );
-  const inserted = (
-    await Promise.all(
-      chunks.map((chunk) =>
-        db
-          .insert(titles)
-          .values(chunk.map((e) => ({ title: e.title, year: e.year })))
-          .returning({ id: titles.id }),
-      ),
-    )
-  ).flat();
 
-  const castStmts = body.flatMap((entry, i) =>
+  // Atomic batch: delete all titles (cascades to cast + history) then insert the new set.
+  // batchAll places the delete in the first db.batch() call so no failure leaves the DB empty.
+  // For payloads up to ~4950 titles the delete and all inserts land in a single atomic call.
+  const titleInsertStmts = chunks.map((chunk) =>
+    db
+      .insert(titles)
+      .values(chunk.map((e) => ({ title: e.title, year: e.year }))),
+  ) as BatchItem<"sqlite">[];
+  await batchAll(db, [asDeleteBatch(db.delete(titles)), ...titleInsertStmts]);
+
+  if (body.length === 0) return c.json({ imported: 0 });
+
+  // Re-fetch inserted IDs keyed by title name — avoids positional RETURNING assumptions.
+  const insertedTitles = await db
+    .select({ id: titles.id, title: titles.title })
+    .from(titles);
+  const titleMap = new Map(insertedTitles.map((t) => [t.title, t.id]));
+
+  const castStmts = body.flatMap((entry) =>
     buildCastInsertStmts(
       db,
-      inserted[i].id,
+      // biome-ignore lint/style/noNonNullAssertion: guaranteed non-null by the batch insert above
+      titleMap.get(entry.title)!,
       entry.cast.map(([actor_name, character_name]) => ({
         actor_name,
         character_name,
@@ -99,20 +112,18 @@ importRoutes.post("/history", authMiddleware, async (c) => {
     return c.json({ error: "Unknown title", title: orphan.title }, 400);
   }
 
-  await db.delete(history);
-
-  if (body.length > 0) {
-    const stmts = body.map((e, i) =>
-      db.insert(history).values({
-        // biome-ignore lint/style/noNonNullAssertion: guaranteed non-null by orphan check above
-        title_id: titleMap.get(e.title)!,
-        display_name: e.name ?? null,
-        year: e.year,
-        sort_order: i,
-      }),
-    ) as BatchItem<"sqlite">[];
-    await batchAll(db, stmts);
-  }
+  // Atomic batch: delete old history then insert new entries.
+  // batchAll places the delete in the first db.batch() call so no failure leaves history empty.
+  const insertStmts = body.map((e, i) =>
+    db.insert(history).values({
+      // biome-ignore lint/style/noNonNullAssertion: guaranteed non-null by orphan check above
+      title_id: titleMap.get(e.title)!,
+      display_name: e.name ?? null,
+      year: e.year,
+      sort_order: i,
+    }),
+  ) as BatchItem<"sqlite">[];
+  await batchAll(db, [asDeleteBatch(db.delete(history)), ...insertStmts]);
 
   return c.json({ imported: body.length });
 });

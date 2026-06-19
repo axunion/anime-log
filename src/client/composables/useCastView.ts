@@ -13,9 +13,17 @@ const voiceToken = createRaceToken();
 export function useCastView() {
   async function loadCast(titleId: number) {
     const token = castToken.next();
-    const detail = await get<TitleDetail>(`/titles/${titleId}`);
-    if (token === castToken.current()) {
-      selectedDetail.value = detail;
+    try {
+      const detail = await get<TitleDetail>(`/titles/${titleId}`);
+      if (token === castToken.current()) {
+        selectedDetail.value = detail;
+      }
+    } catch {
+      // On failure, clear stale detail if this token is still current to avoid
+      // showing a mismatched cast panel (mirrors the loadVoice error handling).
+      if (token === castToken.current()) {
+        selectedDetail.value = null;
+      }
     }
   }
 

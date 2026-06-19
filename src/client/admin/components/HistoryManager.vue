@@ -14,6 +14,17 @@ const { titles } = useTitles();
 const { history, addHistory, updateHistory, deleteHistory, persistOrder } =
   useHistory();
 
+async function onUpdate(
+  id: number,
+  payload: { display_name: string | null; year: number },
+) {
+  try {
+    await updateHistory(id, payload);
+  } catch {
+    // Error displayed via App.vue banner.
+  }
+}
+
 const selectTitleId = ref("");
 const titleQuery = ref("");
 const showSuggest = ref(false);
@@ -44,11 +55,17 @@ function selectTitle(t: Title) {
 
 async function onAdd() {
   if (!selectTitleId.value) return;
-  await addHistory({
-    title_id: Number(selectTitleId.value),
-    display_name: displayName.value || undefined,
-    year: Number(year.value),
-  });
+  const yr = Number(year.value);
+  if (!yr) return;
+  try {
+    await addHistory({
+      title_id: Number(selectTitleId.value),
+      display_name: displayName.value || undefined,
+      year: yr,
+    });
+  } catch {
+    return;
+  }
   selectTitleId.value = "";
   titleQuery.value = "";
   displayName.value = "";
@@ -56,7 +73,13 @@ async function onAdd() {
 }
 
 async function onDragEnd(event: { oldIndex?: number; newIndex?: number }) {
-  if (event.oldIndex !== event.newIndex) await persistOrder();
+  if (event.oldIndex !== event.newIndex) {
+    try {
+      await persistOrder();
+    } catch {
+      // Error is displayed via the App.vue banner; history was restored by persistOrder.
+    }
+  }
 }
 
 function onFilterByTitle(title: string) {
@@ -67,7 +90,11 @@ async function onDelete(id: number) {
   const entry = history.value.find((h) => h.id === id);
   const name = entry?.display_name ?? entry?.title ?? "";
   if (!(await confirm({ message: `「${name}」を削除しますか？` }))) return;
-  await deleteHistory(id);
+  try {
+    await deleteHistory(id);
+  } catch {
+    // Error displayed via App.vue banner.
+  }
 }
 </script>
 
@@ -139,7 +166,7 @@ async function onDelete(id: number) {
 			<template #item="{ element: entry }">
 				<HistoryItem
 					:entry="entry"
-					@update="updateHistory(entry.id, $event)"
+					@update="onUpdate(entry.id, $event)"
 					@delete="onDelete(entry.id)"
 					@filter-by-title="onFilterByTitle"
 				/>
@@ -151,7 +178,7 @@ async function onDelete(id: number) {
 				:key="entry.id"
 				:entry="entry"
 				:draggable="false"
-				@update="updateHistory(entry.id, $event)"
+				@update="onUpdate(entry.id, $event)"
 				@delete="onDelete(entry.id)"
 				@filter-by-title="onFilterByTitle"
 			/>

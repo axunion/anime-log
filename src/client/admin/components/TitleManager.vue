@@ -30,13 +30,32 @@ async function onAddTitle() {
   const title = newTitle.value.trim();
   const year = Number(newYear.value);
   if (!title || !year) return;
-  await addTitle(title, year);
+  try {
+    await addTitle(title, year);
+  } catch {
+    return;
+  }
   newTitle.value = "";
   newYear.value = "";
 }
 
+async function onUpdateTitle(
+  id: number,
+  fields: { title?: string; year?: number },
+) {
+  try {
+    await updateTitle(id, fields);
+  } catch {
+    // Error displayed via App.vue banner.
+  }
+}
+
 async function onDeleteTitle(id: number) {
-  await deleteTitle(id);
+  try {
+    await deleteTitle(id);
+  } catch {
+    return;
+  }
   if (selectedId.value === id) {
     selectedId.value = null;
     emit("selectTitle", null, "");
@@ -78,7 +97,7 @@ async function onDeleteTitle(id: number) {
 				:year="t.year"
 				:selected="t.id === selectedId"
 				@select="onSelect(t.id, t.title)"
-				@update="(id, fields) => updateTitle(id, fields)"
+				@update="onUpdateTitle"
 				@delete="onDeleteTitle"
 			/>
 		</ul>

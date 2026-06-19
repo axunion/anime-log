@@ -158,6 +158,40 @@ describe("PUT /api/history/reorder validation", () => {
     });
     expect(res.status).toBe(400);
   });
+
+  it("returns 400 when ids contain unknown ids", async () => {
+    const titleId = await seedTitle(typedEnv.DB, { title: "OP", year: 1999 });
+    await seedHistory(typedEnv.DB, [{ title_id: titleId, year: 2020 }]);
+
+    const res = await callApp(typedEnv, {
+      method: "PUT",
+      path: "/history/reorder",
+      auth: true,
+      body: { ids: [9999] },
+    });
+    expect(res.status).toBe(400);
+  });
+
+  it("returns 400 when ids are missing existing entries", async () => {
+    const titleId = await seedTitle(typedEnv.DB, { title: "OP", year: 1999 });
+    await seedHistory(typedEnv.DB, [
+      { title_id: titleId, year: 2020 },
+      { title_id: titleId, year: 2021 },
+    ]);
+    const rows = await typedEnv.DB.prepare(
+      "SELECT id FROM history ORDER BY sort_order",
+    ).all<{ id: number }>();
+    const [firstId] = rows.results.map((r) => r.id);
+
+    // Provide only one id out of two — should be rejected
+    const res = await callApp(typedEnv, {
+      method: "PUT",
+      path: "/history/reorder",
+      auth: true,
+      body: { ids: [firstId] },
+    });
+    expect(res.status).toBe(400);
+  });
 });
 
 describe("DELETE /api/history/:id", () => {

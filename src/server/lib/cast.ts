@@ -23,5 +23,3 @@ export function buildCastInsertStmts(
     }),
   ) as BatchItem<"sqlite">[];
 }
-
-export { asBatch, batchAll } from "./batch";
