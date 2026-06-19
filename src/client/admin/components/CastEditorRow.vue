@@ -1,15 +1,15 @@
 <script setup lang="ts">
-import { X } from "lucide-vue-next";
+import { X } from "@lucide/vue";
 
 defineProps<{
-	actorName: string;
-	characterName: string;
+  actorName: string;
+  characterName: string;
 }>();
 
 const emit = defineEmits<{
-	"update:actorName": [value: string];
-	"update:characterName": [value: string];
-	remove: [];
+  "update:actorName": [value: string];
+  "update:characterName": [value: string];
+  remove: [];
 }>();
 </script>
 

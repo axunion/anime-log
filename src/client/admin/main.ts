@@ -7,10 +7,10 @@ import App from "./App.vue";
 // it to localStorage so subsequent reloads stay authenticated without re-visiting
 // the secret URL. This code only runs in the admin bundle — not the viewer bundle.
 const metaToken = document
-	.querySelector('meta[name="x-api-token"]')
-	?.getAttribute("content");
+  .querySelector('meta[name="x-api-token"]')
+  ?.getAttribute("content");
 if (metaToken) {
-	useAuth().setToken(metaToken);
+  useAuth().setToken(metaToken);
 }
 
 createApp(App).mount("#app");

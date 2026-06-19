@@ -8,41 +8,41 @@ import ViewerLayout from "./components/ViewerLayout.vue";
 const { sortedByYear, fetchTitles } = useTitles();
 const { history, fetchHistory } = useHistory();
 const {
-	selectedDetail,
-	voiceResults,
-	selectedActorName,
-	loadCast,
-	loadVoice,
-	clearCast,
-	clearVoice,
+  selectedDetail,
+  voiceResults,
+  selectedActorName,
+  loadCast,
+  loadVoice,
+  clearCast,
+  clearVoice,
 } = useCastView();
 
 const clearTrigger = ref(0);
 
 async function onSelectTitle(id: number) {
-	clearVoice();
-	await loadCast(id);
+  clearVoice();
+  await loadCast(id);
 }
 
 function onDeselectTitle() {
-	clearCast();
+  clearCast();
 }
 
 async function onActorClick(name: string) {
-	await loadVoice(name);
+  await loadVoice(name);
 }
 
 function onCloseCast() {
-	clearTrigger.value++;
-	clearCast();
+  clearTrigger.value++;
+  clearCast();
 }
 
 function onCloseVoice() {
-	clearVoice();
+  clearVoice();
 }
 
 onMounted(async () => {
-	await Promise.all([fetchTitles(), fetchHistory()]);
+  await Promise.all([fetchTitles(), fetchHistory()]);
 });
 </script>
 

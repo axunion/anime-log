@@ -1,11 +1,11 @@
 <script setup lang="ts">
 defineProps<{
-	actorName: string;
-	characterName: string;
+  actorName: string;
+  characterName: string;
 }>();
 
 defineEmits<{
-	actorClick: [name: string];
+  actorClick: [name: string];
 }>();
 </script>
 

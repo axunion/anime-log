@@ -3,55 +3,55 @@ import { useAuth } from "../composables/useAuth";
 const BASE = "/api";
 
 async function request<T>(path: string, options?: RequestInit): Promise<T> {
-	const res = await fetch(`${BASE}${path}`, options);
-	if (!res.ok) {
-		const body = (await res.json().catch(() => null)) as {
-			error?: string;
-		} | null;
-		throw new Error(body?.error ?? `${res.status} ${res.statusText}`);
-	}
-	return res.json() as Promise<T>;
+  const res = await fetch(`${BASE}${path}`, options);
+  if (!res.ok) {
+    const body = (await res.json().catch(() => null)) as {
+      error?: string;
+    } | null;
+    throw new Error(body?.error ?? `${res.status} ${res.statusText}`);
+  }
+  return res.json() as Promise<T>;
 }
 
 export function get<T>(path: string): Promise<T> {
-	return request<T>(path);
+  return request<T>(path);
 }
 
 function getToken(): string {
-	return useAuth().getToken();
+  return useAuth().getToken();
 }
 
 function authHeaders(): HeadersInit {
-	return {
-		"Content-Type": "application/json",
-		Authorization: `Bearer ${getToken()}`,
-	};
+  return {
+    "Content-Type": "application/json",
+    Authorization: `Bearer ${getToken()}`,
+  };
 }
 
 export function post<T>(path: string, body: unknown): Promise<T> {
-	return request<T>(path, {
-		method: "POST",
-		headers: authHeaders(),
-		body: JSON.stringify(body),
-	});
+  return request<T>(path, {
+    method: "POST",
+    headers: authHeaders(),
+    body: JSON.stringify(body),
+  });
 }
 
 export function patch<T>(path: string, body: unknown): Promise<T> {
-	return request<T>(path, {
-		method: "PATCH",
-		headers: authHeaders(),
-		body: JSON.stringify(body),
-	});
+  return request<T>(path, {
+    method: "PATCH",
+    headers: authHeaders(),
+    body: JSON.stringify(body),
+  });
 }
 
 export function put<T>(path: string, body: unknown): Promise<T> {
-	return request<T>(path, {
-		method: "PUT",
-		headers: authHeaders(),
-		body: JSON.stringify(body),
-	});
+  return request<T>(path, {
+    method: "PUT",
+    headers: authHeaders(),
+    body: JSON.stringify(body),
+  });
 }
 
 export function del<T>(path: string): Promise<T> {
-	return request<T>(path, { method: "DELETE", headers: authHeaders() });
+  return request<T>(path, { method: "DELETE", headers: authHeaders() });
 }

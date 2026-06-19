@@ -5,56 +5,56 @@ import { useFilter } from "../../composables/useFilter";
 import TitleListItem from "./TitleListItem.vue";
 
 const props = defineProps<{
-	items: (Title | HistoryEntry)[];
-	active: boolean;
-	query: string;
-	clearTrigger: number;
+  items: (Title | HistoryEntry)[];
+  active: boolean;
+  query: string;
+  clearTrigger: number;
 }>();
 
 const emit = defineEmits<{
-	select: [id: number];
-	deselect: [];
+  select: [id: number];
+  deselect: [];
 }>();
 
 const selectedId = ref<number | null>(null);
 
 watch(
-	() => props.clearTrigger,
-	() => {
-		selectedId.value = null;
-	},
+  () => props.clearTrigger,
+  () => {
+    selectedId.value = null;
+  },
 );
 
 function getDisplayName(item: Title | HistoryEntry): string {
-	return "display_name" in item
-		? (item.display_name ?? item.title)
-		: item.title;
+  return "display_name" in item
+    ? (item.display_name ?? item.title)
+    : item.title;
 }
 
 // Unique identifier for each row (used for selection highlight)
 function getItemId(item: Title | HistoryEntry): number {
-	return item.id;
+  return item.id;
 }
 
 // Title ID for API calls (cast loading)
 function getTitleId(item: Title | HistoryEntry): number {
-	return "title_id" in item ? item.title_id : item.id;
+  return "title_id" in item ? item.title_id : item.id;
 }
 
 const { filtered } = useFilter(
-	toRef(props, "items"),
-	getDisplayName,
-	toRef(props, "query"),
+  toRef(props, "items"),
+  getDisplayName,
+  toRef(props, "query"),
 );
 
 function onClickItem(itemId: number, titleId: number) {
-	if (selectedId.value === itemId) {
-		selectedId.value = null;
-		emit("deselect");
-	} else {
-		selectedId.value = itemId;
-		emit("select", titleId);
-	}
+  if (selectedId.value === itemId) {
+    selectedId.value = null;
+    emit("deselect");
+  } else {
+    selectedId.value = itemId;
+    emit("select", titleId);
+  }
 }
 </script>
 

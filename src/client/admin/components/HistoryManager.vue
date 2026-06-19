@@ -1,6 +1,6 @@
 <script setup lang="ts">
+import { History as HistoryIcon, Plus, X } from "@lucide/vue";
 import type { Title } from "@shared/types";
-import { History as HistoryIcon, Plus, X } from "lucide-vue-next";
 import { ref } from "vue";
 import draggable from "vuedraggable";
 import { useConfirm } from "../../composables/useConfirm";
@@ -12,7 +12,7 @@ import HistoryItem from "./HistoryItem.vue";
 const { confirm } = useConfirm();
 const { titles } = useTitles();
 const { history, addHistory, updateHistory, deleteHistory, persistOrder } =
-	useHistory();
+  useHistory();
 
 const selectTitleId = ref("");
 const titleQuery = ref("");
@@ -21,53 +21,53 @@ const displayName = ref("");
 const year = ref("");
 
 const { filtered: titleSuggestions } = useFilter(
-	titles,
-	(t) => `${t.title} ${t.year}`,
-	titleQuery,
+  titles,
+  (t) => `${t.title} ${t.year}`,
+  titleQuery,
 );
 
 const { query: filterQuery, filtered: filteredHistory } = useFilter(
-	history,
-	(h) => h.title,
+  history,
+  (h) => h.title,
 );
 
 function onTitleQueryInput() {
-	selectTitleId.value = "";
-	showSuggest.value = true;
+  selectTitleId.value = "";
+  showSuggest.value = true;
 }
 
 function selectTitle(t: Title) {
-	selectTitleId.value = String(t.id);
-	titleQuery.value = `${t.title} (${t.year})`;
-	showSuggest.value = false;
+  selectTitleId.value = String(t.id);
+  titleQuery.value = `${t.title} (${t.year})`;
+  showSuggest.value = false;
 }
 
 async function onAdd() {
-	if (!selectTitleId.value) return;
-	await addHistory({
-		title_id: Number(selectTitleId.value),
-		display_name: displayName.value || undefined,
-		year: Number(year.value),
-	});
-	selectTitleId.value = "";
-	titleQuery.value = "";
-	displayName.value = "";
-	year.value = "";
+  if (!selectTitleId.value) return;
+  await addHistory({
+    title_id: Number(selectTitleId.value),
+    display_name: displayName.value || undefined,
+    year: Number(year.value),
+  });
+  selectTitleId.value = "";
+  titleQuery.value = "";
+  displayName.value = "";
+  year.value = "";
 }
 
 async function onDragEnd(event: { oldIndex?: number; newIndex?: number }) {
-	if (event.oldIndex !== event.newIndex) await persistOrder();
+  if (event.oldIndex !== event.newIndex) await persistOrder();
 }
 
 function onFilterByTitle(title: string) {
-	filterQuery.value = title;
+  filterQuery.value = title;
 }
 
 async function onDelete(id: number) {
-	const entry = history.value.find((h) => h.id === id);
-	const name = entry?.display_name ?? entry?.title ?? "";
-	if (!(await confirm({ message: `「${name}」を削除しますか？` }))) return;
-	await deleteHistory(id);
+  const entry = history.value.find((h) => h.id === id);
+  const name = entry?.display_name ?? entry?.title ?? "";
+  if (!(await confirm({ message: `「${name}」を削除しますか？` }))) return;
+  await deleteHistory(id);
 }
 </script>
 

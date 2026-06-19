@@ -6,8 +6,8 @@ defineProps<{ modelValue: AdminTab }>();
 defineEmits<{ "update:modelValue": [tab: AdminTab] }>();
 
 const tabs: { id: AdminTab; label: string }[] = [
-	{ id: "history", label: "履歴" },
-	{ id: "data", label: "データ" },
+  { id: "history", label: "履歴" },
+  { id: "data", label: "データ" },
 ];
 </script>
 

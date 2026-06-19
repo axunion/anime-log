@@ -3,14 +3,14 @@
 let token = localStorage.getItem("api_token") ?? "";
 
 export function useAuth() {
-	function setToken(t: string) {
-		token = t;
-		localStorage.setItem("api_token", t);
-	}
+  function setToken(t: string) {
+    token = t;
+    localStorage.setItem("api_token", t);
+  }
 
-	function getToken(): string {
-		return token;
-	}
+  function getToken(): string {
+    return token;
+  }
 
-	return { setToken, getToken };
+  return { setToken, getToken };
 }

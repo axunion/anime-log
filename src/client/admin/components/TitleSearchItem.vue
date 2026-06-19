@@ -1,19 +1,19 @@
 <script setup lang="ts">
-import { Check, Pencil, Trash2, X } from "lucide-vue-next";
+import { Check, Pencil, Trash2, X } from "@lucide/vue";
 import { ref } from "vue";
 import { useConfirm } from "../../composables/useConfirm";
 
 const props = defineProps<{
-	id: number;
-	titleName: string;
-	year: number;
-	selected: boolean;
+  id: number;
+  titleName: string;
+  year: number;
+  selected: boolean;
 }>();
 
 const emit = defineEmits<{
-	select: [];
-	update: [id: number, fields: { title?: string; year?: number }];
-	delete: [id: number];
+  select: [];
+  update: [id: number, fields: { title?: string; year?: number }];
+  delete: [id: number];
 }>();
 
 const { confirm } = useConfirm();
@@ -22,32 +22,32 @@ const editTitle = ref("");
 const editYear = ref("");
 
 function startEdit(e: Event) {
-	e.stopPropagation();
-	editTitle.value = props.titleName;
-	editYear.value = String(props.year);
-	editing.value = true;
+  e.stopPropagation();
+  editTitle.value = props.titleName;
+  editYear.value = String(props.year);
+  editing.value = true;
 }
 
 function cancelEdit(e: Event) {
-	e.stopPropagation();
-	editing.value = false;
+  e.stopPropagation();
+  editing.value = false;
 }
 
 function commitEdit(e: Event) {
-	e.stopPropagation();
-	const title = editTitle.value.trim();
-	const year = Number(editYear.value);
-	if (title && year) {
-		emit("update", props.id, { title, year });
-	}
-	editing.value = false;
+  e.stopPropagation();
+  const title = editTitle.value.trim();
+  const year = Number(editYear.value);
+  if (title && year) {
+    emit("update", props.id, { title, year });
+  }
+  editing.value = false;
 }
 
 async function onDelete(e: Event) {
-	e.stopPropagation();
-	if (!(await confirm({ message: `「${props.titleName}」を削除しますか？` })))
-		return;
-	emit("delete", props.id);
+  e.stopPropagation();
+  if (!(await confirm({ message: `「${props.titleName}」を削除しますか？` })))
+    return;
+  emit("delete", props.id);
 }
 </script>
 

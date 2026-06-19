@@ -5,21 +5,21 @@ import CastRow from "./CastRow.vue";
 import ExternalLinks from "./ExternalLinks.vue";
 
 const props = defineProps<{
-	detail: TitleDetail | null;
+  detail: TitleDetail | null;
 }>();
 
 const emit = defineEmits<{
-	close: [];
-	actorClick: [name: string];
+  close: [];
+  actorClick: [name: string];
 }>();
 
 // Retain the last non-null detail so content stays visible during exit animation.
 const displayDetail = ref<TitleDetail | null>(props.detail);
 watch(
-	() => props.detail,
-	(val) => {
-		if (val !== null) displayDetail.value = val;
-	},
+  () => props.detail,
+  (val) => {
+    if (val !== null) displayDetail.value = val;
+  },
 );
 </script>
 

@@ -1,63 +1,63 @@
 {
-	"name": "anime-log",
-	"private": true,
-	"type": "module",
-	"devEngines": {
-		"runtime": {
-			"name": "node",
-			"version": "24.16.0",
-			"onFail": "warn"
-		},
-		"packageManager": {
-			"name": "pnpm",
-			"version": "11.2.2",
-			"onFail": "warn"
-		}
-	},
-	"scripts": {
-		"dev": "vite",
-		"build": "vite build",
-		"typecheck": "vue-tsc --noEmit -p tsconfig.app.json && tsc --noEmit -p tsconfig.worker.json",
-		"check": "biome check . && pnpm typecheck",
-		"fix": "biome check --write .",
-		"prepare": "lefthook install",
-		"db:generate": "drizzle-kit generate",
-		"db:check": "drizzle-kit check",
-		"db:drop": "drizzle-kit drop",
-		"db:studio": "drizzle-kit studio",
-		"db:migrate": "wrangler d1 migrations apply anime-db --local",
-		"db:reset": "rm -rf .wrangler/state/v3/d1 && pnpm db:migrate",
-		"seed:local": "pnpm exec tsx scripts/seed-local.ts",
-		"test": "pnpm run test:client && pnpm run test:server",
-		"test:client": "vitest run --config vitest.config.ts",
-		"test:server": "vitest run --config vitest.workers.config.ts",
-		"test:watch": "vitest --config vitest.config.ts"
-	},
-	"dependencies": {
-		"drizzle-orm": "^0.45.2",
-		"drizzle-zod": "^0.8.3",
-		"hono": "^4.12.18",
-		"lucide-vue-next": "^0.468.0",
-		"vue": "^3.5.34",
-		"vuedraggable": "^4.1.0",
-		"zod": "^4.4.3"
-	},
-	"devDependencies": {
-		"@biomejs/biome": "^2.4.15",
-		"@cloudflare/vite-plugin": "^1.36.3",
-		"@cloudflare/vitest-pool-workers": "^0.14.7",
-		"@cloudflare/workers-types": "^4.20260510.1",
-		"@types/node": "^22.15.3",
-		"@vitejs/plugin-vue": "^6.0.5",
-		"@vue/test-utils": "^2.4.10",
-		"drizzle-kit": "^0.31.10",
-		"happy-dom": "^20.9.0",
-		"lefthook": "^2.1.8",
-		"tsx": "^4.19.3",
-		"typescript": "^5.8.3",
-		"vite": "^8.0.11",
-		"vitest": "^4.1.4",
-		"vue-tsc": "^3.2.6",
-		"wrangler": "^4.90.0"
-	}
+  "name": "anime-log",
+  "private": true,
+  "type": "module",
+  "devEngines": {
+    "runtime": {
+      "name": "node",
+      "version": "^24",
+      "onFail": "warn"
+    },
+    "packageManager": {
+      "name": "pnpm",
+      "version": "^11",
+      "onFail": "warn"
+    }
+  },
+  "scripts": {
+    "prepare": "lefthook install",
+    "dev": "vite",
+    "build": "vite build",
+    "typecheck": "vue-tsc --noEmit -p tsconfig.app.json && tsc --noEmit -p tsconfig.worker.json",
+    "check": "biome check && pnpm typecheck",
+    "fix": "biome check --write",
+    "db:generate": "drizzle-kit generate",
+    "db:check": "drizzle-kit check",
+    "db:drop": "drizzle-kit drop",
+    "db:studio": "drizzle-kit studio",
+    "db:migrate": "wrangler d1 migrations apply anime-db --local",
+    "db:reset": "rm -rf .wrangler/state/v3/d1 && pnpm db:migrate",
+    "seed:local": "pnpm exec tsx scripts/seed-local.ts",
+    "test": "pnpm run test:client && pnpm run test:server",
+    "test:client": "vitest run --config vitest.config.ts",
+    "test:server": "vitest run --config vitest.workers.config.ts",
+    "test:watch": "vitest --config vitest.config.ts"
+  },
+  "dependencies": {
+    "@lucide/vue": "^1.21.0",
+    "drizzle-orm": "^0.45.2",
+    "drizzle-zod": "^0.8.3",
+    "hono": "^4.12.26",
+    "vue": "^3.5.38",
+    "vuedraggable": "^4.1.0",
+    "zod": "^4.4.3"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "2.5.0",
+    "@cloudflare/vite-plugin": "^1.41.0",
+    "@cloudflare/vitest-pool-workers": "^0.14.9",
+    "@cloudflare/workers-types": "^4.20260617.1",
+    "@types/node": "^22.19.21",
+    "@vitejs/plugin-vue": "^6.0.7",
+    "@vue/test-utils": "^2.4.11",
+    "drizzle-kit": "^0.31.10",
+    "happy-dom": "^20.10.6",
+    "lefthook": "^2.1.9",
+    "tsx": "^4.22.4",
+    "typescript": "^5.9.3",
+    "vite": "^8.0.16",
+    "vitest": "^4.1.9",
+    "vue-tsc": "^3.3.5",
+    "wrangler": "^4.101.0"
+  }
 }

@@ -2,129 +2,129 @@
 ------------------------------------------------------------------------------*/
 
 :root {
-	/* raw palette */
-	--color-iris: #7e7efc;
-	--color-blossom: #ff9ec7;
-	--color-mint: #6ddbd0;
-	--color-ink: #1f2233;
-	--color-canvas: #fbfbfe;
-	--color-steel: #6b6f80;
-	--color-mist: #c7cad8;
-	--color-fog: #a6a9bd;
+  /* raw palette */
+  --color-iris: #7e7efc;
+  --color-blossom: #ff9ec7;
+  --color-mint: #6ddbd0;
+  --color-ink: #1f2233;
+  --color-canvas: #fbfbfe;
+  --color-steel: #6b6f80;
+  --color-mist: #c7cad8;
+  --color-fog: #a6a9bd;
 
-	/* brand / accent */
-	--accent-color: var(--color-iris);
-	--accent-secondary: var(--color-blossom);
-	--accent-tertiary: var(--color-mint);
+  /* brand / accent */
+  --accent-color: var(--color-iris);
+  --accent-secondary: var(--color-blossom);
+  --accent-tertiary: var(--color-mint);
 
-	/* canvas / ink */
-	--base-color: var(--color-canvas);
-	--contrast-color: var(--color-ink);
+  /* canvas / ink */
+  --base-color: var(--color-canvas);
+  --contrast-color: var(--color-ink);
 
-	/* text roles */
-	--text-muted: var(--color-steel);
-	--text-subtle: var(--color-fog);
+  /* text roles */
+  --text-muted: var(--color-steel);
+  --text-subtle: var(--color-fog);
 
-	/* border / fill roles */
-	--border-strong: var(--color-mist);
-	--fill-muted: var(--color-fog);
+  /* border / fill roles */
+  --border-strong: var(--color-mist);
+  --fill-muted: var(--color-fog);
 
-	/* glass tokens */
-	--glass-bg: color-mix(in srgb, var(--base-color) 62%, transparent);
-	--glass-bg-strong: color-mix(in srgb, var(--base-color) 82%, transparent);
-	--glass-border: color-mix(in srgb, var(--contrast-color) 10%, transparent);
-	--glass-blur: saturate(80%) blur(8px);
+  /* glass tokens */
+  --glass-bg: color-mix(in srgb, var(--base-color) 62%, transparent);
+  --glass-bg-strong: color-mix(in srgb, var(--base-color) 82%, transparent);
+  --glass-border: color-mix(in srgb, var(--contrast-color) 10%, transparent);
+  --glass-blur: saturate(80%) blur(8px);
 
-	/* interaction */
-	--hover-overlay: color-mix(in srgb, var(--contrast-color) 5%, transparent);
-	--focus-ring: color-mix(in srgb, var(--accent-color) 55%, transparent);
-	--focus-glow: color-mix(in srgb, var(--accent-color) 18%, transparent);
+  /* interaction */
+  --hover-overlay: color-mix(in srgb, var(--contrast-color) 5%, transparent);
+  --focus-ring: color-mix(in srgb, var(--accent-color) 55%, transparent);
+  --focus-glow: color-mix(in srgb, var(--accent-color) 18%, transparent);
 
-	/* scrollbar */
-	--scrollbar-track: color-mix(in srgb, var(--contrast-color) 8%, transparent);
-	--scrollbar-thumb: var(--text-muted);
+  /* scrollbar */
+  --scrollbar-track: color-mix(in srgb, var(--contrast-color) 8%, transparent);
+  --scrollbar-thumb: var(--text-muted);
 
-	/* shadow */
-	--shadow-overlay: color-mix(in srgb, var(--color-ink) 25%, transparent);
+  /* shadow */
+  --shadow-overlay: color-mix(in srgb, var(--color-ink) 25%, transparent);
 }
 
 /* glass-surface utility
 ------------------------------------------------------------------------------*/
 
 .glass-surface {
-	background: var(--glass-bg);
-	backdrop-filter: var(--glass-blur);
+  background: var(--glass-bg);
+  backdrop-filter: var(--glass-blur);
 }
 
 @media (prefers-reduced-motion: reduce) {
-	.glass-surface {
-		backdrop-filter: none;
-	}
+  .glass-surface {
+    backdrop-filter: none;
+  }
 }
 
 ::selection {
-	background-color: var(--fill-muted);
-	color: var(--base-color);
+  background-color: var(--fill-muted);
+  color: var(--base-color);
 }
 
 html {
-	background:
-		radial-gradient(
-			ellipse 1000px 820px at 105% -5%,
-			color-mix(in srgb, var(--accent-color) 30%, transparent),
-			transparent 65%
-		),
-		radial-gradient(
-			ellipse 800px 700px at 100% 60%,
-			color-mix(in srgb, var(--accent-secondary) 22%, transparent),
-			transparent 68%
-		),
-		radial-gradient(
-			ellipse 900px 780px at -5% 108%,
-			color-mix(in srgb, var(--accent-tertiary) 26%, transparent),
-			transparent 70%
-		),
-		linear-gradient(
-			-40deg,
-			color-mix(in srgb, var(--accent-tertiary) 4%, transparent) 0%,
-			transparent 50%,
-			color-mix(in srgb, var(--accent-color) 4%, transparent) 100%
-		),
-		var(--base-color);
-	background-attachment: fixed;
-	color: var(--contrast-color);
-	font:
-		500 14px / 1.2 -apple-system,
-		BlinkMacSystemFont,
-		Roboto,
-		Helvetica,
-		"Yu Gothic",
-		sans-serif;
-	-webkit-tap-highlight-color: transparent;
-	-webkit-text-size-adjust: 100%;
-	-webkit-touch-callout: none;
+  background:
+    radial-gradient(
+      ellipse 1000px 820px at 105% -5%,
+      color-mix(in srgb, var(--accent-color) 30%, transparent),
+      transparent 65%
+    ),
+    radial-gradient(
+      ellipse 800px 700px at 100% 60%,
+      color-mix(in srgb, var(--accent-secondary) 22%, transparent),
+      transparent 68%
+    ),
+    radial-gradient(
+      ellipse 900px 780px at -5% 108%,
+      color-mix(in srgb, var(--accent-tertiary) 26%, transparent),
+      transparent 70%
+    ),
+    linear-gradient(
+      -40deg,
+      color-mix(in srgb, var(--accent-tertiary) 4%, transparent) 0%,
+      transparent 50%,
+      color-mix(in srgb, var(--accent-color) 4%, transparent) 100%
+    ),
+    var(--base-color);
+  background-attachment: fixed;
+  color: var(--contrast-color);
+  font:
+    500 14px / 1.2 -apple-system,
+    BlinkMacSystemFont,
+    Roboto,
+    Helvetica,
+    "Yu Gothic",
+    sans-serif;
+  -webkit-tap-highlight-color: transparent;
+  -webkit-text-size-adjust: 100%;
+  -webkit-touch-callout: none;
 }
 
 body {
-	margin: 0;
+  margin: 0;
 }
 
 table {
-	border-collapse: collapse;
-	border-spacing: 0;
+  border-collapse: collapse;
+  border-spacing: 0;
 }
 
 ul {
-	list-style: none;
-	margin: 0;
-	padding: 0;
+  list-style: none;
+  margin: 0;
+  padding: 0;
 }
 
 a {
-	background-color: transparent;
-	color: inherit;
-	outline-width: 0;
-	text-decoration: none;
+  background-color: transparent;
+  color: inherit;
+  outline-width: 0;
+  text-decoration: none;
 }
 
 button,
@@ -132,31 +132,31 @@ input,
 optgroup,
 select,
 textarea {
-	appearance: none;
-	-moz-appearance: none;
-	-webkit-appearance: none;
-	background: transparent;
-	border: 0;
-	color: inherit;
-	font-family: inherit;
-	font-size: 100%;
-	line-height: 1.5;
-	margin: 0;
-	outline: 0;
-	padding: 0;
+  appearance: none;
+  -moz-appearance: none;
+  -webkit-appearance: none;
+  background: transparent;
+  border: 0;
+  color: inherit;
+  font-family: inherit;
+  font-size: 100%;
+  line-height: 1.5;
+  margin: 0;
+  outline: 0;
+  padding: 0;
 }
 
 button::-moz-focus-inner,
 [type="button"]::-moz-focus-inner,
 [type="reset"]::-moz-focus-inner,
 [type="submit"]::-moz-focus-inner {
-	border-style: none;
-	padding: 0;
+  border-style: none;
+  padding: 0;
 }
 
 button:-moz-focusring,
 [type="button"]:-moz-focusring,
 [type="reset"]:-moz-focusring,
 [type="submit"]:-moz-focusring {
-	outline: 1px dotted ButtonText;
+  outline: 1px dotted ButtonText;
 }

@@ -2,52 +2,52 @@
 import { onBeforeUnmount, watch } from "vue";
 
 const props = withDefaults(
-	defineProps<{
-		open: boolean;
-		title?: string;
-		size?: "sm" | "md";
-		closeOnOverlay?: boolean;
-		closeOnEsc?: boolean;
-	}>(),
-	{ size: "md", closeOnOverlay: true, closeOnEsc: true },
+  defineProps<{
+    open: boolean;
+    title?: string;
+    size?: "sm" | "md";
+    closeOnOverlay?: boolean;
+    closeOnEsc?: boolean;
+  }>(),
+  { size: "md", closeOnOverlay: true, closeOnEsc: true },
 );
 
 const emit = defineEmits<{
-	"update:open": [value: boolean];
-	close: [];
+  "update:open": [value: boolean];
+  close: [];
 }>();
 
 function close() {
-	emit("update:open", false);
-	emit("close");
+  emit("update:open", false);
+  emit("close");
 }
 
 function onOverlayClick() {
-	if (props.closeOnOverlay) close();
+  if (props.closeOnOverlay) close();
 }
 
 function onKeydown(e: KeyboardEvent) {
-	if (props.closeOnEsc && e.key === "Escape") {
-		e.preventDefault();
-		close();
-	}
+  if (props.closeOnEsc && e.key === "Escape") {
+    e.preventDefault();
+    close();
+  }
 }
 
 watch(
-	() => props.open,
-	(isOpen) => {
-		document.body.style.overflow = isOpen ? "hidden" : "";
-		if (isOpen) {
-			document.addEventListener("keydown", onKeydown);
-		} else {
-			document.removeEventListener("keydown", onKeydown);
-		}
-	},
+  () => props.open,
+  (isOpen) => {
+    document.body.style.overflow = isOpen ? "hidden" : "";
+    if (isOpen) {
+      document.addEventListener("keydown", onKeydown);
+    } else {
+      document.removeEventListener("keydown", onKeydown);
+    }
+  },
 );
 
 onBeforeUnmount(() => {
-	document.removeEventListener("keydown", onKeydown);
-	document.body.style.overflow = "";
+  document.removeEventListener("keydown", onKeydown);
+  document.body.style.overflow = "";
 });
 </script>
 

@@ -17,12 +17,12 @@ const selectedTitleId = ref<number | null>(null);
 const selectedTitleName = ref("");
 
 function onSelectTitle(id: number | null, name: string) {
-	selectedTitleId.value = id;
-	selectedTitleName.value = name;
+  selectedTitleId.value = id;
+  selectedTitleName.value = name;
 }
 
 onMounted(async () => {
-	await Promise.all([fetchTitles(), fetchHistory()]);
+  await Promise.all([fetchTitles(), fetchHistory()]);
 });
 </script>
 

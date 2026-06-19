@@ -2,8 +2,8 @@
 import { ref } from "vue";
 
 defineProps<{
-	titleName: string;
-	characterName: string;
+  titleName: string;
+  characterName: string;
 }>();
 
 const showPart = ref(false);

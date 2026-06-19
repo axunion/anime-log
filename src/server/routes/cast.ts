@@ -12,59 +12,59 @@ const updateCastInput = castMemberInput.partial();
 export const castRoutes = new Hono<{ Bindings: Bindings }>();
 
 castRoutes.get("/", async (c) => {
-	const actor = (c.req.query("actor") ?? "").trim();
-	if (!actor) {
-		return c.json({ error: "actor query param required" }, 400);
-	}
+  const actor = (c.req.query("actor") ?? "").trim();
+  if (!actor) {
+    return c.json({ error: "actor query param required" }, 400);
+  }
 
-	const db = getDb(c.env.DB);
-	const rows = await db
-		.select({
-			id: cast_members.id,
-			character_name: cast_members.character_name,
-			title_id: titles.id,
-			title: titles.title,
-			year: titles.year,
-		})
-		.from(cast_members)
-		.innerJoin(titles, eq(cast_members.title_id, titles.id))
-		.where(eq(cast_members.actor_name, actor))
-		.orderBy(titles.title);
-	return c.json(rows);
+  const db = getDb(c.env.DB);
+  const rows = await db
+    .select({
+      id: cast_members.id,
+      character_name: cast_members.character_name,
+      title_id: titles.id,
+      title: titles.title,
+      year: titles.year,
+    })
+    .from(cast_members)
+    .innerJoin(titles, eq(cast_members.title_id, titles.id))
+    .where(eq(cast_members.actor_name, actor))
+    .orderBy(titles.title);
+  return c.json(rows);
 });
 
 castRoutes.patch("/:id", authMiddleware, async (c) => {
-	const id = idParam.parse(c.req.param("id"));
-	const body = updateCastInput.parse(await c.req.json());
-	const db = getDb(c.env.DB);
+  const id = idParam.parse(c.req.param("id"));
+  const body = updateCastInput.parse(await c.req.json());
+  const db = getDb(c.env.DB);
 
-	const existing = await db
-		.select({ id: cast_members.id })
-		.from(cast_members)
-		.where(eq(cast_members.id, id))
-		.get();
-	if (!existing) return c.json({ error: "Not found" }, 404);
+  const existing = await db
+    .select({ id: cast_members.id })
+    .from(cast_members)
+    .where(eq(cast_members.id, id))
+    .get();
+  if (!existing) return c.json({ error: "Not found" }, 404);
 
-	// COALESCE pattern keeps sql-level semantics; updated_at uses SQLite datetime()
-	await c.env.DB.prepare(
-		"UPDATE cast_members SET actor_name = COALESCE(?, actor_name), character_name = COALESCE(?, character_name), updated_at = datetime('now') WHERE id = ?",
-	)
-		.bind(body.actor_name ?? null, body.character_name ?? null, id)
-		.run();
-	return c.json({ ok: true });
+  // COALESCE pattern keeps sql-level semantics; updated_at uses SQLite datetime()
+  await c.env.DB.prepare(
+    "UPDATE cast_members SET actor_name = COALESCE(?, actor_name), character_name = COALESCE(?, character_name), updated_at = datetime('now') WHERE id = ?",
+  )
+    .bind(body.actor_name ?? null, body.character_name ?? null, id)
+    .run();
+  return c.json({ ok: true });
 });
 
 castRoutes.delete("/:id", authMiddleware, async (c) => {
-	const id = idParam.parse(c.req.param("id"));
-	const db = getDb(c.env.DB);
+  const id = idParam.parse(c.req.param("id"));
+  const db = getDb(c.env.DB);
 
-	const existing = await db
-		.select({ id: cast_members.id })
-		.from(cast_members)
-		.where(eq(cast_members.id, id))
-		.get();
-	if (!existing) return c.json({ error: "Not found" }, 404);
+  const existing = await db
+    .select({ id: cast_members.id })
+    .from(cast_members)
+    .where(eq(cast_members.id, id))
+    .get();
+  if (!existing) return c.json({ error: "Not found" }, 404);
 
-	await db.delete(cast_members).where(eq(cast_members.id, id));
-	return c.json({ ok: true });
+  await db.delete(cast_members).where(eq(cast_members.id, id));
+  return c.json({ ok: true });
 });

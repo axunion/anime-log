@@ -1,10 +1,10 @@
 <script setup lang="ts">
 import type { Tab } from "@shared/constants";
 import type {
-	HistoryEntry,
-	Title,
-	TitleDetail,
-	VoiceResult,
+  HistoryEntry,
+  Title,
+  TitleDetail,
+  VoiceResult,
 } from "@shared/types";
 import { nextTick, onUnmounted, ref, watch } from "vue";
 import CastPanel from "./CastPanel.vue";
@@ -13,20 +13,20 @@ import TitleNav from "./TitleNav.vue";
 import VoicePanel from "./VoicePanel.vue";
 
 const props = defineProps<{
-	history: HistoryEntry[];
-	titlesByYear: Title[];
-	castDetail: TitleDetail | null;
-	voiceResults: VoiceResult[];
-	voiceActorName: string | null;
-	clearTrigger: number;
+  history: HistoryEntry[];
+  titlesByYear: Title[];
+  castDetail: TitleDetail | null;
+  voiceResults: VoiceResult[];
+  voiceActorName: string | null;
+  clearTrigger: number;
 }>();
 
 const emit = defineEmits<{
-	selectTitle: [id: number];
-	deselectTitle: [];
-	actorClick: [name: string];
-	closeCast: [];
-	closeVoice: [];
+  selectTitle: [id: number];
+  deselectTitle: [];
+  actorClick: [name: string];
+  closeCast: [];
+  closeVoice: [];
 }>();
 
 const activeTab = ref<Tab>("history");
@@ -40,30 +40,30 @@ const castLeaving = ref(false);
 let castLeaveTimer: ReturnType<typeof setTimeout> | null = null;
 
 watch(
-	() => props.castDetail,
-	async (val, old) => {
-		if (val !== null) {
-			if (castLeaveTimer) {
-				clearTimeout(castLeaveTimer);
-				castLeaveTimer = null;
-			}
-			castLeaving.value = false;
-			// Wait one tick so the DOM settles at translateX(100%) before animating in.
-			await nextTick();
-			castVisible.value = true;
-		} else if (old !== null) {
-			castVisible.value = false;
-			castLeaving.value = true;
-			castLeaveTimer = setTimeout(() => {
-				castLeaving.value = false;
-				castLeaveTimer = null;
-			}, 420);
-		}
-	},
+  () => props.castDetail,
+  async (val, old) => {
+    if (val !== null) {
+      if (castLeaveTimer) {
+        clearTimeout(castLeaveTimer);
+        castLeaveTimer = null;
+      }
+      castLeaving.value = false;
+      // Wait one tick so the DOM settles at translateX(100%) before animating in.
+      await nextTick();
+      castVisible.value = true;
+    } else if (old !== null) {
+      castVisible.value = false;
+      castLeaving.value = true;
+      castLeaveTimer = setTimeout(() => {
+        castLeaving.value = false;
+        castLeaveTimer = null;
+      }, 420);
+    }
+  },
 );
 
 onUnmounted(() => {
-	if (castLeaveTimer) clearTimeout(castLeaveTimer);
+  if (castLeaveTimer) clearTimeout(castLeaveTimer);
 });
 </script>
 

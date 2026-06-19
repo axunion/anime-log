@@ -11,50 +11,50 @@ const castToken = createRaceToken();
 const voiceToken = createRaceToken();
 
 export function useCastView() {
-	async function loadCast(titleId: number) {
-		const token = castToken.next();
-		const detail = await get<TitleDetail>(`/titles/${titleId}`);
-		if (token === castToken.current()) {
-			selectedDetail.value = detail;
-		}
-	}
+  async function loadCast(titleId: number) {
+    const token = castToken.next();
+    const detail = await get<TitleDetail>(`/titles/${titleId}`);
+    if (token === castToken.current()) {
+      selectedDetail.value = detail;
+    }
+  }
 
-	async function loadVoice(actorName: string) {
-		const token = voiceToken.next();
-		try {
-			const results = await get<VoiceResult[]>(
-				`/cast?actor=${encodeURIComponent(actorName)}`,
-			);
-			// Update name and results atomically inside the race guard.
-			// This prevents a stale heading when the fetch fails or is superseded.
-			if (token === voiceToken.current()) {
-				selectedActorName.value = actorName;
-				voiceResults.value = results;
-			}
-		} catch {
-			// Discard silently — if this token is still current the panel stays blank,
-			// which is preferable to showing a mismatched heading with stale results.
-		}
-	}
+  async function loadVoice(actorName: string) {
+    const token = voiceToken.next();
+    try {
+      const results = await get<VoiceResult[]>(
+        `/cast?actor=${encodeURIComponent(actorName)}`,
+      );
+      // Update name and results atomically inside the race guard.
+      // This prevents a stale heading when the fetch fails or is superseded.
+      if (token === voiceToken.current()) {
+        selectedActorName.value = actorName;
+        voiceResults.value = results;
+      }
+    } catch {
+      // Discard silently — if this token is still current the panel stays blank,
+      // which is preferable to showing a mismatched heading with stale results.
+    }
+  }
 
-	function clearCast() {
-		castToken.invalidate();
-		selectedDetail.value = null;
-	}
+  function clearCast() {
+    castToken.invalidate();
+    selectedDetail.value = null;
+  }
 
-	function clearVoice() {
-		voiceToken.invalidate();
-		selectedActorName.value = null;
-		voiceResults.value = [];
-	}
+  function clearVoice() {
+    voiceToken.invalidate();
+    selectedActorName.value = null;
+    voiceResults.value = [];
+  }
 
-	return {
-		selectedDetail,
-		voiceResults,
-		selectedActorName,
-		loadCast,
-		loadVoice,
-		clearCast,
-		clearVoice,
-	};
+  return {
+    selectedDetail,
+    voiceResults,
+    selectedActorName,
+    loadCast,
+    loadVoice,
+    clearCast,
+    clearVoice,
+  };
 }

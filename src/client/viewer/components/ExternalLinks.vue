@@ -1,23 +1,23 @@
 <script setup lang="ts">
-import { X } from "lucide-vue-next";
+import { X } from "@lucide/vue";
 import { computed } from "vue";
 import WikipediaIcon from "./WikipediaIcon.vue";
 
 const props = defineProps<{
-	text: string;
+  text: string;
 }>();
 
 defineEmits<{
-	close: [];
+  close: [];
 }>();
 
 const googleUrl = computed(
-	() => `https://www.google.com/search?q=${encodeURIComponent(props.text)}`,
+  () => `https://www.google.com/search?q=${encodeURIComponent(props.text)}`,
 );
 
 const wikiUrl = computed(
-	() =>
-		`https://ja.wikipedia.org/w/index.php?search=${encodeURIComponent(props.text)}`,
+  () =>
+    `https://ja.wikipedia.org/w/index.php?search=${encodeURIComponent(props.text)}`,
 );
 </script>
 

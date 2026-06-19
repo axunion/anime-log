@@ -5,12 +5,12 @@ import ExternalLinks from "./ExternalLinks.vue";
 import VoiceItem from "./VoiceItem.vue";
 
 const props = defineProps<{
-	results: VoiceResult[];
-	actorName: string | null;
+  results: VoiceResult[];
+  actorName: string | null;
 }>();
 
 const emit = defineEmits<{
-	close: [];
+  close: [];
 }>();
 
 // Keep the last non-empty results so the list stays visible during exit animation.
@@ -18,10 +18,10 @@ const emit = defineEmits<{
 // would disappear before the slide-down animation completes.
 const displayResults = ref<VoiceResult[]>([...props.results]);
 watch(
-	() => props.results,
-	(val) => {
-		if (val.length > 0) displayResults.value = [...val];
-	},
+  () => props.results,
+  (val) => {
+    if (val.length > 0) displayResults.value = [...val];
+  },
 );
 </script>
 

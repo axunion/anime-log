@@ -13,10 +13,10 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 const root = resolve(__dirname, "..");
 const require = createRequire(import.meta.url);
 const sharp = require(
-	resolve(
-		root,
-		"node_modules/.pnpm/sharp@0.34.5/node_modules/sharp/lib/index.js",
-	),
+  resolve(
+    root,
+    "node_modules/.pnpm/sharp@0.34.5/node_modules/sharp/lib/index.js",
+  ),
 );
 
 const svgPath = resolve(root, "src/client/public/favicon.svg");
@@ -25,16 +25,16 @@ const svgBuf = readFileSync(svgPath);
 // ── apple-touch-icon.png (180x180) ───────────────────────────────────────────
 const touchIconPath = resolve(root, "src/client/public/apple-touch-icon.png");
 await sharp(svgBuf, { density: 300 })
-	.resize(180, 180)
-	.png()
-	.toFile(touchIconPath);
+  .resize(180, 180)
+  .png()
+  .toFile(touchIconPath);
 console.log("✓ apple-touch-icon.png (180x180)");
 
 // ── favicon.ico (32x32, PNG embedded in ICO) ─────────────────────────────────
 const pngBuf = await sharp(svgBuf, { density: 300 })
-	.resize(32, 32)
-	.png()
-	.toBuffer();
+  .resize(32, 32)
+  .png()
+  .toBuffer();
 
 // ICO format: header(6) + directory(16) + PNG data
 const header = Buffer.alloc(6);

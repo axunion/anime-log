@@ -1,14 +1,14 @@
 <script setup lang="ts">
-import { ClipboardList, Mic2, RotateCcw, Save, Trash2 } from "lucide-vue-next";
+import { ClipboardList, Mic2, RotateCcw, Save, Trash2 } from "@lucide/vue";
 import { computed, ref, watch } from "vue";
-import Modal from "../../components/Modal.vue";
+import Modal from "../../components/AppModal.vue";
 import { useCastEdit } from "../../composables/useCastEdit";
 import { useCastView } from "../../composables/useCastView";
 import CastEditorRow from "./CastEditorRow.vue";
 
 const props = defineProps<{
-	selectedTitleId: number | null;
-	selectedTitleName: string;
+  selectedTitleId: number | null;
+  selectedTitleName: string;
 }>();
 
 const { selectedDetail, loadCast } = useCastView();
@@ -25,113 +25,113 @@ const bulkOpen = ref(false);
 const bulkText = ref("");
 
 const dirty = computed(
-	() =>
-		JSON.stringify(
-			rows.value.map(({ actor_name, character_name }) => ({
-				actor_name,
-				character_name,
-			})),
-		) !==
-		JSON.stringify(
-			savedRows.value.map(({ actor_name, character_name }) => ({
-				actor_name,
-				character_name,
-			})),
-		),
+  () =>
+    JSON.stringify(
+      rows.value.map(({ actor_name, character_name }) => ({
+        actor_name,
+        character_name,
+      })),
+    ) !==
+    JSON.stringify(
+      savedRows.value.map(({ actor_name, character_name }) => ({
+        actor_name,
+        character_name,
+      })),
+    ),
 );
 
 function castToRows(
-	cast: { actor_name: string; character_name: string }[],
+  cast: { actor_name: string; character_name: string }[],
 ): CastRow[] {
-	return cast.map((m) => ({
-		key: nextKey++,
-		actor_name: m.actor_name,
-		character_name: m.character_name,
-	}));
+  return cast.map((m) => ({
+    key: nextKey++,
+    actor_name: m.actor_name,
+    character_name: m.character_name,
+  }));
 }
 
 watch(
-	() => props.selectedTitleId,
-	async (id) => {
-		bulkOpen.value = false;
-		bulkText.value = "";
-		if (id === null) {
-			rows.value = [];
-			savedRows.value = [];
-			return;
-		}
-		await loadCast(id);
-		const cast = selectedDetail.value?.cast ?? [];
-		rows.value = castToRows(cast);
-		savedRows.value = castToRows(cast);
-	},
+  () => props.selectedTitleId,
+  async (id) => {
+    bulkOpen.value = false;
+    bulkText.value = "";
+    if (id === null) {
+      rows.value = [];
+      savedRows.value = [];
+      return;
+    }
+    await loadCast(id);
+    const cast = selectedDetail.value?.cast ?? [];
+    rows.value = castToRows(cast);
+    savedRows.value = castToRows(cast);
+  },
 );
 
 function clearAll() {
-	rows.value = [];
+  rows.value = [];
 }
 
 function onCancel() {
-	rows.value = savedRows.value.map((r) => ({ ...r }));
+  rows.value = savedRows.value.map((r) => ({ ...r }));
 }
 
 function removeRow(index: number) {
-	rows.value.splice(index, 1);
+  rows.value.splice(index, 1);
 }
 
 function updateRow(
-	index: number,
-	field: keyof Omit<CastRow, "key">,
-	value: string,
+  index: number,
+  field: keyof Omit<CastRow, "key">,
+  value: string,
 ) {
-	rows.value[index][field] = value;
+  rows.value[index][field] = value;
 }
 
 function openBulk() {
-	bulkText.value = "";
-	bulkOpen.value = true;
+  bulkText.value = "";
+  bulkOpen.value = true;
 }
 
 function cancelBulk() {
-	bulkOpen.value = false;
-	bulkText.value = "";
+  bulkOpen.value = false;
+  bulkText.value = "";
 }
 
 function commitBulk() {
-	const parsed = bulkText.value.split("\n").flatMap((line) => {
-		const trimmed = line.trim();
-		if (!trimmed) return [];
-		const [actor = "", character = ""] = trimmed.split("\t");
-		return actor.trim()
-			? [
-					{
-						key: nextKey++,
-						actor_name: actor.trim(),
-						character_name: character.trim(),
-					},
-				]
-			: [];
-	});
-	rows.value.push(...parsed);
-	bulkOpen.value = false;
-	bulkText.value = "";
+  const parsed = bulkText.value.split("\n").flatMap((line) => {
+    const trimmed = line.trim();
+    if (!trimmed) return [];
+    const [actor = "", character = ""] = trimmed.split("\t");
+    return actor.trim()
+      ? [
+          {
+            key: nextKey++,
+            actor_name: actor.trim(),
+            character_name: character.trim(),
+          },
+        ]
+      : [];
+  });
+  rows.value.push(...parsed);
+  bulkOpen.value = false;
+  bulkText.value = "";
 }
 
 async function onSave() {
-	if (props.selectedTitleId === null || !dirty.value) return;
-	saving.value = true;
-	try {
-		const payload = rows.value
-			.filter((r) => r.actor_name.trim())
-			.map(({ actor_name, character_name }) => ({
-				actor_name,
-				character_name,
-			}));
-		await replaceCast(props.selectedTitleId, payload);
-		savedRows.value = castToRows(payload);
-	} finally {
-		saving.value = false;
-	}
+  if (props.selectedTitleId === null || !dirty.value) return;
+  saving.value = true;
+  try {
+    const payload = rows.value
+      .filter((r) => r.actor_name.trim())
+      .map(({ actor_name, character_name }) => ({
+        actor_name,
+        character_name,
+      }));
+    await replaceCast(props.selectedTitleId, payload);
+    savedRows.value = castToRows(payload);
+  } finally {
+    saving.value = false;
+  }
 }
 </script>
 

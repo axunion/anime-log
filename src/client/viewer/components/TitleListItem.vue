@@ -1,12 +1,12 @@
 <script setup lang="ts">
 defineProps<{
-	titleName: string;
-	year: number;
-	selected: boolean;
+  titleName: string;
+  year: number;
+  selected: boolean;
 }>();
 
 defineEmits<{
-	select: [];
+  select: [];
 }>();
 </script>
 

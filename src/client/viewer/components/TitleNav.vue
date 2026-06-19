@@ -1,13 +1,13 @@
 <script setup lang="ts">
+import { CalendarArrowDown, Clock, Search } from "@lucide/vue";
 import type { Tab } from "@shared/constants";
-import { CalendarArrowDown, Clock, Search } from "lucide-vue-next";
 
 defineProps<{ activeTab: Tab; query: string }>();
 defineEmits<{ "update:activeTab": [tab: Tab]; "update:query": [q: string] }>();
 
 const tabs: { id: Tab; icon: typeof Clock; label: string }[] = [
-	{ id: "history", icon: Clock, label: "History" },
-	{ id: "year", icon: CalendarArrowDown, label: "Year" },
+  { id: "history", icon: Clock, label: "History" },
+  { id: "year", icon: CalendarArrowDown, label: "Year" },
 ];
 </script>
 

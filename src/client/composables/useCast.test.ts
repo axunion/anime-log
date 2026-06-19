@@ -7,121 +7,121 @@ const mockPut = vi.hoisted(() => vi.fn());
 const mockDel = vi.hoisted(() => vi.fn());
 
 vi.mock("../lib/api.ts", () => ({
-	get: mockGet,
-	post: mockPost,
-	put: mockPut,
-	del: mockDel,
+  get: mockGet,
+  post: mockPost,
+  put: mockPut,
+  del: mockDel,
 }));
 
 import { useCast } from "./useCast.ts";
 
 function deferred<T>() {
-	let resolve!: (value: T) => void;
-	const promise = new Promise<T>((res) => {
-		resolve = res;
-	});
-	return { promise, resolve };
+  let resolve!: (value: T) => void;
+  const promise = new Promise<T>((res) => {
+    resolve = res;
+  });
+  return { promise, resolve };
 }
 
 describe("useCast", () => {
-	beforeEach(() => {
-		const { clearCast, clearVoice } = useCast();
-		clearCast();
-		clearVoice();
-		mockGet.mockReset();
-		mockPost.mockReset();
-		mockPut.mockReset();
-		mockDel.mockReset();
-	});
+  beforeEach(() => {
+    const { clearCast, clearVoice } = useCast();
+    clearCast();
+    clearVoice();
+    mockGet.mockReset();
+    mockPost.mockReset();
+    mockPut.mockReset();
+    mockDel.mockReset();
+  });
 
-	it("keeps the latest cast response when requests resolve out of order", async () => {
-		const first = deferred<TitleDetail>();
-		const second = deferred<TitleDetail>();
-		mockGet
-			.mockImplementationOnce(() => first.promise)
-			.mockImplementationOnce(() => second.promise);
+  it("keeps the latest cast response when requests resolve out of order", async () => {
+    const first = deferred<TitleDetail>();
+    const second = deferred<TitleDetail>();
+    mockGet
+      .mockImplementationOnce(() => first.promise)
+      .mockImplementationOnce(() => second.promise);
 
-		const detailA: TitleDetail = { id: 1, title: "A", year: 2001, cast: [] };
-		const detailB: TitleDetail = { id: 2, title: "B", year: 2002, cast: [] };
-		const { loadCast, selectedDetail } = useCast();
+    const detailA: TitleDetail = { id: 1, title: "A", year: 2001, cast: [] };
+    const detailB: TitleDetail = { id: 2, title: "B", year: 2002, cast: [] };
+    const { loadCast, selectedDetail } = useCast();
 
-		const p1 = loadCast(1);
-		const p2 = loadCast(2);
+    const p1 = loadCast(1);
+    const p2 = loadCast(2);
 
-		second.resolve(detailB);
-		await p2;
-		expect(selectedDetail.value).toEqual(detailB);
+    second.resolve(detailB);
+    await p2;
+    expect(selectedDetail.value).toEqual(detailB);
 
-		first.resolve(detailA);
-		await p1;
-		expect(selectedDetail.value).toEqual(detailB);
-	});
+    first.resolve(detailA);
+    await p1;
+    expect(selectedDetail.value).toEqual(detailB);
+  });
 
-	it("ignores cast responses that arrive after clearCast", async () => {
-		const pending = deferred<TitleDetail>();
-		mockGet.mockImplementationOnce(() => pending.promise);
+  it("ignores cast responses that arrive after clearCast", async () => {
+    const pending = deferred<TitleDetail>();
+    mockGet.mockImplementationOnce(() => pending.promise);
 
-		const detail: TitleDetail = { id: 1, title: "A", year: 2001, cast: [] };
-		const { loadCast, clearCast, selectedDetail } = useCast();
+    const detail: TitleDetail = { id: 1, title: "A", year: 2001, cast: [] };
+    const { loadCast, clearCast, selectedDetail } = useCast();
 
-		const request = loadCast(1);
-		clearCast();
+    const request = loadCast(1);
+    clearCast();
 
-		pending.resolve(detail);
-		await request;
-		expect(selectedDetail.value).toBeNull();
-	});
+    pending.resolve(detail);
+    await request;
+    expect(selectedDetail.value).toBeNull();
+  });
 
-	it("keeps the latest voice response when requests resolve out of order", async () => {
-		const first = deferred<VoiceResult[]>();
-		const second = deferred<VoiceResult[]>();
-		mockGet
-			.mockImplementationOnce(() => first.promise)
-			.mockImplementationOnce(() => second.promise);
+  it("keeps the latest voice response when requests resolve out of order", async () => {
+    const first = deferred<VoiceResult[]>();
+    const second = deferred<VoiceResult[]>();
+    mockGet
+      .mockImplementationOnce(() => first.promise)
+      .mockImplementationOnce(() => second.promise);
 
-		const resultsA: VoiceResult[] = [
-			{ id: 1, title: "A", character_name: "Hero", title_id: 1, year: 2001 },
-		];
-		const resultsB: VoiceResult[] = [
-			{ id: 2, title: "B", character_name: "Rival", title_id: 2, year: 2002 },
-		];
-		const { loadVoice, voiceResults, selectedActorName } = useCast();
+    const resultsA: VoiceResult[] = [
+      { id: 1, title: "A", character_name: "Hero", title_id: 1, year: 2001 },
+    ];
+    const resultsB: VoiceResult[] = [
+      { id: 2, title: "B", character_name: "Rival", title_id: 2, year: 2002 },
+    ];
+    const { loadVoice, voiceResults, selectedActorName } = useCast();
 
-		const p1 = loadVoice("Actor A");
-		const p2 = loadVoice("Actor B");
+    const p1 = loadVoice("Actor A");
+    const p2 = loadVoice("Actor B");
 
-		// selectedActorName is updated atomically with voiceResults after the fetch
-		// resolves, not optimistically. Both fetches are pending so it stays null.
-		expect(selectedActorName.value).toBeNull();
+    // selectedActorName is updated atomically with voiceResults after the fetch
+    // resolves, not optimistically. Both fetches are pending so it stays null.
+    expect(selectedActorName.value).toBeNull();
 
-		second.resolve(resultsB);
-		await p2;
-		expect(voiceResults.value).toEqual(resultsB);
-		expect(selectedActorName.value).toBe("Actor B");
+    second.resolve(resultsB);
+    await p2;
+    expect(voiceResults.value).toEqual(resultsB);
+    expect(selectedActorName.value).toBe("Actor B");
 
-		first.resolve(resultsA);
-		await p1;
-		// Stale response is discarded — name and results both stay at "B".
-		expect(voiceResults.value).toEqual(resultsB);
-		expect(selectedActorName.value).toBe("Actor B");
-	});
+    first.resolve(resultsA);
+    await p1;
+    // Stale response is discarded — name and results both stay at "B".
+    expect(voiceResults.value).toEqual(resultsB);
+    expect(selectedActorName.value).toBe("Actor B");
+  });
 
-	it("ignores voice responses that arrive after clearVoice", async () => {
-		const pending = deferred<VoiceResult[]>();
-		mockGet.mockImplementationOnce(() => pending.promise);
+  it("ignores voice responses that arrive after clearVoice", async () => {
+    const pending = deferred<VoiceResult[]>();
+    mockGet.mockImplementationOnce(() => pending.promise);
 
-		const results: VoiceResult[] = [
-			{ id: 1, title: "A", character_name: "Hero", title_id: 1, year: 2001 },
-		];
-		const { loadVoice, clearVoice, voiceResults, selectedActorName } =
-			useCast();
+    const results: VoiceResult[] = [
+      { id: 1, title: "A", character_name: "Hero", title_id: 1, year: 2001 },
+    ];
+    const { loadVoice, clearVoice, voiceResults, selectedActorName } =
+      useCast();
 
-		const request = loadVoice("Actor A");
-		clearVoice();
+    const request = loadVoice("Actor A");
+    clearVoice();
 
-		pending.resolve(results);
-		await request;
-		expect(voiceResults.value).toEqual([]);
-		expect(selectedActorName.value).toBeNull();
-	});
+    pending.resolve(results);
+    await request;
+    expect(voiceResults.value).toEqual([]);
+    expect(selectedActorName.value).toBeNull();
+  });
 });

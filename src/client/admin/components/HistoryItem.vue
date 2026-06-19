@@ -1,44 +1,44 @@
 <script setup lang="ts">
+import { GripVertical, ListFilter, Trash2 } from "@lucide/vue";
 import type { HistoryEntry } from "@shared/types";
-import { GripVertical, ListFilter, Trash2 } from "lucide-vue-next";
 import { ref, watch } from "vue";
 
 const props = withDefaults(
-	defineProps<{
-		entry: HistoryEntry;
-		draggable?: boolean;
-	}>(),
-	{ draggable: true },
+  defineProps<{
+    entry: HistoryEntry;
+    draggable?: boolean;
+  }>(),
+  { draggable: true },
 );
 
 const emit = defineEmits<{
-	delete: [];
-	update: [payload: { display_name: string | null; year: number }];
-	"filter-by-title": [title: string];
+  delete: [];
+  update: [payload: { display_name: string | null; year: number }];
+  "filter-by-title": [title: string];
 }>();
 
 const displayName = ref(props.entry.display_name ?? "");
 const year = ref(props.entry.year ? String(props.entry.year) : "");
 
 watch(
-	() => props.entry,
-	(e) => {
-		displayName.value = e.display_name ?? "";
-		year.value = e.year ? String(e.year) : "";
-	},
-	{ deep: true },
+  () => props.entry,
+  (e) => {
+    displayName.value = e.display_name ?? "";
+    year.value = e.year ? String(e.year) : "";
+  },
+  { deep: true },
 );
 
 function onBlur() {
-	const dn = displayName.value.trim() || null;
-	const yr = Number(year.value.trim());
-	if (!yr) {
-		year.value = String(props.entry.year);
-		return;
-	}
-	if (dn === (props.entry.display_name ?? null) && yr === props.entry.year)
-		return;
-	emit("update", { display_name: dn, year: yr });
+  const dn = displayName.value.trim() || null;
+  const yr = Number(year.value.trim());
+  if (!yr) {
+    year.value = String(props.entry.year);
+    return;
+  }
+  if (dn === (props.entry.display_name ?? null) && yr === props.entry.year)
+    return;
+  emit("update", { display_name: dn, year: yr });
 }
 </script>
 

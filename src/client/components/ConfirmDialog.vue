@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed } from "vue";
 import { useConfirm } from "../composables/useConfirm";
-import Modal from "./Modal.vue";
+import Modal from "./AppModal.vue";
 
 const { state, resolve } = useConfirm();
 

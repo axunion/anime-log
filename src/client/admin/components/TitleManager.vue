@@ -1,12 +1,12 @@
 <script setup lang="ts">
-import { Library, Plus, X } from "lucide-vue-next";
+import { Library, Plus, X } from "@lucide/vue";
 import { ref } from "vue";
 import { useFilter } from "../../composables/useFilter";
 import { useTitles } from "../../composables/useTitles";
 import TitleSearchItem from "./TitleSearchItem.vue";
 
 const emit = defineEmits<{
-	selectTitle: [id: number | null, title: string];
+  selectTitle: [id: number | null, title: string];
 }>();
 
 const { titles, addTitle, updateTitle, deleteTitle } = useTitles();
@@ -17,30 +17,30 @@ const newTitle = ref("");
 const newYear = ref("");
 
 function onSelect(id: number, title: string) {
-	if (selectedId.value === id) {
-		selectedId.value = null;
-		emit("selectTitle", null, "");
-	} else {
-		selectedId.value = id;
-		emit("selectTitle", id, title);
-	}
+  if (selectedId.value === id) {
+    selectedId.value = null;
+    emit("selectTitle", null, "");
+  } else {
+    selectedId.value = id;
+    emit("selectTitle", id, title);
+  }
 }
 
 async function onAddTitle() {
-	const title = newTitle.value.trim();
-	const year = Number(newYear.value);
-	if (!title || !year) return;
-	await addTitle(title, year);
-	newTitle.value = "";
-	newYear.value = "";
+  const title = newTitle.value.trim();
+  const year = Number(newYear.value);
+  if (!title || !year) return;
+  await addTitle(title, year);
+  newTitle.value = "";
+  newYear.value = "";
 }
 
 async function onDeleteTitle(id: number) {
-	await deleteTitle(id);
-	if (selectedId.value === id) {
-		selectedId.value = null;
-		emit("selectTitle", null, "");
-	}
+  await deleteTitle(id);
+  if (selectedId.value === id) {
+    selectedId.value = null;
+    emit("selectTitle", null, "");
+  }
 }
 </script>
 

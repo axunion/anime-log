@@ -1,19 +1,19 @@
 <script setup lang="ts">
-import { Download, Upload } from "lucide-vue-next";
-import Modal from "../../components/Modal.vue";
+import { Download, Upload } from "@lucide/vue";
+import Modal from "../../components/AppModal.vue";
 import { useDataPortability } from "../../composables/useDataPortability";
 
 const {
-	importModalOpen,
-	dataFile,
-	historyFile,
-	importError,
-	importing,
-	exportData,
-	openImportModal,
-	onDataFileChange,
-	onHistoryFileChange,
-	onImport,
+  importModalOpen,
+  dataFile,
+  historyFile,
+  importError,
+  importing,
+  exportData,
+  openImportModal,
+  onDataFileChange,
+  onHistoryFileChange,
+  onImport,
 } = useDataPortability();
 </script>
 
