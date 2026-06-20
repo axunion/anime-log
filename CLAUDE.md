@@ -181,19 +181,39 @@ Both import endpoints (`POST /api/import/data`, `POST /api/import/history`) requ
 
 ## Deployment
 
-### ⚠️ GitHub Actions CI/CD is not yet active
+### GitHub Actions CI/CD
 
-Workflow files are saved as drafts in `docs/workflows-draft/` and have not been deployed to `.github/workflows/`. No CI or auto-deploy will run on GitHub until they are moved into place.
+Workflow files are active in `.github/workflows/`:
 
-**To activate CI/CD**, complete the setup checklist below, then:
+- **CI** (`ci.yml`) — runs on every push to `main` and on PRs: `pnpm check` + `pnpm test`.
+- **Deploy** (`deploy.yml`) — triggered manually via `workflow_dispatch` only (auto-deploy on main push is disabled until initial production setup is verified).
 
-```bash
-mkdir -p .github/workflows
-cp docs/workflows-draft/ci.yml .github/workflows/
-cp docs/workflows-draft/deploy.yml .github/workflows/
-```
+`.github/workflows/` is the source of truth.
 
-Then restore the `workflow_run` trigger in `deploy.yml` (currently `workflow_dispatch` only):
+### Validating a deploy without touching production (dry-run)
+
+The Deploy workflow has a `dry_run` boolean input (default: `true`). When enabled:
+- Runs `pnpm check` + `pnpm test` + `pnpm build` + `wrangler deploy --dry-run`
+- **Skips** D1 migration apply and the actual upload — production is untouched
+- Works even before GitHub Secrets are fully registered (uses dummy DB ID)
+
+To trigger from the Actions tab: **Deploy → Run workflow → leave dry_run checked**.
+
+### Setup checklist (complete before first real deploy)
+
+1. `wrangler d1 create anime-db` → note the `database_id`
+2. Set `API_TOKEN` via **Cloudflare Dashboard** (not `wrangler secret put` — never run local commands that write to production):
+   - Workers & Pages → `anime-log` → Settings → Variables and Secrets → Add → `API_TOKEN`
+   - Use a random 16–24 character alphanumeric string (e.g., `openssl rand -hex 12`)
+   - This value serves as both the API write token and the admin URL path segment (see below)
+3. Register three GitHub Secrets: `CLOUDFLARE_API_TOKEN`, `CLOUDFLARE_ACCOUNT_ID`, `CLOUDFLARE_D1_DATABASE_ID`
+4. Run Deploy workflow with `dry_run=true` to verify build/config (no production impact)
+5. Run Deploy workflow with `dry_run=false` to perform the first real deploy
+6. Confirm the admin page is reachable at `https://<worker>.workers.dev/<API_TOKEN>`
+
+### Enabling auto-deploy (after setup is verified)
+
+To auto-deploy on every CI-passing push to `main`, restore the `workflow_run` trigger **and** the job-level `if:` guard in `.github/workflows/deploy.yml`. Both are required — without the guard a failed CI run can still trigger the deploy job:
 
 ```yaml
 on:
@@ -202,19 +222,16 @@ on:
     types: [completed]
     branches: [main]
   workflow_dispatch:
+    inputs:
+      dry_run:
+        description: "Validate build/config only; do not deploy to production"
+        type: boolean
+        default: true
+
+jobs:
+  deploy:
+    if: ${{ github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success' }}
 ```
-
-### Setup checklist (complete before activating CI/CD)
-
-1. `wrangler d1 create anime-db` → note the `database_id`
-2. Set `API_TOKEN` via **Cloudflare Dashboard** (not `wrangler secret put` — never run local commands that write to production):
-   - Workers & Pages → `anime-log` → Settings → Variables and Secrets → Add → `API_TOKEN`
-   - Use a random 16–24 character alphanumeric string (e.g., `openssl rand -hex 12`)
-   - This value serves as both the API write token and the admin URL path segment (see below)
-3. Register three GitHub Secrets: `CLOUDFLARE_API_TOKEN`, `CLOUDFLARE_ACCOUNT_ID`, `CLOUDFLARE_D1_DATABASE_ID`
-4. Move workflow files into `.github/workflows/` (see above)
-5. Test a manual deploy via `workflow_dispatch` from the Actions tab
-6. Restore the `workflow_run` trigger in `deploy.yml`
 
 ### Admin page access
 
@@ -233,7 +250,7 @@ For local development, use your `.dev.vars` value:
 http://localhost:5173/<API_TOKEN from .dev.vars>
 ```
 
-### Day-to-day (once CI/CD is active)
+### Day-to-day (once auto-deploy is enabled)
 
 - Push to `main` → CI passes → deploy runs automatically
 

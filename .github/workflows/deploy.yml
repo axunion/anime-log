@@ -1,0 +1,97 @@
+name: Deploy
+
+# Auto-deploy on main push is disabled until initial production setup is complete.
+# To enable after setup: restore the workflow_run trigger below and remove workflow_dispatch-only.
+# IMPORTANT: also restore the job-level `if:` guard so a failed CI run cannot trigger a deploy:
+#
+#   jobs:
+#     deploy:
+#       if: ${{ github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success' }}
+#
+# on:
+#   workflow_run:
+#     workflows: [CI]
+#     types: [completed]
+#     branches: [main]
+#   workflow_dispatch:
+#     inputs: ...
+#
+# See CLAUDE.md > Deployment for the re-enable checklist.
+on:
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: "Validate build/config only; do not deploy to production"
+        type: boolean
+        default: true
+
+concurrency:
+  group: deploy-production
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+
+      - uses: pnpm/action-setup@b906affcce14559ad1aafd4ab0e942779e9f58b1 # v4
+        with:
+          version: 11.7.0
+
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: 24
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      # Dry-run: fake UUID is safe — wrangler.toml is only used for local build validation,
+      # no remote D1 calls are made.
+      - name: Generate wrangler.toml from template (dry-run)
+        if: ${{ inputs.dry_run }}
+        run: node scripts/render-wrangler-toml.mjs
+        env:
+          CLOUDFLARE_D1_DATABASE_ID: ${{ secrets.CLOUDFLARE_D1_DATABASE_ID || '00000000-0000-0000-0000-000000000000' }}
+
+      # Real deploy: require the actual secret — render-wrangler-toml.mjs exits 1 if empty.
+      - name: Generate wrangler.toml from template
+        if: ${{ !inputs.dry_run }}
+        run: node scripts/render-wrangler-toml.mjs
+        env:
+          CLOUDFLARE_D1_DATABASE_ID: ${{ secrets.CLOUDFLARE_D1_DATABASE_ID }}
+
+      - run: pnpm check
+
+      - run: pnpm test
+
+      - name: Apply D1 migrations
+        if: ${{ !inputs.dry_run }}
+        uses: cloudflare/wrangler-action@9acf94ace14e7dc412b076f2c5c20b8ce93c79cd # v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          packageManager: pnpm
+          command: d1 migrations apply anime-db --remote
+
+      - name: Build and deploy
+        if: ${{ !inputs.dry_run }}
+        uses: cloudflare/wrangler-action@9acf94ace14e7dc412b076f2c5c20b8ce93c79cd # v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          packageManager: pnpm
+          preCommands: pnpm build
+          command: deploy
+
+      - name: Build and dry-run deploy (validate only)
+        if: ${{ inputs.dry_run }}
+        uses: cloudflare/wrangler-action@9acf94ace14e7dc412b076f2c5c20b8ce93c79cd # v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN || '' }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID || '' }}
+          packageManager: pnpm
+          preCommands: pnpm build
+          command: deploy --dry-run
