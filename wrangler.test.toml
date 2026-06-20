@@ -1,0 +1,9 @@
+name = "anime-log"
+main = "src/server/index.ts"
+compatibility_date = "2025-01-01"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "anime-db"
+database_id = "__DATABASE_ID__"
+migrations_dir = "migrations"
