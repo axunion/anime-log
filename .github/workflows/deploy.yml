@@ -1,22 +1,5 @@
 name: Deploy
 
-# Auto-deploy on main push is disabled until initial production setup is complete.
-# To enable after setup: restore the workflow_run trigger below and remove workflow_dispatch-only.
-# IMPORTANT: also restore the job-level `if:` guard so a failed CI run cannot trigger a deploy:
-#
-#   jobs:
-#     deploy:
-#       if: ${{ github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success' }}
-#
-# on:
-#   workflow_run:
-#     workflows: [CI]
-#     types: [completed]
-#     branches: [main]
-#   workflow_dispatch:
-#     inputs: ...
-#
-# See CLAUDE.md > Deployment for the re-enable checklist.
 on:
   workflow_dispatch:
     inputs:
