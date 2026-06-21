@@ -124,4 +124,56 @@ describe("useCast", () => {
     expect(voiceResults.value).toEqual([]);
     expect(selectedActorName.value).toBeNull();
   });
+
+  it("clears selectedDetail when loadCast fails and the request is still current", async () => {
+    mockGet.mockRejectedValueOnce(new Error("network error"));
+
+    const { loadCast, selectedDetail } = useCast();
+    // Pre-populate so we can verify it gets cleared on failure.
+    selectedDetail.value = { id: 99, title: "Stale", year: 2000, cast: [] };
+
+    await loadCast(1);
+    expect(selectedDetail.value).toBeNull();
+  });
+
+  it("does not clear selectedDetail when a stale loadCast fails after a newer one succeeded", async () => {
+    const fresh = deferred<TitleDetail>();
+    mockGet
+      // First call returns a pre-rejected promise (stale request).
+      .mockImplementationOnce(() => Promise.reject(new Error("network error")))
+      .mockImplementationOnce(() => fresh.promise);
+
+    const freshDetail: TitleDetail = {
+      id: 2,
+      title: "Fresh",
+      year: 2002,
+      cast: [],
+    };
+    const { loadCast, selectedDetail } = useCast();
+
+    // Start stale request (immediately rejected), then supersede with fresh one.
+    const p1 = loadCast(1); // stale — token becomes outdated when p2 starts
+    const p2 = loadCast(2); // fresh
+
+    fresh.resolve(freshDetail);
+    await p2;
+    expect(selectedDetail.value).toEqual(freshDetail);
+
+    // p1's catch block did not clear selectedDetail because its token was no
+    // longer current. The error is caught internally and never re-thrown.
+    await p1;
+    expect(selectedDetail.value).toEqual(freshDetail);
+  });
+
+  it("does not update voiceResults or selectedActorName when loadVoice fails", async () => {
+    mockGet.mockRejectedValueOnce(new Error("server error"));
+
+    const { loadVoice, voiceResults, selectedActorName } = useCast();
+    await loadVoice("Actor");
+
+    // Failure is discarded silently — panel stays blank rather than showing
+    // a stale heading with mismatched results.
+    expect(voiceResults.value).toEqual([]);
+    expect(selectedActorName.value).toBeNull();
+  });
 });

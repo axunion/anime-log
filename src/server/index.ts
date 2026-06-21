@@ -84,14 +84,20 @@ app.get("/:secret", async (c) => {
   return c.env.ASSETS.fetch(assetUrl.toString());
 });
 
+function isUniqueViolation(err: Error): boolean {
+  // DrizzleQueryError wraps the D1 error in err.cause; check both levels.
+  const msg = "UNIQUE constraint failed";
+  return (
+    err.message.includes(msg) ||
+    (err.cause instanceof Error && err.cause.message.includes(msg))
+  );
+}
+
 app.onError((err, c) => {
   if (err instanceof ZodError) {
     return c.json({ error: "Bad Request", issues: err.issues }, 400);
   }
-  if (
-    err instanceof Error &&
-    err.message.includes("UNIQUE constraint failed")
-  ) {
+  if (isUniqueViolation(err)) {
     return c.json({ error: "Already exists" }, 409);
   }
   console.error(err);

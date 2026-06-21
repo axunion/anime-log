@@ -47,6 +47,13 @@ historyRoutes.post("/", authMiddleware, async (c) => {
   const body = createHistory.parse(await c.req.json());
   const db = getDb(c.env.DB);
 
+  const parent = await db
+    .select({ id: titles.id })
+    .from(titles)
+    .where(eq(titles.id, body.title_id))
+    .get();
+  if (!parent) return c.json({ error: "Not found" }, 404);
+
   // sort_order via subquery avoids MAX+1 race condition
   const [result] = await db
     .insert(history)

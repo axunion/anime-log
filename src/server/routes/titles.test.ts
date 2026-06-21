@@ -129,6 +129,43 @@ describe("POST /api/titles validation", () => {
   });
 });
 
+describe("POST /api/titles UNIQUE constraint", () => {
+  beforeEach(() => applySchema(typedEnv.DB));
+
+  it("returns 409 when creating a title that already exists", async () => {
+    await seedTitle(typedEnv.DB, { title: "Duplicate", year: 2000 });
+
+    const res = await callApp(typedEnv, {
+      method: "POST",
+      path: "/titles",
+      auth: true,
+      body: { title: "Duplicate", year: 2001 },
+    });
+    const data = (await res.json()) as { error: string };
+    expect(res.status).toBe(409);
+    expect(data.error).toBe("Already exists");
+  });
+});
+
+describe("PATCH /api/titles/:id UNIQUE constraint", () => {
+  beforeEach(() => applySchema(typedEnv.DB));
+
+  it("returns 409 when renaming to a title that already exists", async () => {
+    await seedTitle(typedEnv.DB, { title: "Existing", year: 2000 });
+    const id = await seedTitle(typedEnv.DB, { title: "Target", year: 2001 });
+
+    const res = await callApp(typedEnv, {
+      method: "PATCH",
+      path: `/titles/${id}`,
+      auth: true,
+      body: { title: "Existing" },
+    });
+    const data = (await res.json()) as { error: string };
+    expect(res.status).toBe(409);
+    expect(data.error).toBe("Already exists");
+  });
+});
+
 describe("DELETE /api/titles/:id", () => {
   beforeEach(() => applySchema(typedEnv.DB));
 

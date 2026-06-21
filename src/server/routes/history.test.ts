@@ -194,6 +194,20 @@ describe("PUT /api/history/reorder validation", () => {
   });
 });
 
+describe("POST /api/history with non-existent title_id", () => {
+  beforeEach(() => applySchema(typedEnv.DB));
+
+  it("returns 404 when title_id does not exist", async () => {
+    const res = await callApp(typedEnv, {
+      method: "POST",
+      path: "/history",
+      auth: true,
+      body: { title_id: 9999, year: 2020 },
+    });
+    expect(res.status).toBe(404);
+  });
+});
+
 describe("DELETE /api/history/:id", () => {
   beforeEach(() => applySchema(typedEnv.DB));
 
