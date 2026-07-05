@@ -28,7 +28,9 @@ The global security-header middleware clones `c.res` before setting headers (ASS
 c.res = new Response(c.res.body, { status: c.res.status, statusText: c.res.statusText, headers });
 ```
 
-The middleware sets `Strict-Transport-Security` on all responses. CSP is not set by the middleware — static assets get CSP from `public/_headers` (production only; Vite dev server does not apply `_headers`).
+The middleware sets `Strict-Transport-Security`, `Referrer-Policy: no-referrer` (keeps the token-bearing admin URL out of Referer headers), and `X-Robots-Tag: noindex` (personal site — never indexed) on all responses. CSP is not set by the middleware — static assets get CSP from `public/_headers` (production only; Vite dev server does not apply `_headers`).
+
+The `/:secret` success response sets `Cache-Control: no-store` — the injected HTML contains the API token and must never be cached.
 
 The `/:secret` handler fails closed when `API_TOKEN` is unset — it proxies to ASSETS without comparing, so an unconfigured deployment never accidentally grants admin access.
 

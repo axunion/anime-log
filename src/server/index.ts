@@ -20,6 +20,10 @@ app.use("*", async (c, next) => {
     "Strict-Transport-Security",
     "max-age=31536000; includeSubDomains",
   );
+  // Personal site: keep the token-bearing admin URL out of Referer headers
+  // and the whole site out of search engine indexes.
+  headers.set("Referrer-Policy", "no-referrer");
+  headers.set("X-Robots-Tag", "noindex");
   c.res = new Response(c.res.body, {
     status: c.res.status,
     statusText: c.res.statusText,
@@ -77,6 +81,8 @@ app.get("/:secret", async (c) => {
     // then override Content-Type for the modified HTML.
     const respHeaders = new Headers(resp.headers);
     respHeaders.set("Content-Type", "text/html; charset=UTF-8");
+    // The injected HTML contains the API token — never cache it.
+    respHeaders.set("Cache-Control", "no-store");
     return new Response(injected, { status: 200, headers: respHeaders });
   }
   // Not the token — proxy to ASSETS to serve any matching static file.

@@ -10,7 +10,7 @@ const typedEnv = env as unknown as Bindings;
 describe("security headers", () => {
   beforeEach(() => applySchema(typedEnv.DB));
 
-  it("sets X-Content-Type-Options, X-Frame-Options, and Strict-Transport-Security on success responses", async () => {
+  it("sets X-Content-Type-Options, X-Frame-Options, HSTS, Referrer-Policy, and X-Robots-Tag on success responses", async () => {
     const res = await app.fetch(
       new Request("http://localhost/api/titles"),
       typedEnv,
@@ -19,6 +19,8 @@ describe("security headers", () => {
     expect(res.headers.get("X-Content-Type-Options")).toBe("nosniff");
     expect(res.headers.get("X-Frame-Options")).toBe("DENY");
     expect(res.headers.get("Strict-Transport-Security")).toMatch(/max-age=/);
+    expect(res.headers.get("Referrer-Policy")).toBe("no-referrer");
+    expect(res.headers.get("X-Robots-Tag")).toBe("noindex");
   });
 
   it("sets security headers on error responses", async () => {
