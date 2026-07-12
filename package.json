@@ -15,7 +15,6 @@
     }
   },
   "scripts": {
-    "prepare": "lefthook install",
     "dev": "vite",
     "build": "vite build",
     "typecheck": "vue-tsc --noEmit -p tsconfig.app.json && tsc --noEmit -p tsconfig.worker.json",
@@ -28,10 +27,10 @@
     "db:migrate": "wrangler d1 migrations apply anime-db --local",
     "db:reset": "rm -rf .wrangler/state/v3/d1 && pnpm db:migrate",
     "seed:local": "pnpm exec tsx scripts/seed-local.ts",
-    "test": "pnpm run test:client && pnpm run test:server",
-    "test:client": "vitest run --config vitest.config.ts",
-    "test:server": "vitest run --config vitest.workers.config.ts",
-    "test:watch": "vitest --config vitest.config.ts"
+    "test": "vitest run",
+    "test:client": "vitest run --project client",
+    "test:server": "vitest run --project server",
+    "test:watch": "vitest"
   },
   "dependencies": {
     "@lucide/vue": "^1.21.0",
@@ -52,7 +51,6 @@
     "@vue/test-utils": "^2.4.11",
     "drizzle-kit": "^0.31.10",
     "happy-dom": "^20.10.6",
-    "lefthook": "^2.1.9",
     "tsx": "^4.22.4",
     "typescript": "^5.9.3",
     "vite": "^8.0.16",

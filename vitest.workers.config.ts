@@ -20,6 +20,7 @@ export default defineConfig({
     }),
   ],
   test: {
+    name: "server",
     include: ["src/server/**/*.test.ts"],
   },
 });

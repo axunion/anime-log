@@ -75,7 +75,7 @@ pnpm build       # Build locally — deploy goes through GitHub Actions
 pnpm db:reset    # Wipe local D1 and re-apply all migrations
 ```
 
-Git hooks (lefthook) run Biome and `vue-tsc` automatically on every commit.
+Run `pnpm check` and `pnpm test` before committing — CI runs the same checks on every push.
 
 ---
 

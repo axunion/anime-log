@@ -69,9 +69,6 @@ pnpm typecheck        # TypeScript type check (vue-tsc -p tsconfig.app.json + ts
 pnpm fix              # Biome lint + auto-fix (all files, respects .gitignore)
 pnpm check            # Biome lint + typecheck (no auto-fix; used in CI)
 
-# Git hooks (lefthook — runs automatically on git commit)
-# pre-commit (parallel): biome check --write on staged files + pnpm typecheck
-
 pnpm db:generate      # Generate migration SQL from schema changes (drizzle-kit)
 pnpm db:check         # Verify migration journal/snapshot integrity (drizzle-kit)
 pnpm db:drop          # Interactively drop the latest generated migration (pre-release iteration)
@@ -80,9 +77,9 @@ pnpm db:migrate       # Apply migrations to local D1 only
 pnpm db:reset         # Wipe local D1 state and re-apply all migrations (fresh local DB)
 pnpm seed:local       # Seed local DB from data/data.{json,js} (prefers .json; requires pnpm dev running)
 
-pnpm test             # Run all tests (client + server)
-pnpm test:client      # Client composable/API tests (Vitest + happy-dom)
-pnpm test:server      # Server route tests (Vitest + @cloudflare/vitest-pool-workers)
+pnpm test             # Run all tests in one vitest run (client + server projects)
+pnpm test:client      # Client composable/API tests only (--project client; happy-dom)
+pnpm test:server      # Server route tests only (--project server; @cloudflare/vitest-pool-workers)
 ```
 
 To query the local D1 database directly:
@@ -99,6 +96,8 @@ Coding conventions are in `.claude/rules/` (path-scoped, auto-loaded when editin
 - `vue.md` — Vue 3 component conventions (`src/client/**/*.vue`)
 - `composables.md` — Composable conventions: singleton pattern, race guard, mutation→re-fetch (`src/client/composables/*.ts`)
 - `testing.md` — Test structure, patterns, and what to test/skip (`**/*.test.ts`)
+
+Step-by-step recipes for common changes (add a column, add an endpoint, deploy, etc.) are in `docs/update-playbook.md`.
 
 ## Keeping rules up to date
 

@@ -4,15 +4,16 @@ paths: ["**/*.test.ts"]
 
 # Testing Conventions
 
-## Two test environments
+## Two test environments, one vitest run
 
-- **`pnpm test:client`** — composables and `lib/api.ts` tests (Vitest, happy-dom)
-- **`pnpm test:server`** — Hono routes and middleware tests (Vitest + `@cloudflare/vitest-pool-workers` / Miniflare)
-- **`pnpm test`** — runs both in sequence
+- **`pnpm test`** — runs both projects in a single `vitest run`
+- **`pnpm test:client`** — composables and `lib/api.ts` tests only (`--project client`; happy-dom)
+- **`pnpm test:server`** — Hono routes and middleware tests only (`--project server`; `@cloudflare/vitest-pool-workers` / Miniflare)
 
 Config files:
-- `vitest.config.ts` — client tests
-- `vitest.workers.config.ts` — server tests (uses `cloudflareTest` plugin)
+- `vitest.config.ts` — root config; lists the two projects below via `test.projects`
+- `vitest.client.config.ts` — client project
+- `vitest.workers.config.ts` — server project (uses `cloudflareTest` plugin)
 
 ## Server test patterns
 
