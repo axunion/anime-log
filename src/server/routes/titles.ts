@@ -1,4 +1,8 @@
-import { idParam } from "@shared/schemas/common";
+import {
+  idParam,
+  MAX_CAST_PER_TITLE,
+  MAX_NAME_LENGTH,
+} from "@shared/schemas/common";
 import { eq, sql } from "drizzle-orm";
 import type { BatchItem } from "drizzle-orm/batch";
 import { createInsertSchema } from "drizzle-zod";
@@ -12,21 +16,21 @@ import { authMiddleware } from "../middleware/auth";
 import type { Bindings } from "../types";
 
 const createTitle = createInsertSchema(titles, {
-  title: z.string().min(1),
+  title: z.string().min(1).max(MAX_NAME_LENGTH),
 })
   .pick({ title: true, year: true })
   .extend({
-    cast: z.array(castMemberInput).optional(),
+    cast: z.array(castMemberInput).max(MAX_CAST_PER_TITLE).optional(),
   });
 
 const updateTitle = createInsertSchema(titles, {
-  title: z.string().min(1),
+  title: z.string().min(1).max(MAX_NAME_LENGTH),
 })
   .pick({ title: true, year: true })
   .partial();
 
 const castListInput = z.object({
-  cast: z.array(castMemberInput),
+  cast: z.array(castMemberInput).max(MAX_CAST_PER_TITLE),
 });
 
 export const titlesRoutes = new Hono<{ Bindings: Bindings }>();

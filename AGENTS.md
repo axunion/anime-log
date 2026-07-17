@@ -130,13 +130,13 @@ Types, schemas, and constants shared between the server and client. Both sides i
 
 - `types.ts` — Canonical API response types (`Title`, `CastMember`, `TitleDetail`, `HistoryEntry`, `VoiceResult`, `CastInput`). Import these on both server and client instead of duplicating type definitions.
 - `constants.ts` — `Tab`, `AdminTab` union types derived from `as const` arrays. No Cloudflare-specific types here.
-- `schemas/common.ts` — `idParam = z.coerce.number().int().positive()` for path parameter validation.
+- `schemas/common.ts` — `idParam = z.coerce.number().int().positive()` for path parameter validation, plus input size caps (`MAX_NAME_LENGTH = 200`, `MAX_CAST_PER_TITLE = 500`, `MAX_IMPORT_ROWS = 10000`) applied to all string/array inputs in server schemas.
 
 Never import Cloudflare Workers types (`D1Database`, etc.) into `src/shared/` — they are not available in the client build.
 
 ### Server (`src/server/`)
 
-- `index.ts` — Hono app entry. Defines `Bindings = { DB: D1Database; API_TOKEN: string; ASSETS: Fetcher }` and mounts five route modules. Global `onError` handles ZodError → 400 and UNIQUE constraint → 409. Admin page routing and ASSETS proxy are handled here (not in route modules).
+- `index.ts` — Hono app entry. Defines `Bindings = { DB: D1Database; API_TOKEN: string; ASSETS: Fetcher; RATE_LIMITER?: RateLimit; WRITE_RATE_LIMITER?: RateLimit }` and mounts five route modules. Global `onError` handles ZodError → 400 and UNIQUE constraint → 409. Admin page routing, ASSETS proxy, and per-IP rate limiting middleware are handled here (not in route modules). Rate limit bindings come from `[[ratelimits]]` in `wrangler.toml` (global: 300 req/min, writes: 60 req/min per IP per Cloudflare location); they are absent in tests and requests pass through unlimited.
 - `middleware/auth.ts` — Bearer token middleware for write endpoints. Token configured via Cloudflare Dashboard in production, `.dev.vars` in local development.
 - `routes/titles.ts` — CRUD for titles + per-title cast routes (`GET/POST/PUT /:id/cast`).
 - `routes/cast.ts` — Cross-title voice actor search (`GET /api/cast?actor=...`) and individual cast PATCH/DELETE.

@@ -11,3 +11,16 @@ binding = "DB"
 database_name = "anime-db"
 database_id = "__DATABASE_ID__"
 migrations_dir = "migrations"
+
+# Rate limiting bindings (per client IP, per Cloudflare location).
+# namespace_id is an arbitrary integer, unique per binding within this Worker.
+# RATE_LIMITER: all requests. WRITE_RATE_LIMITER: POST/PUT/PATCH/DELETE only.
+[[ratelimits]]
+name = "RATE_LIMITER"
+namespace_id = "1001"
+simple = { limit = 300, period = 60 }
+
+[[ratelimits]]
+name = "WRITE_RATE_LIMITER"
+namespace_id = "1002"
+simple = { limit = 60, period = 60 }

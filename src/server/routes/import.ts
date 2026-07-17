@@ -1,3 +1,8 @@
+import {
+  MAX_CAST_PER_TITLE,
+  MAX_IMPORT_ROWS,
+  MAX_NAME_LENGTH,
+} from "@shared/schemas/common";
 import type { BatchItem } from "drizzle-orm/batch";
 import { createInsertSchema } from "drizzle-zod";
 import { Hono } from "hono";
@@ -11,25 +16,30 @@ import type { Bindings } from "../types";
 
 export const importRoutes = new Hono<{ Bindings: Bindings }>();
 
+const importName = z.string().min(1).max(MAX_NAME_LENGTH);
+
 const importDataItem = createInsertSchema(titles, {
-  title: z.string().min(1),
+  title: importName,
   year: z.coerce.number().int().min(1900).max(2100),
 })
   .pick({ title: true, year: true })
   .extend({
-    cast: z.array(z.tuple([z.string().min(1), z.string().min(1)])).default([]),
+    cast: z
+      .array(z.tuple([importName, importName]))
+      .max(MAX_CAST_PER_TITLE)
+      .default([]),
   });
-const importDataSchema = z.array(importDataItem);
+const importDataSchema = z.array(importDataItem).max(MAX_IMPORT_ROWS);
 
 const importHistoryItem = createInsertSchema(history, {
   year: z.coerce.number().int().min(1900).max(2100),
 })
   .pick({ year: true })
   .extend({
-    title: z.string().min(1),
-    name: z.string().min(1).optional(),
+    title: importName,
+    name: importName.optional(),
   });
-const importHistorySchema = z.array(importHistoryItem);
+const importHistorySchema = z.array(importHistoryItem).max(MAX_IMPORT_ROWS);
 
 importRoutes.post("/data", authMiddleware, async (c) => {
   if (c.req.query("confirm") !== "replace-all") {

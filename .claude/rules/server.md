@@ -64,14 +64,15 @@ All `POST` and `PATCH` handlers must validate request bodies with zod. Derive sc
 ```ts
 import { z } from "zod"
 import { createInsertSchema } from "drizzle-zod"
+import { MAX_NAME_LENGTH } from "@shared/schemas/common"
 import { titles } from "../db/schema"
 
 const createFoo = createInsertSchema(titles, {
-  title: z.string().min(1),
+  title: z.string().min(1).max(MAX_NAME_LENGTH),
 }).pick({ title: true, year: true })
 
 const updateFoo = createInsertSchema(titles, {
-  title: z.string().min(1),
+  title: z.string().min(1).max(MAX_NAME_LENGTH),
 }).pick({ title: true, year: true }).partial()
 
 fooRoutes.post("/", authMiddleware, async (c) => {
@@ -81,6 +82,26 @@ fooRoutes.post("/", authMiddleware, async (c) => {
 ```
 
 Do NOT use `c.req.json<T>()` with a TypeScript type alone — this provides no runtime validation.
+
+### Input size caps
+
+Every string input must have `.max()` and every array input must have a `.max()` count cap — even on token-authenticated endpoints (defense in depth: bounds the damage of a leaked token and rejects oversized payloads early). Use the shared constants from `@shared/schemas/common`:
+
+- `MAX_NAME_LENGTH` (200) — all name/title strings
+- `MAX_CAST_PER_TITLE` (500) — cast arrays per title
+- `MAX_IMPORT_ROWS` (10000) — import payloads and `reorder` id lists
+
+## Rate limiting
+
+`src/server/index.ts` applies a global rate-limiting middleware (registered after the security-header middleware, before routes), keyed by the `CF-Connecting-IP` header:
+
+- `RATE_LIMITER` — all requests, including `/:secret` brute-force attempts and asset requests
+- `WRITE_RATE_LIMITER` — additional stricter budget for `POST`/`PUT`/`PATCH`/`DELETE`
+- Over limit → `429 { error: "Too Many Requests" }` with `Retry-After: 60`
+
+Bindings are declared in `wrangler.toml` under `[[ratelimits]]` (name, arbitrary unique `namespace_id`, `simple = { limit, period }`; `period` must be 10 or 60). Counters are **per Cloudflare location and eventually consistent** — treat limits as abuse dampening, not exact accounting.
+
+Both bindings are optional in `Bindings` and absent in `wrangler.test.toml` — the middleware skips the check when a binding is unbound (same guard pattern as ASSETS). Tests inject stub `RateLimit` objects via the env argument to `app.fetch()`.
 
 ## Error handling
 

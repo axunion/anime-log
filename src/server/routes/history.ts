@@ -1,4 +1,8 @@
-import { idParam } from "@shared/schemas/common";
+import {
+  idParam,
+  MAX_IMPORT_ROWS,
+  MAX_NAME_LENGTH,
+} from "@shared/schemas/common";
 import { eq, sql } from "drizzle-orm";
 import type { BatchItem } from "drizzle-orm/batch";
 import { createInsertSchema } from "drizzle-zod";
@@ -10,19 +14,26 @@ import { batchAll } from "../lib/batch";
 import { authMiddleware } from "../middleware/auth";
 import type { Bindings } from "../types";
 
-const createHistory = createInsertSchema(history).pick({
-  title_id: true,
-  display_name: true,
-  year: true,
-});
+// display_name is nullable — cap length while keeping null (clear) and
+// undefined (omit) accepted.
+const displayNameInput = z.string().max(MAX_NAME_LENGTH).nullable().optional();
+
+const createHistory = createInsertSchema(history)
+  .pick({
+    title_id: true,
+    display_name: true,
+    year: true,
+  })
+  .extend({ display_name: displayNameInput });
 
 const reorderHistory = z.object({
-  ids: z.array(z.number().int().positive()),
+  ids: z.array(z.number().int().positive()).max(MAX_IMPORT_ROWS),
 });
 
 const updateHistory = createInsertSchema(history)
   .pick({ display_name: true, year: true })
-  .partial();
+  .partial()
+  .extend({ display_name: displayNameInput });
 
 export const historyRoutes = new Hono<{ Bindings: Bindings }>();
 

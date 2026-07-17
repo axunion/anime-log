@@ -49,6 +49,8 @@ beforeEach(async () => {
 | `scripts/seed-local.ts` | Skip (one-off dev script) |
 | UNIQUE constraint → 409 | `POST /api/titles` and `PATCH /api/titles/:id` with duplicate name; `onError` checks `err.cause` chain for DrizzleQueryError wrapping |
 | `src/server/index.ts` | Security headers (nosniff/DENY/HSTS/Referrer-Policy/X-Robots-Tag), admin concealment (`/admin.html` etc. → 404), `/:secret` guard in test env, notFound JSON 404 for `/api/*` |
+| Rate limiting | Inject stub `RateLimit` objects (`{ limit: async () => ({ success }) }`) into the env argument of `app.fetch()`: 429 + `Retry-After` when rejected, pass-through when allowed, write limiter skips GET |
+| Input size limits | Representative 400s: title > `MAX_NAME_LENGTH`, cast > `MAX_CAST_PER_TITLE`, import > `MAX_IMPORT_ROWS` |
 | `useDataPortability.ts` | `onImport`: missing-file guard, confirm cancel, data-success/history-fail partial error, full success (modal close + re-fetch); `readJson`: invalid JSON and FileReader IO error; `exportData`: fetch failure + `exporting` flag cleanup |
 | `useCastView.ts` | `loadCast` failure clears `selectedDetail` when current, does not clear when stale; `loadVoice` failure is silent discard |
 | `useHistory.ts` | `persistOrder` failure: `fetchHistory` called to restore order + re-throw; `addHistory` success: write→re-fetch; write failure: error set + re-throw, no re-fetch |

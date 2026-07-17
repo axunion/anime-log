@@ -31,6 +31,37 @@ app.use("*", async (c, next) => {
   });
 });
 
+// Rate limiting: counters are per client IP and per Cloudflare location.
+// RATE_LIMITER covers every request (including /:secret brute-force attempts);
+// WRITE_RATE_LIMITER adds a stricter budget for mutating methods so a leaked
+// token cannot mass-create records quickly. Bindings are optional — absent in
+// test environments, where requests pass through unlimited.
+const WRITE_METHODS = new Set(["POST", "PUT", "PATCH", "DELETE"]);
+
+async function checkLimit(
+  limiter: RateLimit | undefined,
+  key: string,
+): Promise<boolean> {
+  if (!limiter) return true;
+  const { success } = await limiter.limit({ key });
+  return success;
+}
+
+app.use("*", async (c, next) => {
+  const key = c.req.header("CF-Connecting-IP") ?? "";
+  const checks = [checkLimit(c.env.RATE_LIMITER, key)];
+  if (WRITE_METHODS.has(c.req.method)) {
+    checks.push(checkLimit(c.env.WRITE_RATE_LIMITER, key));
+  }
+  const allowed = await Promise.all(checks);
+  if (allowed.some((ok) => !ok)) {
+    return c.json({ error: "Too Many Requests" }, 429, {
+      "Retry-After": "60",
+    });
+  }
+  await next();
+});
+
 app.route("/api/titles", titlesRoutes);
 app.route("/api/cast", castRoutes);
 app.route("/api/history", historyRoutes);

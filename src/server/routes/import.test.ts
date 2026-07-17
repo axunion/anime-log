@@ -309,3 +309,37 @@ describe("POST /api/import/history", () => {
     expect(rows).toHaveLength(0);
   });
 });
+
+describe("import size limits", () => {
+  beforeEach(() => applySchema(typedEnv.DB));
+
+  it("returns 400 when data payload exceeds max rows", async () => {
+    const body = Array.from({ length: 10001 }, (_, i) => ({
+      title: `Title ${i}`,
+      year: 2024,
+    }));
+
+    const res = await callApp(typedEnv, {
+      method: "POST",
+      path: "/import/data?confirm=replace-all",
+      auth: true,
+      body,
+    });
+    expect(res.status).toBe(400);
+  });
+
+  it("returns 400 when history payload exceeds max rows", async () => {
+    const body = Array.from({ length: 10001 }, (_, i) => ({
+      title: `Title ${i}`,
+      year: 2024,
+    }));
+
+    const res = await callApp(typedEnv, {
+      method: "POST",
+      path: "/import/history?confirm=replace-all",
+      auth: true,
+      body,
+    });
+    expect(res.status).toBe(400);
+  });
+});

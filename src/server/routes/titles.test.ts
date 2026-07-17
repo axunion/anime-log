@@ -191,3 +191,33 @@ describe("DELETE /api/titles/:id", () => {
     expect(castCount?.n).toBe(0);
   });
 });
+
+describe("input size limits", () => {
+  beforeEach(() => applySchema(typedEnv.DB));
+
+  it("returns 400 when title exceeds max length", async () => {
+    const res = await callApp(typedEnv, {
+      method: "POST",
+      path: "/titles",
+      auth: true,
+      body: { title: "x".repeat(201), year: 2024 },
+    });
+    expect(res.status).toBe(400);
+  });
+
+  it("returns 400 when cast replacement exceeds max entries", async () => {
+    const id = await seedTitle(typedEnv.DB, { title: "Big Cast", year: 2024 });
+    const cast = Array.from({ length: 501 }, (_, i) => ({
+      actor_name: `Actor ${i}`,
+      character_name: `Role ${i}`,
+    }));
+
+    const res = await callApp(typedEnv, {
+      method: "PUT",
+      path: `/titles/${id}/cast`,
+      auth: true,
+      body: { cast },
+    });
+    expect(res.status).toBe(400);
+  });
+});

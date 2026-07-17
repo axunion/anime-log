@@ -86,6 +86,55 @@ describe("/:secret admin routing", () => {
   });
 });
 
+describe("rate limiting", () => {
+  beforeEach(() => applySchema(typedEnv.DB));
+
+  const limiter = (success: boolean): RateLimit => ({
+    limit: async () => ({ success }),
+  });
+
+  it("returns 429 with Retry-After when the global limiter rejects", async () => {
+    const res = await app.fetch(new Request("http://localhost/api/titles"), {
+      ...typedEnv,
+      RATE_LIMITER: limiter(false),
+    });
+    expect(res.status).toBe(429);
+    expect(res.headers.get("Retry-After")).toBe("60");
+  });
+
+  it("passes through when limiters allow the request", async () => {
+    const res = await app.fetch(new Request("http://localhost/api/titles"), {
+      ...typedEnv,
+      RATE_LIMITER: limiter(true),
+      WRITE_RATE_LIMITER: limiter(true),
+    });
+    expect(res.status).toBe(200);
+  });
+
+  it("does not apply the write limiter to GET requests", async () => {
+    const res = await app.fetch(new Request("http://localhost/api/titles"), {
+      ...typedEnv,
+      WRITE_RATE_LIMITER: limiter(false),
+    });
+    expect(res.status).toBe(200);
+  });
+
+  it("returns 429 for writes when the write limiter rejects", async () => {
+    const res = await app.fetch(
+      new Request("http://localhost/api/titles", {
+        method: "POST",
+        headers: {
+          Authorization: "Bearer test-token",
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ title: "Blocked", year: 2024 }),
+      }),
+      { ...typedEnv, WRITE_RATE_LIMITER: limiter(false) },
+    );
+    expect(res.status).toBe(429);
+  });
+});
+
 describe("notFound", () => {
   it("returns JSON 404 for unknown /api paths", async () => {
     const res = await app.fetch(
