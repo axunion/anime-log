@@ -10,7 +10,7 @@
     },
     "packageManager": {
       "name": "pnpm",
-      "version": "^11",
+      "version": "^12",
       "onFail": "warn"
     }
   },
@@ -33,29 +33,29 @@
     "test:watch": "vitest"
   },
   "dependencies": {
-    "@lucide/vue": "^1.21.0",
-    "drizzle-orm": "^0.45.2",
+    "@lucide/vue": "^1.47.0",
+    "drizzle-orm": "^0.45.3",
     "drizzle-zod": "^0.8.3",
-    "hono": "^4.12.26",
-    "vue": "^3.5.38",
+    "hono": "^4.13.8",
+    "vue": "^3.5.43",
     "vuedraggable": "^4.1.0",
-    "zod": "^4.4.3"
+    "zod": "^4.6.5"
   },
   "devDependencies": {
-    "@biomejs/biome": "2.5.0",
-    "@cloudflare/vite-plugin": "^1.41.0",
-    "@cloudflare/vitest-pool-workers": "^0.14.9",
-    "@cloudflare/workers-types": "^4.20260617.1",
-    "@types/node": "^22.19.21",
-    "@vitejs/plugin-vue": "^6.0.7",
-    "@vue/test-utils": "^2.4.11",
-    "drizzle-kit": "^0.31.10",
-    "happy-dom": "^20.10.6",
-    "tsx": "^4.22.4",
-    "typescript": "^5.9.3",
-    "vite": "^8.0.16",
-    "vitest": "^4.1.9",
-    "vue-tsc": "^3.3.5",
-    "wrangler": "^4.101.0"
+    "@biomejs/biome": "2.5.14",
+    "@cloudflare/vite-plugin": "^1.56.0",
+    "@cloudflare/vitest-pool-workers": "^0.22.0",
+    "@cloudflare/workers-types": "^5",
+    "@types/node": "^22.20.4",
+    "@vitejs/plugin-vue": "^6.0.9",
+    "@vue/test-utils": "^2.5.1",
+    "drizzle-kit": "^0.31.11",
+    "happy-dom": "^20.14.5",
+    "tsx": "^4.23.15",
+    "typescript": "^5",
+    "vite": "^8.3.0",
+    "vitest": "^4",
+    "vue-tsc": "^3.3.11",
+    "wrangler": "^4.135.0"
   }
 }
