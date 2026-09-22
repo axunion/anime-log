@@ -1,120 +1,10 @@
-# CLAUDE.md
+# Architecture Reference
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
-
-> **Sync:** This file and `AGENTS.md` contain the same guidance. When updating one, update the other to match.
-
-## Language
-
-Write the following in **English only**:
-- In-code comments, console output, error messages, log messages
-- Commit messages, README files, AI-readable config files (CLAUDE.md, AGENT.md, etc.)
-
-Communicate with the user in **Japanese**.
-
-## Production safety — NEVER touch production from local
-
-**All production changes must go through GitHub Actions. Never run any command that writes to or deploys production from a local environment.**
-
-This is a hard rule with no exceptions, including "emergencies":
-
-- ❌ `wrangler deploy` — forbidden locally; deploys go through CI/CD only
-- ❌ `wrangler d1 migrations apply --remote` — forbidden; CI/CD applies remote migrations
-- ❌ Any script or command targeting a production URL or remote D1
-
-If asked to run any such command, refuse and explain this policy.
-
-**Permitted local operations:** `pnpm dev`, `pnpm build` (local build only), `pnpm db:migrate` (local D1 only), `pnpm seed:local` (localhost only), and all read-only wrangler commands with `--local`.
-
-## Code Structure
-
-- Name variables, functions, and files to communicate intent.
-- Extract a helper only when used in 3+ places; otherwise inline it.
-- One concern per file; split when a file exceeds ~300 lines.
-- Delete dead code; never comment it out.
-
-## Testing
-
-- Write tests before or alongside implementation.
-- Test observable outcomes and edge cases, not implementation details.
-- Each test must be fully self-contained; no shared mutable state between tests.
-
-Test environment details and helpers are in `.claude/rules/testing.md`.
-
-## Commits
-
-Format:
-
-```
-<one-line summary>
-
-<Why: one sentence — motivation or problem>
-
-- <change 1>
-- <change 2>
-```
-
-- Summary: imperative mood, ≤70 chars, no trailing period, no prefix tags (`feat:`, `fix:`, etc.).
-- Why line: include only when motivation is not evident from the diff alone.
-- Bullets: include only for 2+ distinct changes.
-- Never commit secrets (`*.key`, `*.pem`, `credentials*`).
-- Never use `--no-verify` or `--amend`; always create a new commit.
-
-## Commands
-
-```bash
-pnpm dev              # Start dev server with Cloudflare Worker + Vite HMR (http://localhost:5173)
-pnpm build            # Build client and worker locally (dist/client/, dist/anime_log/) — do NOT run wrangler deploy
-pnpm typecheck        # TypeScript type check (vue-tsc -p tsconfig.app.json + tsc -p tsconfig.worker.json)
-pnpm fix              # Biome lint + auto-fix (all files, respects .gitignore)
-pnpm check            # Biome lint + typecheck (no auto-fix; used in CI)
-
-pnpm db:generate      # Generate migration SQL from schema changes (drizzle-kit)
-pnpm db:check         # Verify migration journal/snapshot integrity (drizzle-kit)
-pnpm db:drop          # Interactively drop the latest generated migration (pre-release iteration)
-pnpm db:studio        # Open Drizzle Studio against local D1 (requires db:migrate run first)
-pnpm db:migrate       # Apply migrations to local D1 only
-pnpm db:reset         # Wipe local D1 state and re-apply all migrations (fresh local DB)
-pnpm seed:local       # Seed local DB from data/data.{json,js} (prefers .json; requires pnpm dev running)
-
-pnpm test             # Run all tests in one vitest run (client + server projects)
-pnpm test:client      # Client composable/API tests only (--project client; happy-dom)
-pnpm test:server      # Server route tests only (--project server; @cloudflare/vitest-pool-workers)
-```
-
-To query the local D1 database directly:
-```bash
-pnpm exec wrangler d1 execute anime-db --local --command "SELECT COUNT(*) FROM titles"
-```
-
-## Conventions
-
-Coding conventions are in `.claude/rules/` (path-scoped, auto-loaded when editing matching files):
-
-- `migrations.md` — D1/SQLite schema patterns (`migrations/**`)
-- `server.md` — Hono route and D1 query conventions (`src/server/**`)
-- `vue.md` — Vue 3 component conventions (`src/client/**/*.vue`)
-- `composables.md` — Composable conventions: singleton pattern, race guard, mutation→re-fetch (`src/client/composables/*.ts`)
-- `testing.md` — Test structure, patterns, and what to test/skip (`**/*.test.ts`)
-
-Step-by-step recipes for common changes (add a column, add an endpoint, deploy, etc.) are in `docs/update-playbook.md`.
-
-## Keeping rules up to date
-
-After any code change, check whether `.claude/rules/` needs updating:
-
-- Modified server code → review `rules/server.md`
-- Modified Vue components → review `rules/vue.md`
-- Modified composables → review `rules/composables.md`
-- Modified migrations → review `rules/migrations.md`
-
-Update the relevant files immediately when conventions change or new patterns emerge. Do not defer.
-
-## Architecture
+Detailed reference for this repo's structure. `AGENTS.md` has the operational rules; this file has the "how it's wired" facts.
 
 This is a **Cloudflare Workers + D1 + Hono** backend serving a **Vue 3** MPA (two pages: viewer and admin).
 
-### Request flow
+## Request flow
 
 ```
 Browser → Vite dev server (port 5173)
@@ -124,17 +14,17 @@ Browser → Vite dev server (port 5173)
 
 In production, the Worker serves everything: API routes via Hono, static assets from `dist/client/` via the `assets` binding.
 
-### Shared (`src/shared/`)
+## Shared (`src/shared/`)
 
-Types, schemas, and constants shared between the server and client. Both sides import from the `@shared` alias (configured in `vite.config.ts` and the tsconfig files).
+Types, schemas, and constants shared between server and client, imported via the `@shared` alias.
 
-- `types.ts` — Canonical API response types (`Title`, `CastMember`, `TitleDetail`, `HistoryEntry`, `VoiceResult`, `CastInput`). Import these on both server and client instead of duplicating type definitions.
+- `types.ts` — Canonical API response types (`Title`, `CastMember`, `TitleDetail`, `HistoryEntry`, `VoiceResult`, `CastInput`). Import these on both sides instead of duplicating type definitions.
 - `constants.ts` — `Tab`, `AdminTab` union types derived from `as const` arrays. No Cloudflare-specific types here.
 - `schemas/common.ts` — `idParam = z.coerce.number().int().positive()` for path parameter validation, plus input size caps (`MAX_NAME_LENGTH = 200`, `MAX_CAST_PER_TITLE = 500`, `MAX_IMPORT_ROWS = 10000`) applied to all string/array inputs in server schemas.
 
 Never import Cloudflare Workers types (`D1Database`, etc.) into `src/shared/` — they are not available in the client build.
 
-### Server (`src/server/`)
+## Server (`src/server/`)
 
 - `index.ts` — Hono app entry. Defines `Bindings = { DB: D1Database; API_TOKEN: string; ASSETS: Fetcher; RATE_LIMITER?: RateLimit; WRITE_RATE_LIMITER?: RateLimit }` and mounts five route modules. Global `onError` handles ZodError → 400 and UNIQUE constraint → 409. Admin page routing, ASSETS proxy, and per-IP rate limiting middleware are handled here (not in route modules). Rate limit bindings come from `[[ratelimits]]` in `wrangler.toml` (global: 300 req/min, writes: 60 req/min per IP per Cloudflare location); they are absent in tests and requests pass through unlimited.
 - `middleware/auth.ts` — Bearer token middleware for write endpoints. Token configured via Cloudflare Dashboard in production, `.dev.vars` in local development.
@@ -149,7 +39,7 @@ Partial updates use `PATCH` (not `PUT`). All `PATCH`/`DELETE` handlers check exi
 
 The `/:secret` admin route compares the path segment against `API_TOKEN` with `timingSafeEqual`. On match it serves `admin.html` with the token injected via `<meta name="x-api-token">`. Requests to `/admin.html`, `/admin`, and `/admin/` return 404 directly. Unmatched non-API paths proxy to `ASSETS`.
 
-### Client (`src/client/`)
+## Client (`src/client/`)
 
 Two independent Vue 3 apps (MPA). Each mounts via `createApp(App).mount("#app")`.
 
@@ -171,7 +61,7 @@ Two independent Vue 3 apps (MPA). Each mounts via `createApp(App).mount("#app")`
 - `lib/raceToken.ts` — `createRaceToken()` for cancellable async loads.
 - `styles/base.css` — Global CSS custom properties and resets.
 
-### Database schema
+## Database schema
 
 Schema source of truth: `src/server/db/schema.ts` (Drizzle ORM `sqliteTable` definitions).
 
@@ -184,7 +74,12 @@ Indexes: `idx_cast_title_sort` on cast_members(title_id, sort_order); `idx_histo
 
 To add columns or tables: edit `schema.ts` → `pnpm db:generate` → `pnpm db:migrate`.
 
-### Vite config notes
+To query the local D1 database directly:
+```bash
+pnpm exec wrangler d1 execute anime-db --local --command "SELECT COUNT(*) FROM titles"
+```
+
+## Vite config notes
 
 - Vue plugin (`@vitejs/plugin-vue`) listed before `cloudflare()` in plugins array.
 - `root: 'src/client'` — enables clean dev URLs (`/` instead of `/src/client/`).
@@ -192,7 +87,7 @@ To add columns or tables: edit `schema.ts` → `pnpm db:generate` → `pnpm db:m
 - `persistState: { path: resolve(__dirname, '.wrangler/state') }` — forces the plugin to use the project-root `.wrangler/state` instead of creating a separate one under `src/client/.wrangler/state`.
 - Worker build output goes to `dist/anime_log/`; client assets to `dist/client/`. The generated `dist/anime_log/wrangler.json` references `"assets": {"directory": "../client"}`.
 
-### Data management
+## Data management
 
 Two workflows for moving data in and out:
 

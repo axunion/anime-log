@@ -53,7 +53,7 @@ Or restore from an Admin UI export: Import button → select `data.json` +
 2. GitHub → Actions → Deploy → Run workflow with `dry_run=true` to verify
 3. Re-run with `dry_run=false` for the real deploy
 
-Never deploy from local — see the production safety rule in `CLAUDE.md`.
+Never deploy from local — see the production safety rule in `AGENTS.md`.
 
 ## Before committing
 
