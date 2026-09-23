@@ -6,12 +6,12 @@
     "runtime": {
       "name": "node",
       "version": "^24",
-      "onFail": "warn"
+      "onFail": "download"
     },
     "packageManager": {
       "name": "pnpm",
       "version": "^12",
-      "onFail": "warn"
+      "onFail": "download"
     }
   },
   "scripts": {
