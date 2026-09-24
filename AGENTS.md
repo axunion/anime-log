@@ -41,6 +41,34 @@ If asked to run any such command, refuse and explain this policy.
 
 Test environment details and helpers are in `.claude/rules/testing.md`.
 
+- **Structural correctness** (API responses, D1 state, composable state transitions) belongs in vitest and runs as part of verification.
+- **Visual/subjective judgment** (layout, spacing, animation, cross-browser rendering) stays a human check against the running app. Don't try to automate it away.
+- **Persist a regression test only for a durable flow worth protecting**, ideally one with evidence it has broken before (see git history). A one-off check that verified a single change doesn't need to become a permanent file. When unsure, ask the user.
+
+## Subagents
+
+Project agents live in `.claude/agents/` and sit alongside Claude Code's built-in agents:
+
+- `researcher` — external docs only (zod, drizzle, Hono, Cloudflare Workers/Vite/vitest plugins, Vue). Local code search is the built-in `Explore` agent's job.
+- `reviewer` — reviews the uncommitted diff against this file and `.claude/rules/`. Read-only.
+- `tester` — runs `pnpm test` and `pnpm check`; may add tests, never edits implementation code.
+
+Risk areas (subtle bugs are costly here): `src/server/middleware/auth.ts`, `src/server/index.ts` (rate limiting, `onError`, security headers, admin concealment), `src/server/lib/batch.ts`, `migrations/` + `src/server/db/schema.ts`, and the race-guarded composables in `src/client/composables/`.
+
+Tiers:
+
+1. **Trivial** (one-line fix, typo, config tweak): implement directly, no agents.
+2. **Non-trivial but contained** (self-contained change in one area): implement directly. Optionally run `Explore` first to confirm a convention, or `researcher` for an unfamiliar external API. Afterward, run `reviewer` and `tester` in parallel **without asking** — both are read-only/test-only, so they're cheap and exist to catch the blind spot of reviewing your own work.
+3. **Large, ambiguous, or high-risk** (spans many files, substantially touches a risk area, or the task itself is ambiguous): propose that the user drive it with `/goal`, and hand them a ready-to-use condition that names the checks, e.g. "implement X; done when reviewer reports no findings and tester passes". The evaluator only reads the condition text, so a condition without the agents ends the loop right after implementation. Each turn: `Explore` + `researcher` in parallel, implement here, then `reviewer` + `tester` in parallel, repeating until the condition holds. Always propose this rather than assuming it — it's a real commitment of time and tokens.
+
+Visual verification is a separate axis from the tiers — it depends on whether the change touches rendered UI, not on how risky it is:
+
+- **No rendered surface touched**: skip.
+- **Small, isolated, single-property tweak**: a quick manual glance at `pnpm dev` is enough.
+- **Viewport-dependent layout, shared styles across components, or a reported visual bug**: check the running app across a range of widths and in both Chromium and Firefox (past bugs were Firefox-only). There is no browser-automation agent yet; propose adding one (Playwright-based) if this becomes frequent.
+
+The main conversation writes the code at every tier; there is no implementer agent. Implementation shares context across planning, coding, and iterating on review/test findings, which a subagent would lose on every re-spawn (each starts fresh), and its real output is the working tree, not a summary. The value of `reviewer` and `tester` — an opinion from something that didn't write the code — holds either way.
+
 ## Commits
 
 Format — plain prose, no prefixes or labels (`feat:`, `fix:`, and the like):
