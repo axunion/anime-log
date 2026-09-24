@@ -66,4 +66,4 @@ async function onDelete() {
 
 ## Modal component
 
-Use `<Modal>` from `../../components/Modal.vue` for overlay UI (forms, bulk inputs, detail views). It supports `v-model:open`, `title`, `size` (`sm` | `md`), `closeOnOverlay`, `closeOnEsc`, and named slots `header`, default body, `footer`.
+Use `<Modal>` (imported from `../../components/AppModal.vue`) for overlay UI (forms, bulk inputs, detail views). It supports `v-model:open`, `title`, `size` (`sm` | `md`), `closeOnOverlay`, `closeOnEsc`, and named slots `header`, default body, `footer`.

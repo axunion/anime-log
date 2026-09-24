@@ -9,9 +9,9 @@ paths: ["src/server/**"]
 `src/server/index.ts` contains two special routes for the admin page (not in any route module):
 
 - `GET /admin.html` → returns `new Response(null, { status: 404 })` directly (plain 404, bypasses ASSETS, hides existence)
-- `GET /:secret` → compares `:secret` against `c.env.API_TOKEN` with `timingSafeEqual`. On match: fetches `admin.html` from ASSETS, checks `resp.ok`, injects `<meta name="x-api-token" content="...">` (HTML-attribute-escaped via `escapeAttr`), propagates ASSETS response headers (including CSP from `public/_headers`), and returns the modified HTML. On no-match: proxies to ASSETS for the same path so single-segment static files (favicon.svg, index.html, etc.) are served normally. **Note:** inline-segment params (`/prefix-:secret`) do not work in `@cloudflare/vite-plugin` dev mode; always use full-segment params (`/:param`).
+- `GET /:secret` → compares `:secret` against `c.env.API_TOKEN` with `timingSafeEqual`. On match: fetches `admin.html` from ASSETS, checks `resp.ok`, injects `<meta name="x-api-token" content="...">` (HTML-attribute-escaped via `escapeAttr`), propagates ASSETS response headers (including CSP from `src/client/public/_headers`), and returns the modified HTML. On no-match: proxies to ASSETS for the same path so single-segment static files (favicon.svg, index.html, etc.) are served normally. **Note:** inline-segment params (`/prefix-:secret`) do not work in `@cloudflare/vite-plugin` dev mode; always use full-segment params (`/:param`).
 
-Token injection uses `<meta>` (not `<script>`) to stay compatible with `Content-Security-Policy: default-src 'self'` set in `public/_headers`. The token is read from the meta tag in `src/client/admin/main.ts` (admin-only entry point) and persisted to localStorage via `useAuth().setToken()`.
+Token injection uses `<meta>` (not `<script>`) to stay compatible with `Content-Security-Policy: default-src 'self'` set in `src/client/public/_headers`. The token is read from the meta tag in `src/client/admin/main.ts` (admin-only entry point) and persisted to localStorage via `useAuth().setToken()`.
 
 The ASSETS binding is required in `Bindings` (`src/server/types.ts`) and configured in `wrangler.toml`:
 ```toml
@@ -28,7 +28,7 @@ The global security-header middleware clones `c.res` before setting headers (ASS
 c.res = new Response(c.res.body, { status: c.res.status, statusText: c.res.statusText, headers });
 ```
 
-The middleware sets `Strict-Transport-Security`, `Referrer-Policy: no-referrer` (keeps the token-bearing admin URL out of Referer headers), and `X-Robots-Tag: noindex` (personal site — never indexed) on all responses. CSP is not set by the middleware — static assets get CSP from `public/_headers` (production only; Vite dev server does not apply `_headers`).
+The middleware sets `Strict-Transport-Security`, `Referrer-Policy: no-referrer` (keeps the token-bearing admin URL out of Referer headers), and `X-Robots-Tag: noindex` (personal site — never indexed) on all responses. CSP is not set by the middleware — static assets get CSP from `src/client/public/_headers` (production only; Vite dev server does not apply `_headers`).
 
 The `/:secret` success response sets `Cache-Control: no-store` — the injected HTML contains the API token and must never be cached.
 
@@ -36,7 +36,7 @@ The `/:secret` handler fails closed when `API_TOKEN` is unset — it proxies to 
 
 ## Auth middleware
 
-- `authMiddleware` is required on all `POST` / `PATCH` / `DELETE` handlers
+- `authMiddleware` is required on all `POST` / `PUT` / `PATCH` / `DELETE` handlers
 - `GET` handlers must NOT use `authMiddleware`
 - `authMiddleware` returns 500 `"Server misconfigured"` if `API_TOKEN` is unset (fail closed)
 
@@ -130,7 +130,7 @@ if (!parent) return c.json({ error: "Not found" }, 404)
 
 - `POST` — create
 - `PATCH` — partial update (omitted fields keep their current value)
-- `PUT` — full replacement (used only for reorder endpoints that replace the entire ordered set)
+- `PUT` — full replacement (reorder endpoints and `PUT /api/titles/:id/cast`, which replace the entire set)
 - `DELETE` — delete
 
 Never use `PUT` for partial updates. Use `PATCH` with existence check + COALESCE pattern.

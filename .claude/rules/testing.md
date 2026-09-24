@@ -42,7 +42,6 @@ beforeEach(async () => {
 | Area | Coverage |
 |---|---|
 | `useFilter.ts` | All logic including regex metacharacter behavior |
-| `useHistory.reorder` | Boundary conditions (first up / last down = no-op) |
 | `lib/api.ts` | Auth header presence/absence for each method |
 | Server routes | Full CRUD via `callApp` + Miniflare D1 |
 | Vue components | Skip (logic lives in composables) |
