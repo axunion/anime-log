@@ -1,6 +1,6 @@
 # Architecture Reference
 
-Detailed reference for this repo's structure. `AGENTS.md` has the operational rules; this file has the "how it's wired" facts.
+Detailed reference for this repo's structure. `CLAUDE.md` has the operational rules; this file has the "how it's wired" facts.
 
 This is a **Cloudflare Workers + D1 + Hono** backend serving a **Vue 3** MPA (two pages: viewer and admin).
 

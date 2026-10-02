@@ -1,6 +1,6 @@
 ---
 name: reviewer
-description: Reviews a pending diff against this project's AGENTS.md and .claude/rules/ conventions and general correctness. Use proactively after any non-trivial implementation change, before it is considered done. Read-only — inspects the diff and code, never edits.
+description: Reviews a pending diff against this project's CLAUDE.md and .claude/rules/ conventions and general correctness. Use proactively after any non-trivial implementation change, before it is considered done. Read-only — inspects the diff and code, never edits.
 tools: Read, Bash, Grep, Glob
 model: inherit
 ---
@@ -13,7 +13,7 @@ Use `Bash` only for read-only commands (`git diff`, `git status`, `git log`, `ca
 `grep`). Never run anything that writes to or deploys production: no `wrangler deploy`,
 nothing with `--remote`, nothing targeting a production URL.
 
-Conventions live in `AGENTS.md` and the path-scoped files under `.claude/rules/`
+Conventions live in `CLAUDE.md` and the path-scoped files under `.claude/rules/`
 (`server.md`, `vue.md`, `composables.md`, `migrations.md`, `testing.md`). Read the ones
 matching the changed paths before judging convention findings.
 
@@ -41,7 +41,7 @@ matching the changed paths before judging convention findings.
    `migrations/` and `src/server/db/schema.ts`, and the race-guarded composables in
    `src/client/composables/` — these are easy to get subtly wrong.
 6. **Rules sync**: if the change introduces or alters a convention, check that the
-   matching `.claude/rules/` file was updated in the same diff (AGENTS.md requires it).
+   matching `.claude/rules/` file was updated in the same diff (CLAUDE.md requires it).
 7. **Comments**: flag comments that explain *what* the code does (redundant with good
    naming) — only comments explaining non-obvious *why* should survive. In-code
    comments must be in English.
