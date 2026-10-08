@@ -79,4 +79,35 @@ describe("useTitles", () => {
     expect(mockGet).toHaveBeenCalledWith("/titles");
     expect(fetchHistoryMock).toHaveBeenCalledTimes(1);
   });
+
+  it("addTitle posts title with cast, refreshes titles, and returns the new id", async () => {
+    mockPost.mockResolvedValue({ id: 7 });
+    mockGet.mockResolvedValue([]);
+    const cast = [{ actor_name: "Actor", character_name: "Role" }];
+
+    const { addTitle } = useTitles();
+    const id = await addTitle("New Show", 2026, cast);
+
+    expect(mockPost).toHaveBeenCalledWith("/titles", {
+      title: "New Show",
+      year: 2026,
+      cast,
+    });
+    expect(mockGet).toHaveBeenCalledWith("/titles");
+    expect(id).toBe(7);
+  });
+
+  it("addTitle sends an empty cast list when cast is omitted", async () => {
+    mockPost.mockResolvedValue({ id: 1 });
+    mockGet.mockResolvedValue([]);
+
+    const { addTitle } = useTitles();
+    await addTitle("Solo", 2020);
+
+    expect(mockPost).toHaveBeenCalledWith("/titles", {
+      title: "Solo",
+      year: 2020,
+      cast: [],
+    });
+  });
 });

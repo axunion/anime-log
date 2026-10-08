@@ -3,18 +3,18 @@ import { Library, Plus, X } from "@lucide/vue";
 import { ref } from "vue";
 import { useFilter } from "../../composables/useFilter";
 import { useTitles } from "../../composables/useTitles";
+import TitleAddModal from "./TitleAddModal.vue";
 import TitleSearchItem from "./TitleSearchItem.vue";
 
 const emit = defineEmits<{
   selectTitle: [id: number | null, title: string];
 }>();
 
-const { titles, addTitle, updateTitle, deleteTitle } = useTitles();
+const { titles, updateTitle, deleteTitle } = useTitles();
 const { query, filtered } = useFilter(titles, (t) => t.title);
 
 const selectedId = ref<number | null>(null);
-const newTitle = ref("");
-const newYear = ref("");
+const addOpen = ref(false);
 
 function onSelect(id: number, title: string) {
   if (selectedId.value === id) {
@@ -26,17 +26,10 @@ function onSelect(id: number, title: string) {
   }
 }
 
-async function onAddTitle() {
-  const title = newTitle.value.trim();
-  const year = Number(newYear.value);
-  if (!title || !year) return;
-  try {
-    await addTitle(title, year);
-  } catch {
-    return;
-  }
-  newTitle.value = "";
-  newYear.value = "";
+function onAdded(id: number, title: string) {
+  query.value = "";
+  selectedId.value = id;
+  emit("selectTitle", id, title);
 }
 
 async function onUpdateTitle(
@@ -71,14 +64,13 @@ async function onDeleteTitle(id: number) {
 			<span class="section-count">{{ titles.length }}件</span>
 		</h2>
 
-		<form class="admin-form" @submit.prevent="onAddTitle">
-			<input class="admin-form-input" v-model="newTitle" type="text" placeholder="タイトル名" />
-			<input class="admin-form-input admin-form-input--narrow" v-model="newYear" type="text" inputmode="numeric" maxlength="4" placeholder="年" />
-			<button class="admin-form-button" type="submit">
+		<div class="admin-form">
+			<button class="admin-form-button" type="button" @click="addOpen = true">
 				<Plus :size="13" :stroke-width="2.5" />
 				追加
 			</button>
-		</form>
+		</div>
+		<TitleAddModal v-model:open="addOpen" @added="onAdded" />
 
 		<div class="admin-form title-filter">
 			<div class="filter-wrap">

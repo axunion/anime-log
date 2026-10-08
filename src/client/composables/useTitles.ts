@@ -1,4 +1,4 @@
-import type { Title } from "@shared/types";
+import type { CastInput, Title } from "@shared/types";
 import { computed, ref } from "vue";
 import { del, get, patch, post } from "../lib/api";
 import { useHistory } from "./useHistory";
@@ -39,11 +39,17 @@ export function useTitles() {
     }
   }
 
-  async function addTitle(title: string, year: number) {
+  async function addTitle(
+    title: string,
+    year: number,
+    cast: CastInput[] = [],
+  ): Promise<number> {
+    let id = 0;
     await mutate(async () => {
-      await post("/titles", { title, year });
+      ({ id } = await post<{ id: number }>("/titles", { title, year, cast }));
       await fetchTitles();
     });
+    return id;
   }
 
   async function updateTitle(

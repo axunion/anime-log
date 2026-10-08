@@ -49,6 +49,8 @@ Components that need the token (e.g. for display) can call `useAuth().getToken()
 
 All admin sections that support adding items must place the add form at the top of the section, directly after `<h2 class="admin-section-title">`. Use `<form class="admin-form" @submit.prevent="onAdd">` with inline inputs and a submit button. Never place the primary add UI at the bottom of a list.
 
+Exception: adding a title (`TitleManager.vue`) puts only an add button at the top, which opens `TitleAddModal.vue` to enter title, year, and cast together and create them in one `POST /titles`. A new title always comes with its cast, and the new row is auto-selected and scrolled into view instead of getting lost mid-list.
+
 ## Confirmation dialogs
 
 Never use `window.confirm()`, `alert()`, or `prompt()`. For destructive actions (delete, overwrite), use `useConfirm()` from `../../composables/useConfirm`:

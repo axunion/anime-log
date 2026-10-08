@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Check, Pencil, Trash2, X } from "@lucide/vue";
-import { ref } from "vue";
+import { ref, watchPostEffect } from "vue";
 import { useConfirm } from "../../composables/useConfirm";
 
 const props = defineProps<{
@@ -17,6 +17,7 @@ const emit = defineEmits<{
 }>();
 
 const { confirm } = useConfirm();
+const itemEl = ref<HTMLLIElement | null>(null);
 const editing = ref(false);
 const editTitle = ref("");
 const editYear = ref("");
@@ -43,6 +44,11 @@ function commitEdit(e: Event) {
   editing.value = false;
 }
 
+// Post-flush so a newly added title is scrolled to once its <li> has mounted.
+watchPostEffect(() => {
+  if (props.selected) itemEl.value?.scrollIntoView({ block: "nearest" });
+});
+
 async function onDelete(e: Event) {
   e.stopPropagation();
   if (!(await confirm({ message: `「${props.titleName}」を削除しますか？` })))
@@ -52,7 +58,7 @@ async function onDelete(e: Event) {
 </script>
 
 <template>
-	<li class="search-item" :class="{ selected, editing }" @click="!editing && $emit('select')">
+	<li ref="itemEl" class="search-item" :class="{ selected, editing }" @click="!editing && $emit('select')">
 		<template v-if="editing">
 			<input
 				class="edit-input edit-input--title"
