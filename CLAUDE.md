@@ -31,6 +31,7 @@ Project agents live in `.claude/agents/` and sit alongside Claude Code's built-i
 - `researcher` — external docs only (zod, drizzle, Hono, Cloudflare Workers/Vite/vitest plugins, Vue). Local code search is the built-in `Explore` agent's job.
 - `reviewer` — reviews the uncommitted diff against this file and `.claude/rules/`. Read-only.
 - `tester` — runs `pnpm test` and `pnpm check`; may add tests, never edits implementation code.
+- `inspector` — renders the running app in an isolated Playwright Chromium and checks screenshots and overflow across viewport widths. Read-only for project code; see the visual-verification gate below.
 
 Risk areas (subtle bugs are costly here): `src/server/middleware/auth.ts`, `src/server/index.ts` (rate limiting, `onError`, security headers, admin concealment), `src/server/lib/batch.ts`, `migrations/` + `src/server/db/schema.ts`, and the race-guarded composables in `src/client/composables/`.
 
@@ -44,7 +45,9 @@ Visual verification is a separate axis from the tiers — it depends on whether 
 
 - **No rendered surface touched**: skip.
 - **Small, isolated, single-property tweak**: a quick manual glance at `pnpm dev` is enough.
-- **Viewport-dependent layout, shared styles across components, or a reported visual bug**: check the running app across a range of widths and in both Chromium and Firefox (past bugs were Firefox-only). There is no browser-automation agent yet; propose adding one (Playwright-based) if this becomes frequent.
+- **Viewport-dependent layout, shared styles across components, or a reported visual bug**: run `inspector` with the full picture (it has no memory of the conversation) and treat a fix as unverified until a re-run comes back clean. It only drives Chromium, and past bugs were Firefox-only, so also glance at the running app in Firefox.
+
+The gate needs no confirmation to run, but it is not automatic for every UI change: it costs a dev server and a browser, so judge each change against these cases. `inspector` stays out of a `/goal` completion condition, since "does it render correctly" is not something a scripted evaluator can judge.
 
 The main conversation writes the code at every tier; there is no implementer agent. Implementation shares context across planning, coding, and iterating on review/test findings, which a subagent would lose on every re-spawn (each starts fresh), and its real output is the working tree, not a summary. The value of `reviewer` and `tester` — an opinion from something that didn't write the code — holds either way.
 
