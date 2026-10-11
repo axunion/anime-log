@@ -6,7 +6,7 @@
     "runtime": {
       "name": "node",
       "version": "^24",
-      "onFail": "download"
+      "onFail": "warn"
     },
     "packageManager": {
       "name": "pnpm",
@@ -52,6 +52,7 @@
     "@vue/test-utils": "^2.5.1",
     "drizzle-kit": "^0.31.11",
     "happy-dom": "^20.14.5",
+    "playwright": "^1.64.0",
     "tsx": "^4.23.15",
     "typescript": "^5",
     "vite": "^8.3.0",
