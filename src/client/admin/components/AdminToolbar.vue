@@ -21,11 +21,11 @@ const {
 
 <template>
 	<div class="tab-actions">
-		<button type="button" class="action-btn" @click="openImportModal">
+		<button type="button" class="btn action-btn" @click="openImportModal">
 			<Upload :size="15" :stroke-width="1.75" />
 			Import
 		</button>
-		<button type="button" class="action-btn" :disabled="exporting" @click="exportData">
+		<button type="button" class="btn action-btn" :disabled="exporting" @click="exportData">
 			<Download :size="15" :stroke-width="1.75" />
 			{{ exporting ? "..." : "Export" }}
 		</button>
@@ -46,12 +46,12 @@ const {
 			<p v-if="importError" class="import-error">{{ importError }}</p>
 		</div>
 		<template #footer>
-			<button type="button" class="btn-cancel" @click="importModalOpen = false">
+			<button type="button" class="btn btn--ghost" @click="importModalOpen = false">
 				キャンセル
 			</button>
 			<button
 				type="button"
-				class="btn-import"
+				class="btn btn--primary"
 				:disabled="!dataFile || !historyFile || importing"
 				@click="onImport"
 			>
@@ -68,22 +68,7 @@ const {
 }
 
 .action-btn {
-	align-items: center;
-	border-radius: 8px;
-	color: var(--text-muted);
-	cursor: pointer;
-	display: flex;
-	font-size: 13px;
-	font-weight: 500;
-	gap: 0.4em;
-	height: 32px;
-	padding: 0 0.75em;
-	transition: color 0.15s, background 0.15s;
-}
-
-.action-btn:hover:not(:disabled) {
-	background: var(--hover-overlay);
-	color: var(--contrast-color);
+	--btn-bg: transparent;
 }
 
 .import-form {
@@ -112,51 +97,15 @@ const {
 }
 
 .import-error {
-	color: var(--danger-color, #e53e3e);
+	color: var(--danger-color);
 	font-size: 13px;
 	margin: 0;
 }
 
 .export-error {
-	color: var(--danger-color, #e53e3e);
+	color: var(--danger-color);
 	font-size: 12px;
 	margin: 0;
 	padding: 0 0.5em;
-}
-
-.btn-cancel,
-.btn-import {
-	border-radius: 8px;
-	cursor: pointer;
-	font-size: 13px;
-	font-weight: 500;
-	height: 32px;
-	padding: 0 1em;
-	transition: background 0.15s, color 0.15s;
-}
-
-.btn-cancel {
-	background: transparent;
-	border: 1px solid var(--glass-border);
-	color: var(--text-muted);
-}
-
-.btn-cancel:hover {
-	background: var(--hover-overlay);
-	color: var(--contrast-color);
-}
-
-.btn-import {
-	background: var(--accent-color);
-	color: #fff;
-}
-
-.btn-import:hover:not(:disabled) {
-	filter: brightness(1.1);
-}
-
-.btn-import:disabled {
-	cursor: not-allowed;
-	opacity: 0.5;
 }
 </style>

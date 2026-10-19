@@ -69,7 +69,7 @@ onMounted(async () => {
 	</div>
 	<div v-else-if="appError" class="app-status app-status--error">
 		<p class="app-status-text">{{ appError.message }}</p>
-		<button class="app-status-retry" type="button" @click="reload">再読み込み</button>
+		<button class="btn btn--ghost" type="button" @click="reload">再読み込み</button>
 	</div>
 	<ViewerLayout
 		v-else
@@ -107,22 +107,6 @@ onMounted(async () => {
 }
 
 .app-status--error .app-status-text {
-	color: var(--danger-color, #e53e3e);
-}
-
-.app-status-retry {
-	background: transparent;
-	border: 1px solid var(--glass-border);
-	border-radius: 8px;
-	color: var(--text-muted);
-	cursor: pointer;
-	font-size: 13px;
-	padding: 0.4em 1em;
-	transition: background 0.15s, color 0.15s;
-}
-
-.app-status-retry:hover {
-	background: var(--hover-overlay);
-	color: var(--contrast-color);
+	color: var(--danger-color);
 }
 </style>

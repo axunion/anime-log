@@ -86,7 +86,7 @@ async function onSubmit() {
 				<input class="admin-form-input admin-form-input--narrow" v-model="year" type="text" inputmode="numeric" maxlength="4" placeholder="年" />
 			</div>
 			<textarea
-				class="cast-textarea"
+				class="admin-form-textarea"
 				v-model="castText"
 				placeholder="声優名&#9;役名（1行1件、タブ区切り）"
 				spellcheck="false"
@@ -97,8 +97,8 @@ async function onSubmit() {
 			<p v-if="submitError" class="form-message" role="alert">{{ submitError }}</p>
 		</form>
 		<template #footer>
-			<button class="btn-cancel" type="button" @click="onCancel">キャンセル</button>
-			<button class="admin-form-button" type="submit" form="title-add-form" :disabled="!canSubmit">
+			<button class="btn btn--ghost" type="button" @click="onCancel">キャンセル</button>
+			<button class="btn btn--primary" type="submit" form="title-add-form" :disabled="!canSubmit">
 				<Plus :size="13" :stroke-width="2.5" />
 				追加
 			</button>
@@ -109,50 +109,9 @@ async function onSubmit() {
 <style scoped>
 @import "../styles/admin-shared.css";
 
-.admin-form-button:disabled {
-	cursor: default;
-	opacity: 0.35;
-}
-
-.cast-textarea {
-	background: var(--glass-bg-strong);
-	border: 1px solid var(--glass-border);
-	border-radius: 6px;
-	box-sizing: border-box;
-	font-size: 13px;
-	height: 200px;
-	line-height: 1.6;
-	padding: 0.5em 0.6em;
-	resize: vertical;
-	transition:
-		border-color 0.15s,
-		box-shadow 0.15s;
-	width: 100%;
-}
-
-.cast-textarea:focus {
-	border-color: var(--focus-ring);
-	box-shadow: 0 0 0 3px var(--focus-glow);
-	outline: none;
-}
-
 .form-message {
-	color: var(--danger-color, #e53e3e);
+	color: var(--danger-color);
 	font-size: 12px;
 	margin: 0.5em 0 0;
-}
-
-.btn-cancel {
-	background: none;
-	border: none;
-	color: var(--text-subtle);
-	cursor: pointer;
-	font-size: 13px;
-	padding: 0.25em 0.5em;
-	transition: color 0.1s;
-}
-
-.btn-cancel:hover {
-	color: var(--contrast-color);
 }
 </style>

@@ -64,8 +64,8 @@ watch(
 		backdrop-filter: var(--glass-blur);
 		background: var(--glass-bg);
 		border: 1px solid var(--glass-border);
-		border-radius: 16px;
-		box-shadow: 0 8px 32px var(--shadow-overlay);
+		border-radius: var(--radius-xl);
+		box-shadow: var(--glass-highlight), var(--shadow-pop);
 		box-sizing: border-box;
 		display: block;
 		height: auto;
@@ -77,16 +77,16 @@ watch(
 		scrollbar-color: var(--scrollbar-thumb) var(--scrollbar-track);
 		scrollbar-width: thin;
 		width: calc(100% - 2rem);
-		/* exit: ease-in straight down */
+		/* exit: quick slide straight down */
 		transform: translateY(100vh);
-		transition: transform 0.45s cubic-bezier(0.3, 0.8, 0.7, 1);
+		transition: transform 0.45s var(--ease-out);
 	}
 
 	.panel-content.visible {
 		pointer-events: auto;
 		transform: translateY(0);
 		/* entry: gentle spring bounce */
-		transition: transform 0.55s cubic-bezier(0.34, 1.25, 0.64, 1);
+		transition: transform 0.55s var(--ease-spring);
 	}
 }
 

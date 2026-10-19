@@ -127,11 +127,13 @@ function onBlur() {
 .item-input {
 	background: transparent;
 	border: 1px solid transparent;
-	border-radius: 4px;
+	border-radius: var(--radius-sm);
 	font-size: 13px;
 	min-width: 0;
 	padding: 0.1em 0.5em;
-	transition: border-color 0.15s, box-shadow 0.15s;
+	transition:
+		border-color var(--dur-fast) var(--ease-out),
+		box-shadow var(--dur-fast) var(--ease-out);
 }
 
 .item-input:focus {
@@ -177,7 +179,7 @@ function onBlur() {
 	flex: 0 0 24px;
 	justify-content: center;
 	padding: 0;
-	transition: color 0.15s;
+	transition: color var(--dur-fast) var(--ease-out);
 }
 
 .btn-delete:hover {

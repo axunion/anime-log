@@ -105,13 +105,15 @@ async function onDelete(e: Event) {
 <style scoped>
 .search-item {
 	align-items: center;
-	border-radius: 6px;
+	border-radius: var(--radius-md);
 	cursor: pointer;
 	display: flex;
 	font-size: 13px;
 	gap: 0.5em;
 	padding: 0.4em 0.5em;
-	transition: background 0.1s, color 0.1s;
+	transition:
+		background-color var(--dur-fast) var(--ease-out),
+		color var(--dur-fast) var(--ease-out);
 }
 
 .search-item.editing {
@@ -148,7 +150,7 @@ async function onDelete(e: Event) {
 	flex-shrink: 0;
 	gap: 0.15em;
 	opacity: 0;
-	transition: opacity 0.1s;
+	transition: opacity var(--dur-fast) var(--ease-out);
 }
 
 .search-item:hover .action-buttons,
@@ -160,13 +162,15 @@ async function onDelete(e: Event) {
 	align-items: center;
 	background: none;
 	border: none;
-	border-radius: 4px;
+	border-radius: var(--radius-sm);
 	color: var(--text-subtle);
 	cursor: pointer;
 	display: flex;
 	justify-content: center;
 	padding: 0.2em;
-	transition: color 0.1s, background 0.1s;
+	transition:
+		color var(--dur-fast) var(--ease-out),
+		background-color var(--dur-fast) var(--ease-out);
 }
 
 .btn-action:hover {
@@ -179,13 +183,13 @@ async function onDelete(e: Event) {
 }
 
 .btn-action--danger:hover {
-	color: color-mix(in srgb, #e05555 80%, var(--contrast-color));
+	color: var(--danger-color);
 }
 
 .edit-input {
 	background: var(--glass-bg-strong);
 	border: 1px solid var(--glass-border);
-	border-radius: 4px;
+	border-radius: var(--radius-sm);
 	font-size: 13px;
 	padding: 0.2em 0.4em;
 }

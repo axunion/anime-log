@@ -46,14 +46,16 @@ const wikiUrl = computed(
 .panel-close-btn,
 .link-wikipedia {
 	align-items: center;
-	border-radius: 8px;
+	border-radius: var(--radius-control);
 	color: var(--text-muted);
 	cursor: pointer;
 	display: inline-flex;
 	flex: 0 0 28px;
 	height: 28px;
 	justify-content: center;
-	transition: color 0.15s, background 0.15s;
+	transition:
+		color var(--dur-fast) var(--ease-out),
+		background-color var(--dur-fast) var(--ease-out);
 	width: 28px;
 }
 

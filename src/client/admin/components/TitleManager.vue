@@ -65,7 +65,7 @@ async function onDeleteTitle(id: number) {
 		</h2>
 
 		<div class="admin-form">
-			<button class="admin-form-button" type="button" @click="addOpen = true">
+			<button class="btn btn--primary" type="button" @click="addOpen = true">
 				<Plus :size="13" :stroke-width="2.5" />
 				追加
 			</button>

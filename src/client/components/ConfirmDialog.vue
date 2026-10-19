@@ -21,12 +21,12 @@ const danger = computed(() => state.value?.danger !== false);
 	>
 		<p class="confirm-message">{{ state?.message }}</p>
 		<template #footer>
-			<button class="btn-cancel" type="button" @click="resolve(false)">
+			<button class="btn btn--ghost" type="button" @click="resolve(false)">
 				{{ cancelLabel }}
 			</button>
 			<button
-				class="btn-confirm"
-				:class="{ 'btn-confirm--danger': danger }"
+				class="btn"
+				:class="danger ? 'btn--danger' : 'btn--primary'"
 				type="button"
 				@click="resolve(true)"
 			>
@@ -41,41 +41,5 @@ const danger = computed(() => state.value?.danger !== false);
 	font-size: 14px;
 	line-height: 1.6;
 	margin: 0;
-}
-
-.btn-cancel {
-	background: none;
-	border: none;
-	color: var(--text-subtle);
-	cursor: pointer;
-	font-size: 13px;
-	padding: 0.35em 0.75em;
-	transition: color 0.1s;
-}
-
-.btn-cancel:hover {
-	color: var(--contrast-color);
-}
-
-.btn-confirm {
-	align-items: center;
-	background: var(--accent-color);
-	border: 1px solid transparent;
-	border-radius: 8px;
-	color: var(--base-color);
-	cursor: pointer;
-	display: inline-flex;
-	font-size: 13px;
-	font-weight: 500;
-	padding: 0.35em 1em;
-	transition: opacity 0.15s;
-}
-
-.btn-confirm:hover {
-	opacity: 0.85;
-}
-
-.btn-confirm--danger {
-	background: color-mix(in srgb, #e05555 80%, var(--base-color));
 }
 </style>

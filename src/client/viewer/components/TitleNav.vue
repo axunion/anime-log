@@ -61,14 +61,21 @@ const tabs: { id: Tab; icon: typeof Clock; label: string }[] = [
 
 .tab {
 	align-items: center;
-	border-radius: 8px;
+	border-radius: var(--radius-control);
 	color: var(--text-muted);
 	cursor: pointer;
 	display: flex;
 	height: 32px;
 	justify-content: center;
-	transition: color 0.15s, background 0.15s;
+	transition:
+		color var(--dur-fast) var(--ease-out),
+		background-color var(--dur-fast) var(--ease-out),
+		transform var(--dur-fast) var(--ease-spring);
 	width: 32px;
+}
+
+.tab:active {
+	transform: scale(0.92);
 }
 
 .tab:hover {
@@ -77,7 +84,7 @@ const tabs: { id: Tab; icon: typeof Clock; label: string }[] = [
 }
 
 .tab.active {
-	background: color-mix(in srgb, var(--accent-color) 12%, transparent);
+	background: color-mix(in srgb, var(--accent-color) 14%, transparent);
 	color: var(--accent-color);
 }
 
@@ -85,14 +92,16 @@ const tabs: { id: Tab; icon: typeof Clock; label: string }[] = [
 	align-items: center;
 	background: var(--glass-bg-strong);
 	border: 1px solid var(--glass-border);
-	border-radius: 8px;
+	border-radius: var(--radius-control);
 	cursor: text;
 	display: flex;
 	flex: 1;
 	gap: 0.5em;
 	height: 30px;
-	padding: 0 0.625em;
-	transition: border-color 0.15s, box-shadow 0.15s;
+	padding: 0 0.875em;
+	transition:
+		border-color var(--dur-fast) var(--ease-out),
+		box-shadow var(--dur-fast) var(--ease-out);
 }
 
 .search:focus-within {

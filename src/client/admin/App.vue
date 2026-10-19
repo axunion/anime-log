@@ -41,7 +41,7 @@ onMounted(async () => {
 	<div class="admin-root">
 		<div v-if="appError" class="app-error-banner" role="alert">
 			<span>{{ appError.message }}</span>
-			<button type="button" class="app-error-retry" @click="reload">再読み込み</button>
+			<button type="button" class="btn btn--ghost app-error-retry" @click="reload">再読み込み</button>
 		</div>
 		<div v-else-if="appLoading" class="app-loading-banner" aria-live="polite">読み込み中...</div>
 		<AdminTabs v-model="activeTab" />
@@ -68,9 +68,9 @@ onMounted(async () => {
 
 .app-error-banner {
 	align-items: center;
-	background: color-mix(in srgb, var(--danger-color, #e53e3e) 12%, transparent);
-	border-bottom: 1px solid color-mix(in srgb, var(--danger-color, #e53e3e) 30%, transparent);
-	color: var(--danger-color, #e53e3e);
+	background: color-mix(in srgb, var(--danger-color) 12%, transparent);
+	border-bottom: 1px solid color-mix(in srgb, var(--danger-color) 30%, transparent);
+	color: var(--danger-color);
 	display: flex;
 	font-size: 13px;
 	gap: 1em;
@@ -79,18 +79,12 @@ onMounted(async () => {
 }
 
 .app-error-retry {
-	background: transparent;
-	border: 1px solid currentcolor;
-	border-radius: 6px;
-	color: inherit;
-	cursor: pointer;
+	--btn-bg-hover: color-mix(in srgb, currentcolor 12%, transparent);
+	--btn-fg: inherit;
+	--btn-fg-hover: inherit;
+	border-color: currentcolor;
 	font-size: 12px;
 	padding: 0.2em 0.75em;
-	transition: background 0.15s;
-}
-
-.app-error-retry:hover {
-	background: color-mix(in srgb, currentcolor 12%, transparent);
 }
 
 .app-loading-banner {

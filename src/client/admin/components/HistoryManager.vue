@@ -133,7 +133,7 @@ async function onDelete(id: number) {
 			</div>
 			<input class="admin-form-input" v-model="displayName" type="text" placeholder="表示名（省略可）" />
 			<input class="admin-form-input admin-form-input--narrow" v-model="year" type="text" inputmode="numeric" maxlength="4" placeholder="年" />
-			<button class="admin-form-button" type="submit">
+			<button class="btn btn--primary" type="submit">
 				<Plus :size="13" :stroke-width="2.5" />
 				追加
 			</button>
@@ -203,7 +203,8 @@ async function onDelete(id: number) {
 .title-suggest {
 	background: var(--glass-bg-strong);
 	border: 1px solid var(--glass-border);
-	border-radius: 8px;
+	border-radius: var(--radius-md);
+	box-shadow: var(--shadow-float);
 	left: 0;
 	list-style: none;
 	margin: 2px 0 0;

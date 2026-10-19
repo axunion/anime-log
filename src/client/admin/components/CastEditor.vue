@@ -145,7 +145,7 @@ async function onSave() {
 		<div class="cast-header">
 			<p class="selected-title">{{ selectedTitleName }}</p>
 			<button
-				class="admin-form-button"
+				class="btn btn--primary"
 				type="button"
 				:disabled="!selectedTitleId"
 				@click="openBulk"
@@ -154,7 +154,7 @@ async function onSave() {
 				追加
 			</button>
 			<button
-				class="admin-form-button btn-outline"
+				class="btn btn--ghost"
 				type="button"
 				:disabled="rows.length === 0"
 				@click="clearAll"
@@ -166,15 +166,15 @@ async function onSave() {
 
 		<Modal v-model:open="bulkOpen" title="キャストを一括追加" size="md" :close-on-overlay="false" @close="cancelBulk">
 			<textarea
-				class="bulk-textarea"
+				class="admin-form-textarea"
 				v-model="bulkText"
 				placeholder="声優名&#9;役名（1行1件、タブ区切り）"
 				spellcheck="false"
 				autofocus
 			/>
 			<template #footer>
-				<button class="btn-cancel" type="button" @click="cancelBulk">キャンセル</button>
-				<button class="admin-form-button" type="button" :disabled="!bulkText.trim()" @click="commitBulk">
+				<button class="btn btn--ghost" type="button" @click="cancelBulk">キャンセル</button>
+				<button class="btn btn--primary" type="button" :disabled="!bulkText.trim()" @click="commitBulk">
 					取り込む
 				</button>
 			</template>
@@ -193,7 +193,7 @@ async function onSave() {
 		</div>
 		<div class="cast-footer">
 			<button
-				class="btn-cancel"
+				class="btn btn--ghost"
 				type="button"
 				:disabled="!dirty || saving"
 				@click="onCancel"
@@ -202,7 +202,7 @@ async function onSave() {
 				キャンセル
 			</button>
 			<button
-				class="admin-form-button"
+				class="btn btn--primary"
 				type="button"
 				:disabled="!dirty || saving"
 				@click="onSave"
@@ -235,55 +235,6 @@ async function onSave() {
 	white-space: nowrap;
 }
 
-.admin-form-button:disabled {
-	cursor: default;
-	opacity: 0.35;
-}
-
-.bulk-textarea {
-	background: var(--glass-bg-strong);
-	border: 1px solid var(--glass-border);
-	border-radius: 6px;
-	box-sizing: border-box;
-	font-size: 13px;
-	height: 200px;
-	line-height: 1.6;
-	padding: 0.5em 0.6em;
-	resize: vertical;
-	transition:
-		border-color 0.15s,
-		box-shadow 0.15s;
-	width: 100%;
-}
-
-.bulk-textarea:focus {
-	border-color: var(--focus-ring);
-	box-shadow: 0 0 0 3px var(--focus-glow);
-	outline: none;
-}
-
-.btn-cancel {
-	align-items: center;
-	background: none;
-	border: none;
-	color: var(--text-subtle);
-	cursor: pointer;
-	display: inline-flex;
-	font-size: 13px;
-	gap: 0.35em;
-	padding: 0.25em 0.5em;
-	transition: color 0.1s;
-}
-
-.btn-cancel:disabled {
-	cursor: default;
-	opacity: 0.35;
-}
-
-.btn-cancel:hover:not(:disabled) {
-	color: var(--contrast-color);
-}
-
 .cast-rows {
 	display: flex;
 	flex: 1;
@@ -292,17 +243,6 @@ async function onSave() {
 	min-height: 0;
 	overflow-y: auto;
 	padding-right: 0.25em;
-}
-
-.btn-outline {
-	background: none;
-	border-color: var(--glass-border);
-	color: var(--text-muted);
-}
-
-.btn-outline:hover:not(:disabled) {
-	background: var(--glass-bg-strong);
-	opacity: 1;
 }
 
 .cast-footer {

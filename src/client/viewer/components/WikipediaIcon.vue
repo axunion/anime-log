@@ -13,6 +13,6 @@
 .wiki-icon {
 	display: block;
 	opacity: 0.55;
-	transition: opacity 0.15s;
+	transition: opacity var(--dur-fast) var(--ease-out);
 }
 </style>

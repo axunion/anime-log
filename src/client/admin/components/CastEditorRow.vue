@@ -74,7 +74,7 @@ const emit = defineEmits<{
 	flex: 0 0 20px;
 	justify-content: center;
 	padding: 0;
-	transition: color 0.15s;
+	transition: color var(--dur-fast) var(--ease-out);
 }
 
 .btn-remove-row:hover {

@@ -19,9 +19,20 @@ defineEmits<{
 
 <style scoped>
 .title-item {
+	border-radius: var(--radius-md);
 	cursor: pointer;
 	display: flex;
-	padding: 0.75em 1em;
+	margin: 1px 0.5em;
+	padding: 0.7em 0.75em;
+	transition:
+		background-color var(--dur-fast) var(--ease-out),
+		color var(--dur-fast) var(--ease-out);
+}
+
+@media (hover: hover) {
+	.title-item:hover:not(.selected) {
+		background: var(--hover-overlay);
+	}
 }
 
 .title-item.selected {

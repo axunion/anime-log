@@ -184,12 +184,12 @@ onUnmounted(() => {
 
 	.frame-cast.cast-visible {
 		transform: translateX(0);
-		transition: transform 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+		transition: transform 0.4s var(--ease-out);
 	}
 
 	.frame-cast.cast-leaving {
 		transform: translateX(100%);
-		transition: transform 0.35s cubic-bezier(0.3, 0.8, 0.7, 1);
+		transition: transform 0.35s var(--ease-out);
 	}
 
 	.frame-voice {

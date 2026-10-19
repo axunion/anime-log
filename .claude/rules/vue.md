@@ -69,3 +69,7 @@ async function onDelete() {
 ## Modal component
 
 Use `<Modal>` (imported from `../../components/AppModal.vue`) for overlay UI (forms, bulk inputs, detail views). It supports `v-model:open`, `title`, `size` (`sm` | `md`), `closeOnOverlay`, `closeOnEsc`, and named slots `header`, default body, `footer`.
+
+## Buttons and design tokens
+
+Use the global `.btn` classes from `styles/base.css` for every button instead of defining per-component button styles: `.btn` plus `.btn--primary` (main action), `.btn--danger`, or `.btn--ghost` (cancel / secondary). Restyle a button by overriding its `--btn-*` custom properties, not its `background`/`color`. Take radii, shadows, and easing from the `--radius-*`, `--shadow-*`, `--ease-*`, `--dur-*` tokens, and colors from `--danger-color` / `--on-accent` rather than hard-coded values. Take transition durations from `--dur-fast` / `--dur-base`; they drop to `0s` under `prefers-reduced-motion`, so those transitions need no media query of their own.

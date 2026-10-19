@@ -57,7 +57,7 @@ const tabs: { id: AdminTab; label: string }[] = [
 
 .tab {
 	align-items: center;
-	border-radius: 8px;
+	border-radius: var(--radius-control);
 	color: var(--text-muted);
 	cursor: pointer;
 	display: flex;
@@ -65,8 +65,15 @@ const tabs: { id: AdminTab; label: string }[] = [
 	font-weight: 500;
 	gap: 0.4em;
 	height: 32px;
-	padding: 0 0.75em;
-	transition: color 0.15s, background 0.15s;
+	padding: 0 1em;
+	transition:
+		color var(--dur-fast) var(--ease-out),
+		background-color var(--dur-fast) var(--ease-out),
+		transform var(--dur-fast) var(--ease-spring);
+}
+
+.tab:active {
+	transform: scale(0.95);
 }
 
 .tab:hover {
@@ -75,7 +82,7 @@ const tabs: { id: AdminTab; label: string }[] = [
 }
 
 .tab.active {
-	background: color-mix(in srgb, var(--accent-color) 12%, transparent);
+	background: color-mix(in srgb, var(--accent-color) 14%, transparent);
 	color: var(--accent-color);
 }
 </style>

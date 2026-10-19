@@ -133,8 +133,8 @@ onBeforeUnmount(() => {
 	backdrop-filter: var(--glass-blur);
 	-webkit-backdrop-filter: var(--glass-blur);
 	border: 1px solid var(--glass-border);
-	border-radius: 12px;
-	box-shadow: 0 12px 40px var(--shadow-overlay);
+	border-radius: var(--radius-xl);
+	box-shadow: var(--glass-highlight), var(--shadow-pop);
 	box-sizing: border-box;
 	display: flex;
 	flex-direction: column;
@@ -182,11 +182,19 @@ onBeforeUnmount(() => {
 
 /* enter/leave transitions */
 .modal-enter-active {
-	transition: opacity 0.15s ease, transform 0.15s ease;
+	transition: opacity var(--dur-base) var(--ease-out);
+}
+
+.modal-enter-active .modal-dialog {
+	transition: transform var(--dur-base) var(--ease-spring);
 }
 
 .modal-leave-active {
-	transition: opacity 0.12s ease, transform 0.12s ease;
+	transition: opacity var(--dur-fast) var(--ease-out);
+}
+
+.modal-leave-active .modal-dialog {
+	transition: transform var(--dur-fast) var(--ease-out);
 }
 
 .modal-enter-from,
@@ -196,13 +204,6 @@ onBeforeUnmount(() => {
 
 .modal-enter-from .modal-dialog,
 .modal-leave-to .modal-dialog {
-	transform: scale(0.97);
-}
-
-@media (prefers-reduced-motion: reduce) {
-	.modal-enter-active,
-	.modal-leave-active {
-		transition: none;
-	}
+	transform: scale(0.94);
 }
 </style>
