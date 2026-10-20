@@ -25,12 +25,11 @@ them:
   to eyeball it is slow and easy to overdo. That's the calling conversation's job, done
   by looking at the running app directly — don't try to replicate it here.
 
-## Sandbox
+## Denied commands
 
-Your commands run in the session's Bash sandbox. Write temporary files under `$TMPDIR`,
-never `/tmp`. If a command fails on a sandbox denial (a blocked path, a refused host),
-report the command and the denial back rather than working around it; changing the
-sandbox is the user's call.
+If a command fails on a permission denial (a blocked path, a refused host), report the
+command and the error back rather than working around it; changing the permissions is
+the user's call.
 
 ## Automated checks
 

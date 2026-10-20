@@ -26,23 +26,16 @@ in scope; never print it in your output.
 
 ## Recipe
 
-Your commands run in the session's Bash sandbox, and Chromium can't launch inside it.
-The browser run in step 3 leaves the sandbox only because `node inspector-scratch.mjs`
-matches an `excludedCommands` entry, so run it exactly as written, as a call of its
-own — prefixing `cd`, chaining with `&&`, piping, or redirecting to a file keeps it
-sandboxed, where Chromium fails to start. Everything else stays sandboxed: write only
-under the project root or `$TMPDIR`, never `/tmp`. If a command fails on a sandbox
-denial, report the command and the denial back rather than working around it; changing
-the sandbox is the user's call.
+If a command fails on a permission denial, report the command and the error back
+rather than working around it; changing the permissions is the user's call.
 
 1. **Start the dev server as a background task.** First check whether the port is
    already taken:
    ```bash
    lsof -ti:5173 -sTCP:LISTEN
    ```
-   If something is listening, don't kill it — it may be the developer's own server, and
-   a sandboxed command can't signal a process it didn't start anyway. Reuse it if it
-   serves this project; otherwise report the conflict back. If the port is free, run
+   If something is listening, don't kill it — it may be the developer's own server.
+   Reuse it if it serves this project; otherwise report the conflict back. If the port is free, run
    `pnpm dev` through `Bash` with `run_in_background: true` and note the task ID it
    returns; its output is captured for you, so don't redirect it to a log file. Then
    wait for it to answer. macOS has no `timeout` command, so poll instead:
@@ -50,14 +43,13 @@ the sandbox is the user's call.
    for i in $(seq 1 30); do curl -sf http://localhost:5173 >/dev/null && break; sleep 1; done
    ```
 
-2. **Write the throwaway script as `inspector-scratch.mjs` at the project root** — that
-   exact name, since the sandbox exclusion matches it. Node's ESM resolver walks up from
-   the script's *own* location to find `node_modules`, so the script must live under
-   the project root (`playwright` must already be a dependency) — running it from
-   anywhere outside the project fails with `ERR_MODULE_NOT_FOUND`. Keep screenshots out
-   of the repo: have the script write them under `os.tmpdir()`, print each file's
-   absolute path, and `Read` them from those paths — under the sandbox, the excluded
-   run's temp directory isn't the `$TMPDIR` your sandboxed commands see.
+2. **Write the throwaway script as `inspector-scratch.mjs` at the project root.**
+   Node's ESM resolver walks up from the script's *own* location to find
+   `node_modules`, so the script must live under the project root (`playwright` must
+   already be a dependency) — running it from anywhere outside the project fails with
+   `ERR_MODULE_NOT_FOUND`. Keep screenshots out of the repo: have the script write them
+   under `os.tmpdir()`, print each file's absolute path, and `Read` them from those
+   paths.
 
 3. **Run it with `node inspector-scratch.mjs`** from the project root — a throwaway
    script driving `chromium` directly.
